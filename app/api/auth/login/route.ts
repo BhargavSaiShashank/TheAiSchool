@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findFirst({
       where: { email },
-      include: { org: true },
+      include: { organization: true },
     });
 
     if (!user || user.password_hash !== password) {
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       email: user.email,
       role: user.role,
       org_id: user.org_id,
-      org_name: user.org?.name || "PulseSend Inc.",
+      org_name: user.organization?.name || "PulseSend Inc.",
     });
   } catch (error: any) {
     console.error("POST /api/auth/login error:", error);
