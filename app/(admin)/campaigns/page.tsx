@@ -45,8 +45,9 @@ export default function CampaignsPage() {
   
   // Campaigns State
   const [campaigns, setCampaigns] = useState(initialCampaigns);
+  const [lists, setLists] = useState<any[]>([]);
 
-  // Fetch live campaigns from Supabase via Next.js API Routes on mount
+  // Fetch live campaigns and mailing lists on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("pulsesend:loading"));
@@ -70,7 +71,23 @@ export default function CampaignsPage() {
         }
       }
     }
+
+    async function fetchMailingLists() {
+      try {
+        const res = await fetch("/api/lists");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data)) {
+            setLists(data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch mailing lists.", err);
+      }
+    }
+
     fetchLiveCampaigns();
+    fetchMailingLists();
   }, [view]);
 
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
@@ -196,6 +213,11 @@ export default function CampaignsPage() {
     setQueueStatus("sending");
     setView("queue");
   };
+
+  // Calculate dynamic recipients count
+  const totalRecipientsCount = lists
+    .filter((list) => selectedLists.includes(list.id) && !excludedLists.includes(list.id))
+    .reduce((sum, list) => sum + (list.count ?? 0), 0);
 
   return (
     <div className="space-y-8 select-none">
@@ -416,26 +438,29 @@ export default function CampaignsPage() {
                 <div className="space-y-4">
                   <h4 className="text-xs font-bold text-white uppercase font-mono">Include Contact Lists</h4>
                   <div className="space-y-2">
-                    {["SaaS Innovators", "Monthly Newsletter", "Enterprise Leads"].map((list, i) => {
-                      const listId = `l${i+1}`;
-                      const isChecked = selectedLists.includes(listId);
-                      return (
-                        <label key={listId} className="flex items-center gap-3 p-3 rounded bg-zinc-900/40 border border-zinc-900 cursor-pointer hover:border-zinc-800 transition">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              setSelectedLists(e.target.checked ? [...selectedLists, listId] : selectedLists.filter(id => id !== listId));
-                            }}
-                            className="w-4 h-4 rounded border-zinc-800 text-white bg-black focus:ring-0"
-                          />
-                          <div>
-                            <p className="text-xs font-bold text-zinc-300">{list}</p>
-                            <p className="text-[10px] text-zinc-500 font-mono mt-0.5">{selectedLists.includes(listId) ? "Recipient matching active" : "Audience excluded"}</p>
-                          </div>
-                        </label>
-                      );
-                    })}
+                    {lists.length === 0 ? (
+                      <p className="text-xs text-zinc-500 font-mono italic">No mailing lists discovered. Please create a mailing list under Contacts first.</p>
+                    ) : (
+                      lists.map((list) => {
+                        const isChecked = selectedLists.includes(list.id);
+                        return (
+                          <label key={list.id} className="flex items-center gap-3 p-3 rounded bg-zinc-900/40 border border-zinc-900 cursor-pointer hover:border-zinc-800 transition">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                setSelectedLists(e.target.checked ? [...selectedLists, list.id] : selectedLists.filter(id => id !== list.id));
+                              }}
+                              className="w-4 h-4 rounded border-zinc-800 text-white bg-black focus:ring-0"
+                            />
+                            <div>
+                              <p className="text-xs font-bold text-zinc-300">{list.name}</p>
+                              <p className="text-[10px] text-zinc-500 font-mono mt-0.5">{selectedLists.includes(list.id) ? `${list.count || 0} contacts active` : "Audience excluded"}</p>
+                            </div>
+                          </label>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
 
@@ -443,26 +468,29 @@ export default function CampaignsPage() {
                 <div className="space-y-4">
                   <h4 className="text-xs font-bold text-white uppercase font-mono">Exclude Contact Lists (Optional)</h4>
                   <div className="space-y-2">
-                    {["SaaS Innovators", "Monthly Newsletter", "Enterprise Leads"].map((list, i) => {
-                      const listId = `l${i+1}`;
-                      const isChecked = excludedLists.includes(listId);
-                      return (
-                        <label key={listId} className="flex items-center gap-3 p-3 rounded bg-zinc-900/20 border border-zinc-900/60 cursor-pointer hover:border-zinc-800 transition">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              setExcludedLists(e.target.checked ? [...excludedLists, listId] : excludedLists.filter(id => id !== listId));
-                            }}
-                            className="w-4 h-4 rounded border-zinc-800 text-red-500 bg-black focus:ring-0"
-                          />
-                          <div>
-                            <p className="text-xs font-bold text-zinc-400">{list}</p>
-                            <p className="text-[10px] text-zinc-600 font-mono mt-0.5">{excludedLists.includes(listId) ? "Suppress matching" : "Suppress excluded"}</p>
-                          </div>
-                        </label>
-                      );
-                    })}
+                    {lists.length === 0 ? (
+                      <p className="text-xs text-zinc-500 font-mono italic">No mailing lists discovered.</p>
+                    ) : (
+                      lists.map((list) => {
+                        const isChecked = excludedLists.includes(list.id);
+                        return (
+                          <label key={list.id} className="flex items-center gap-3 p-3 rounded bg-zinc-900/20 border border-zinc-900/60 cursor-pointer hover:border-zinc-800 transition">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                setExcludedLists(e.target.checked ? [...excludedLists, list.id] : excludedLists.filter(id => id !== list.id));
+                              }}
+                              className="w-4 h-4 rounded border-zinc-800 text-red-500 bg-black focus:ring-0"
+                            />
+                            <div>
+                              <p className="text-xs font-bold text-zinc-400">{list.name}</p>
+                              <p className="text-[10px] text-zinc-600 font-mono mt-0.5">{excludedLists.includes(list.id) ? "Suppress matching" : "Suppress excluded"}</p>
+                            </div>
+                          </label>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
 
@@ -476,7 +504,7 @@ export default function CampaignsPage() {
                     </div>
                   </div>
                   <span className="text-sm font-extrabold font-mono text-white">
-                    {selectedLists.length > 0 ? "4,250 contacts" : "0 contacts"}
+                    {totalRecipientsCount.toLocaleString()} contacts
                   </span>
                 </div>
               </div>
@@ -532,7 +560,7 @@ export default function CampaignsPage() {
                     </div>
                     <div>
                       <span className="text-zinc-500">Estimated Size:</span>
-                      <p className="text-white font-bold mt-1">4,250 recipients</p>
+                      <p className="text-white font-bold mt-1">{totalRecipientsCount.toLocaleString()} recipients</p>
                     </div>
                   </div>
 
