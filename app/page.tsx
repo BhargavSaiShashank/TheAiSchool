@@ -10,14 +10,24 @@ export default function Home() {
   const router = useRouter();
   const { user } = useStore();
   const [loading, setLoading] = useState(true);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
+    setHasHydrated(useStore.persist.hasHydrated());
+    const unsubFinishHydration = useStore.persist.onFinishHydration(() => setHasHydrated(true));
+    return () => {
+      unsubFinishHydration();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
     if (user) {
       router.push("/dashboard");
     } else {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, router, hasHydrated]);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-black text-white relative">

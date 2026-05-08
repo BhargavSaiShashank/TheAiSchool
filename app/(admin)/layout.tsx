@@ -20,13 +20,23 @@ export default function AdminLayout({
   const { user } = useStore();
   const [mounted, setMounted] = useState(false);
   const [pageChanging, setPageChanging] = useState(false);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
+    setHasHydrated(useStore.persist.hasHydrated());
+    const unsubFinishHydration = useStore.persist.onFinishHydration(() => setHasHydrated(true));
+    return () => {
+      unsubFinishHydration();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
     setMounted(true);
     if (!user) {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, router, hasHydrated]);
 
   // Trigger cinematic preloader on route change
   useEffect(() => {
