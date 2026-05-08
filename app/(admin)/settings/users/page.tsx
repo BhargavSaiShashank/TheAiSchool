@@ -1,46 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, ShieldCheck, Trash2, Mail, Check } from "lucide-react";
-
-// Mock Teammates matching seed.js
-const initialTeammates = [
-  { id: "u1", email: "superadmin@pulsesend.com", role: "SUPER_ADMIN", status: "Active" },
-  { id: "u2", email: "manager@pulsesend.com", role: "CAMPAIGN_MANAGER", status: "Active" },
-  { id: "u3", email: "viewer@pulsesend.com", role: "VIEWER", status: "Active" },
-];
+import { Users, Plus, Trash2, Mail, Check } from "lucide-react";
 
 export default function TeammatesPage() {
-  const [teammates, setTeammates] = useState(initialTeammates);
+  const [teammates, setTeammates] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newRole, setNewRole] = useState("CAMPAIGN_MANAGER");
 
-  const handleInvite = (e: React.FormEvent) => {
+  // Fetch teammates from live database
+  useEffect(() => {
+    async function fetchTeammates() {
+      try {
+        const res = await fetch("/api/users");
+        if (res.ok) {
+          const data = await res.json();
+          setTeammates(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch teammates directory:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchTeammates();
+  }, []);
+
+  const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmail.trim()) return;
 
-    const item = {
-      id: `u-${Date.now()}`,
-      email: newEmail,
-      role: newRole,
-      status: "Invited",
-    };
-    setTeammates([...teammates, item]);
-    setNewEmail("");
-    setShowInviteModal(false);
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newEmail, role: newRole }),
+      });
+
+      if (res.ok) {
+        // Refresh list
+        const refresh = await fetch("/api/users");
+        if (refresh.ok) {
+          const data = await refresh.json();
+          setTeammates(data);
+        }
+        setNewEmail("");
+        setShowInviteModal(false);
+      }
+    } catch (err) {
+      console.error("Failed to invite teammate:", err);
+    }
   };
 
-  const handleRoleChange = (id: string, role: string) => {
-    setTeammates(
-      teammates.map((u) => (u.id === id ? { ...u, role } : u))
-    );
+  const handleRoleChange = async (id: string, role: string) => {
+    try {
+      const res = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, role }),
+      });
+
+      if (res.ok) {
+        setTeammates(
+          teammates.map((u) => (u.id === id ? { ...u, role } : u))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to update teammate role:", err);
+    }
   };
 
-  const handleRevoke = (id: string, email: string) => {
+  const handleRevoke = async (id: string, email: string) => {
     if (confirm(`Are you sure you want to revoke access for ${email}?`)) {
-      setTeammates(teammates.filter((u) => u.id !== id));
+      try {
+        const res = await fetch(`/api/users?id=${id}`, {
+          method: "DELETE",
+        });
+
+        if (res.ok) {
+          setTeammates(teammates.filter((u) => u.id !== id));
+        }
+      } catch (err) {
+        console.error("Failed to revoke teammate access:", err);
+      }
     }
   };
 
@@ -75,47 +120,59 @@ export default function TeammatesPage() {
               </tr>
             </thead>
             <tbody>
-              {teammates.map((user) => (
-                <tr key={user.id} className="border-b border-border/50 hover:bg-secondary/40 transition">
-                  <td className="py-3.5 px-5 font-bold text-foreground font-mono text-[11px] flex items-center gap-2.5">
-                    <div className="w-[26px] h-[26px] rounded-full bg-secondary border border-border flex items-center justify-center text-[10px] font-black uppercase text-muted-foreground">
-                      {user.email[0]}
-                    </div>
-                    <span>{user.email}</span>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-zinc-500 font-mono tracking-widest text-[11px] uppercase">
+                    Loading directory...
                   </td>
-                  <td className="py-3.5 px-5">
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                      className="px-2 py-1 rounded bg-secondary border border-border text-[10px] text-zinc-300 font-semibold font-mono focus:outline-none"
-                    >
-                      <option value="SUPER_ADMIN">SUPER ADMIN</option>
-                      <option value="CAMPAIGN_MANAGER">CAMPAIGN MANAGER</option>
-                      <option value="VIEWER">VIEWER</option>
-                    </select>
+                </tr>
+              ) : teammates.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-zinc-500 font-mono tracking-wider text-[11px] uppercase">
+                    No teammates found inside organization registry.
                   </td>
-                  <td className="py-3.5 px-5">
-                    <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
-                      user.status === "Active"
-                        ? "bg-emerald-950/20 text-emerald-400 border border-emerald-900/30"
-                        : "bg-zinc-900 text-muted-foreground border border-border"
-                    }`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-5 text-right">
-                    {user.email !== "superadmin@pulsesend.com" && (
+                </tr>
+              ) : (
+                teammates.map((user) => (
+                  <tr key={user.id} className="border-b border-border/50 hover:bg-secondary/40 transition">
+                    <td className="py-3.5 px-5 font-bold text-foreground font-mono text-[11px] flex items-center gap-2.5">
+                      <div className="w-[26px] h-[26px] rounded-full bg-secondary border border-border flex items-center justify-center text-[10px] font-black uppercase text-muted-foreground">
+                        {user.email[0]}
+                      </div>
+                      <span>{user.email}</span>
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        className="px-2 py-1 rounded bg-secondary border border-border text-[10px] text-zinc-300 font-semibold font-mono focus:outline-none"
+                      >
+                        <option value="SUPER_ADMIN">SUPER ADMIN</option>
+                        <option value="CAMPAIGN_MANAGER">CAMPAIGN MANAGER</option>
+                        <option value="VIEWER">VIEWER</option>
+                      </select>
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
+                        user.status === "Active"
+                          ? "bg-emerald-950/20 text-emerald-400 border border-emerald-900/30"
+                          : "bg-amber-950/20 text-amber-400 border border-amber-900/30"
+                      }`}>
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-5 text-right">
                       <button
                         onClick={() => handleRevoke(user.id, user.email)}
-                        className="text-muted-foreground hover:text-foreground p-1.5 transition"
+                        className="text-muted-foreground hover:text-foreground transition p-1"
                         title="Revoke Teammate Access"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -133,20 +190,23 @@ export default function TeammatesPage() {
             >
               <div>
                 <h3 className="text-sm font-bold text-foreground tracking-tight">Invite Teammate</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Invite a teammate and configure permission boundaries</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Invite a teammate to collaborate on PulseSend campaigns</p>
               </div>
 
               <form onSubmit={handleInvite} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Teammate Email Address</label>
-                  <input
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="teammate@pulsesend.com"
-                    required
-                    className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
-                  />
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                    <input
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="teammate@example.com"
+                      required
+                      className="w-full pl-9 pr-4 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -157,8 +217,8 @@ export default function TeammatesPage() {
                     className="w-full px-3 py-2.5 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-400 font-medium"
                   >
                     <option value="SUPER_ADMIN">SUPER ADMIN (Full Access)</option>
-                    <option value="CAMPAIGN_MANAGER">CAMPAIGN MANAGER (Design/Send)</option>
-                    <option value="VIEWER">VIEWER (Read-Only Analytics)</option>
+                    <option value="CAMPAIGN_MANAGER">CAMPAIGN MANAGER (Campaign Access)</option>
+                    <option value="VIEWER">VIEWER (Read-Only Access)</option>
                   </select>
                 </div>
 
@@ -172,7 +232,7 @@ export default function TeammatesPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 text-xs font-semibold transition shadow-md border border-white/5"
+                    className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 text-xs font-semibold transition shadow-md border border-white/5 bg-violet-600 hover:bg-violet-700"
                   >
                     Send Invitation
                   </button>
