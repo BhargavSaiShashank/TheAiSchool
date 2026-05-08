@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #06070A;
+  --color-foreground: #F5F7FA;
+  --color-card: #0B0C10;
+  --color-card-foreground: #F5F7FA;
+  --color-popover: #0B0C10;
+  --color-popover-foreground: #F5F7FA;
+  --color-primary: #7C5CFF;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #101117;
+  --color-secondary-foreground: #F5F7FA;
+  --color-muted: #101117;
+  --color-muted-foreground: rgba(255,255,255,0.62);
+  --color-accent: #101117;
+  --color-accent-foreground: #F5F7FA;
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(255,255,255,0.06);
+  --color-input: #0B0C10;
+  --color-ring: #7C5CFF;
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  --background: #06070A;
+  --foreground: #F5F7FA;
+  --card: #0B0C10;
+  --card-foreground: #F5F7FA;
+  --popover: #0B0C10;
+  --popover-foreground: #F5F7FA;
+  --primary: #7C5CFF;
+  --primary-foreground: #ffffff;
+  --secondary: #101117;
+  --secondary-foreground: #F5F7FA;
+  --muted: #101117;
+  --muted-foreground: rgba(255,255,255,0.62);
+  --accent: #101117;
+  --accent-foreground: #F5F7FA;
+  --destructive: #EF4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255,255,255,0.06);
+  --input: #0B0C10;
+  --ring: #7C5CFF;
+  --radius: 12px;
+}
+
+html, body {
+  background-color: #06070A !important;
+  color: #F5F7FA !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Premium Linear Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f1f23;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #27272a;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(18, 18, 20, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Custom glow borders */
+.border-glow:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.03);
+}
+
+.border-glow-blue:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.05);
+}
+
+/* Premium Text Gradients */
+.text-gradient-metallic {
+  background: linear-gradient(135deg, #ffffff 30%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-purple {
+  background: linear-gradient(135deg, #c084fc 0%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Ambient Floating Background Blobs */
+@keyframes ambient-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.ambient-blob-purple {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0) 70%);
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: ambient-float 15s infinite ease-in-out;
+  pointer-events: none;
+}
+
+.ambient-blob-blue {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0) 70%);
+  border-radius: 50%;
+  filter: blur(100px);
+  animation: ambient-float 20s infinite ease-in-out alternate;
+  pointer-events: none;
+}
+
+/* Hyper-Premium Slabs */
+.premium-slab {
+  background: linear-gradient(180deg, rgba(18, 18, 20, 0.8) 0%, rgba(12, 12, 14, 0.5) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-slab:hover {
+  border-color: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 10px 40px rgba(139, 92, 246, 0.04), 0 0 1px rgba(139, 92, 246, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Hide Unlayer editor branding if needed */
+.unlayer-branding {
+  display: none !important;
+}
+
+/* Premium Minimalist SaaS Cards (inspired by Resend/Linear) */
+.clay-card {
+  background: var(--card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.clay-card:hover {
+  border-color: #d4d4d8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.dark .clay-card:hover {
+  border-color: #3f3f46;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}

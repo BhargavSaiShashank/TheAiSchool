@@ -1,0 +1,716 @@
+--- PAGE 1 ---
+ 
+ 
+ 
+  
+EMAIL CAMPAIGN PLATFORM 
+ 
+Functional Requirements Document 
+Your step-by-step guide to building an in-house email platform 
+— contacts, templates, scheduling, tracking & analytics. 
+--- PAGE 2 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 2 
+ 
+ 
+■ How to Use This Document 
+ 
+Welcome! This document tells you exactly what to build. Read each section before you start that part of the app. You 
+don't need to understand everything at once. 
+ 
+ 
+Symbol What it means 
+■ Must Have Required — judges will check this. 
+■ Bonus Optional extra credit — earns bonus points. 
+■ Watch Out Easy to get wrong — pay attention. 
+■ Tip 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Helpful hint to save you time. 
+■ Reading Order (Start Here) 
+ 
+1. Section 1 — Understand what you're building. 2. Section 2 — Learn the two user types (Admin & Subscriber). 3. Section 
+3 — See all 9 feature modules at a glance. 4. Section 4 — Dive into feature details one module at a time. 5. Section 5 — 
+Use the screen checklist while building. 6. Section 6 — Refer to API routes when connecting frontend & backend. 
+--- PAGE 3 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 3 
+ 
+ 
+1 What Are We Building? 
+ 
+You are building an Email Campaign Platform — a web app that lets teams create, send, and track email campaigns 
+to large groups of people. 
+Think of it like building your own version of Mailchimp or Zoho Campaigns, powered by AWS SES (Amazon's email 
+sending service). 
+ 
+What the app does — in plain English: 
+• Manage contacts — store email lists, import from CSV, group people into lists. 
+• Drag-and-drop email builder — design beautiful emails visually, no coding needed. 
+• Create & send campaigns — send emails to hundreds or thousands at once. 
+• Schedule sends — set a future date & time and the app sends automatically. 
+• Track opens & clicks — see who opened your email and what they clicked. 
+• Handle bounces & complaints — auto-remove bad email addresses. 
+• Manage unsubscribes — people can opt out, the app respects that always. 
+• Show analytics — dashboards with open rates, click rates, and more. 
+ 
+ 
+■■ The Tech Stack (Recommended) 
+ 
+Frontend: Any AI website builder — Lovable, Cursor, Bolt, v0, Builder.io, Webflow AI, etc. Backend: Node.js (Express) or 
+Python (FastAPI / Flask) Database: PostgreSQL Email: AWS SES (Simple Email Service) Storage: AWS S3 (for images 
+used in emails) Queue: AWS SQS (for sending at scale without crashing) 
+■ Which AI Tool Should I Use? 
+ 
+You can use ANY AI-powered web development tool. Popular options: • Lovable (lovable.dev) — describe your UI in plain 
+English, get React code. • Cursor (cursor.sh) — Antigravity with AI that writes and edits your code. • Bolt (bolt.new) — 
+full-stack app builder in the browser, no setup. • v0 by Vercel (v0.dev) — generate React components from a description. • 
+Builder.io — drag-and-drop + AI for visual web building. Pick whichever you're most comfortable with. The goal is to ship 
+fast! 
+--- PAGE 4 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 4 
+ 
+ 
+2 User Types (Who Uses the App?) 
+ 
+There are two types of users. Each has a different experience and different permissions. 
+ 
+ ADMIN REGULAR USER (Subscriber) 
+Who are they? Marketing manager, IT admin, or team lead who 
+runs the campaigns. 
+A person who receives emails. They don't log in. 
+What can they do? Create contact lists, design email templates, send 
+campaigns, and view reports. 
+Click the unsubscribe link or manage their own 
+email preferences. 
+Login required? Yes — email + password. No — they use a unique link sent inside each 
+email. 
+Main screens Dashboard, Contacts, Templates, Campaigns, 
+Analytics, Settings. 
+Unsubscribe page, Preference Centre. 
+ 
+Admin Roles — 3 levels inside Admin: 
+ 
+Role Who What They Can Do 
+Super Admin IT / Platform Owner Full access — AWS settings, all data, user management, billing. 
+Campaign Manager Marketing team Create lists, build email templates, send campaigns, view reports. 
+Viewer Leadership / Stakeholders Read-only — can see dashboards and reports, cannot create or edit 
+anything. 
+--- PAGE 5 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 5 
+ 
+ 
+3 App Overview — 9 Features to Build 
+ 
+The app has 9 feature modules. Each is a self-contained chunk you can build one at a time. Build them in order — 
+each one builds on the last. 
+ 
+# Module Name What It Does Priority 
+M1 Login & User Management Sign in, roles, profile settings ■ Must 
+M2 Contact List Management Store contacts, import CSV, create groups ■ Must 
+M3 Email Template Builder Drag-and-drop email design tool ■ Must 
+M4 Campaign Management Create and manage email campaigns ■ Must 
+M5 Scheduling & Sending Send now or schedule for later ■ Must 
+M6 Open & Click Tracking See who opened/clicked your emails ■ Must 
+M7 Bounce & Complaint Handling Auto-remove bad emails, stay AWS-compliant ■ Must 
+M8 Unsubscribe Management Let people opt out safely and easily ■ Must 
+M9 Analytics & Reports Dashboards, charts, campaign stats ■ Must 
+--- PAGE 6 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 6 
+ 
+ 
+4 Feature Details — What to Build in Each Module 
+ 
+Read each module before you start building it. Every bullet marked ■ is required. ■ Bonus items are optional extra 
+credit. 
+ 
+M1 — Login & User Management 
+ 
+ 
+What the Admin sees: 
+• A login page with email and password fields. 
+• After login, they land on the Dashboard. 
+• Profile page to update name, email, and password. 
+• Settings  Users page to invite teammates and assign roles. 
+ 
+What the system does behind the scenes: 
+• Stores passwords hashed (bcrypt) — never plain text. 
+• Issues a JWT token on login; expires after 15 min, auto-renews silently. 
+• Locks an IP for 15 min after 5 failed login attempts. 
+• Shows/hides menu items based on the user's role. 
+ 
+ 
+M2 — Contact List Management 
+ 
+This is the address book of your app. All contacts and their groups live here. 
+ 
+What the Admin sees: 
+• Contacts sidebar with two sub-pages: Lists and Segments. 
+• Lists page: grid of mailing lists — name, contact count, create/rename/delete actions. 
+• List detail: table of contacts in that list — searchable, sortable, with bulk actions. 
+• Contact detail: one person's info + which lists they're in + full email event history. 
+• Import page: upload CSV  map columns  preview  import. 
+• Segments page: build smart filters like 'opened last email but never clicked'. 
+ 
+Contact fields to store: 
+ 
+Field Required? Notes 
+Email address ■ Yes Must be unique. Validate format before saving. 
+First name Optional Used in email personalisation — {{first_name}} 
+Last name Optional Used in email personalisation — {{last_name}} 
+Phone Optional  
+Status ■ Auto active / unsubscribed / bounced / complained 
+Custom fields Optional Admin can add any extra fields: company, city, job title, etc. 
+■ Tip for Freshers 
+ 
+Use a ready-made auth library to save time: • Supabase Auth (free, easy setup) • Clerk.dev (beautiful login UI out of the 
+box) • NextAuth.js (if using Next.js) Don't build auth from scratch — spend that time on campaign features! 
+--- PAGE 7 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 7 
+ 
+ 
+ 
+Field Required? Notes 
+Source ■ Auto How they were added: import / form / manual / API 
+ 
+CSV Import — step by step: 
+• User uploads a CSV file (maximum size: 25 MB). 
+• App shows a preview of the first 10 rows. 
+• User maps CSV column headers to contact fields using a dropdown. 
+• User confirms — import runs in the background. 
+• When done: show count of added / updated / skipped / failed rows. 
+ 
+ 
+M3 — Email Template Builder 
+ 
+The most visual part of the app. Like a simple Canva — but for emails. 
+ 
+What the Admin sees: 
+• Template Library: grid of saved templates with thumbnails, search, category filter. 
+• Editor: two-panel layout — block palette on the left, email canvas on the right. 
+• Preview toggle: switch between desktop (600 px wide) and mobile (375 px) view. 
+• HTML mode: toggle to see and edit the raw HTML if needed. 
+ 
+Blocks available in the drag-and-drop palette: 
+ 
+Block What it does 
+Header Logo image + headline text + background colour. 
+Text Rich text editor — bold, italic, links, font size, colour, alignment. 
+Image Upload or paste URL, set alt text, add a clickable link, set width. 
+Button CTA button — label, URL, colour, text colour, border radius, padding. 
+Divider Horizontal line to separate sections — set colour and style. 
+Spacer Empty vertical gap — set the height in pixels. 
+2-Column Layout Two side-by-side sections, each can hold any block. 
+3-Column Layout Three side-by-side sections. 
+Social Icons LinkedIn, Twitter/X, Facebook, Instagram, YouTube with custom URLs. 
+Footer Unsubscribe link (auto-added), mailing address, copyright text. 
+HTML Block Paste any custom HTML snippet directly into the canvas. 
+ 
+Personalisation — merge tags: 
+• Any text field supports: {{first_name}}, {{last_name}}, {{email}}, {{custom.company}} 
+• A tag picker button opens a dropdown — no need to type the tag manually. 
+• Preview mode replaces tags with sample data from the first contact in the target list. 
+■ Segment Ideas to Support 
+ 
+• Opened any email in the last 30 days • Never opened any email (re-engagement target) • Member of List A but NOT List B 
+• Custom field 'City' equals 'Chennai' 
+--- PAGE 8 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 8 
+ 
+ 
+ 
+Template rules: 
+• Generated HTML must use inline CSS only — email clients strip external stylesheets. 
+• Must look correct on both desktop (600 px) and mobile (375 px). 
+• Tracking pixel and unsubscribe link are added automatically at send time. 
+• Ship at least 5 starter templates: Welcome, Newsletter, Promotional, Event Invite, Training Notice. 
+ 
+ 
+M4 — Campaign Management 
+ 
+A Campaign = one email send event. Pick a template, choose recipients, hit send. 
+ 
+Campaign creation — 4-step wizard: 
+ 
+Step What the user fills in 
+Step 1 Details Campaign name (internal only), email Subject line, Preview text (shown in inbox before opening), Sender name, 
+Sender email address, Reply-to email (optional). 
+Step 2 Recipients Pick one or more contact lists or saved segments. Optionally exclude specific lists. App shows estimated 
+recipient count after removing duplicates and unsubscribed contacts. 
+Step 3 Design Pick an existing template from the library — OR open the editor to create a new one inline. Both paths land on 
+the same editor. 
+Step 4 Review Full rendered email preview. Send a test to up to 5 email addresses. Then choose: Send Now OR Schedule 
+(pick date, time, timezone). Shows estimated recipient count before confirming. 
+ 
+Campaign list page: 
+• Table showing: name, status badge, recipient count, send date, open rate, click rate. 
+• Status badges: Draft / Scheduled / Sending / Sent / Paused / Cancelled. 
+• Actions per campaign: Edit (draft only), Duplicate, View Report, Delete. 
+• Filters: by status, date range, and tags. 
+ 
+Other campaign features: 
+• Test Send: send a preview to up to 5 addresses before the real send. Not counted in analytics. 
+• Duplicate: copy all settings into a new draft campaign. 
+• ■ Bonus — Re-send: re-send to contacts who did NOT open the original email. 
+ 
+M5 — Scheduling & Sending 
+ 
+ 
+Send Now: 
+• Clicking Send Now queues all recipient emails into AWS SQS immediately. 
+• A background worker reads from the queue and calls AWS SES for each contact. 
+• Must respect AWS SES rate limits — don't send too fast or SES throttles you. 
+ 
+Scheduled Send: 
+• User picks a future date, time, and timezone. 
+■ Tip: Don't Build the Editor from Scratch 
+ 
+Use an open-source email editor library: • Unlayer (unlayer.com) — free embeddable drag-and-drop editor • MJML (mjml.io) 
+— responsive email framework, auto-generates inline CSS • GrapeJS (grapesjs.com) — open-source visual builder 
+Embedding one of these saves weeks of work! 
+--- PAGE 9 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 9 
+ 
+ 
+• App triggers the send at the right UTC time (use AWS EventBridge or a cron job). 
+• User can edit the schedule up to 15 minutes before dispatch. 
+• User can cancel at any time before the send starts. 
+ 
+Send Progress: 
+• While sending, show a live progress bar: '12,450 of 50,000 sent'. 
+• Update the count every 5 seconds using polling or WebSocket. 
+• Pause button stops the queue. Resume continues from where it left off. 
+ 
+• ■ Bonus: Recurring campaigns — daily, weekly, or monthly repeating sends. 
+ 
+M6 — Open & Click Tracking 
+ 
+ 
+How Open Tracking works — step by step: 
+• When sending an email, the app adds an invisible 1×1 pixel image at the bottom. 
+• The image URL points to your backend: /track/open?uid=ABC123 
+• When the email client loads the image, your server records an 'opened' event. 
+• The uid is a unique code that identifies the contact + campaign combination. 
+ 
+How Click Tracking works: 
+• Every link in the email is rewritten to pass through your server first. 
+• Original: https://example.com/offer 
+• Rewritten: /track/click?uid=ABC123&url=https://example.com/offer 
+• Your server records the click, then instantly redirects to the original URL (HTTP 302). 
+ 
+What to record for each event: 
+• Which contact (contact_id), which campaign (campaign_id), when (timestamp). 
+• For clicks: which specific link was clicked (original URL). 
+• Device info: IP address and browser/email client (from User-Agent header). 
+ 
+ 
+M7 — Bounce & Complaint Handling 
+ 
+ 
+ 
+Types of email problems & how to handle them: 
+■■ AWS SES Sending Limits — Read This! 
+ 
+New SES accounts start in sandbox mode — you can only send to verified email addresses, with a 200 email/day limit. For 
+the demo, this is fine — just verify a few test addresses. For production: request a sending limit increase via AWS Console 
+ SES  Account Dashboard  Request Production Access. 
+■ Use AWS SES Native Tracking 
+ 
+AWS SES Configuration Sets can automatically track opens and clicks for you — no custom pixel needed. Set up a 
+Configuration Set in SES, point events to an SNS topic, and your backend receives all events via webhook. This is the 
+recommended approach. 
+■■ AWS SES Rule — This is Non-Negotiable 
+ 
+AWS requires: • Bounce rate must stay below 2%. • Complaint rate must stay below 0.1%. If you exceed these thresholds, 
+AWS will pause your sending account. Your app MUST automatically stop sending to bounced and complained addresses. 
+--- PAGE 10 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 10 
+ 
+ 
+ 
+Type What it means What your app must do 
+Hard Bounce Email address doesn't exist or 
+domain is invalid (permanent). 
+Immediately add to suppression list. Set contact status = bounced. 
+Never send again. 
+Soft Bounce Temporary issue — inbox full, mail 
+server down. 
+Count soft bounces. After 3 in 30 days  treat as hard bounce. 
+Complaint Person marked your email as spam. Immediately add to suppression list. Set contact status = complained. 
+Never send again. 
+ 
+How your app receives these notifications: 
+• AWS SES  sends bounce/complaint events to an SNS topic. 
+• SNS  forwards messages to an SQS queue. 
+• Your backend  has a worker that reads from SQS and processes each message. 
+• The worker updates the contact status and adds them to the suppression list. 
+ 
+Suppression List page (Admin): 
+• Table of all suppressed emails: address, reason (bounced/complained), date added. 
+• Admin can manually add or remove entries (with reason logged in audit trail). 
+• CSV import automatically skips any email found in the suppression list. 
+ 
+ 
+M8 — Unsubscribe Management 
+ 
+People must be able to opt out easily. This is both a legal requirement and best practice. 
+ 
+Every email must include an unsubscribe link: 
+• Added automatically in the email footer — the admin doesn't need to remember. 
+• Link URL: /unsubscribe?uid=ABC123 (uid identifies the contact + campaign). 
+• Clicking the link instantly marks the contact as unsubscribed. 
+ 
+Unsubscribe confirmation page (public — no login needed): 
+• Shows a friendly message: 'You have been unsubscribed from [List Name].' 
+• Option to re-subscribe if they changed their mind. 
+• Branded with the organisation's name and logo. 
+ 
+One-Click Unsubscribe — required by Gmail & Yahoo (2024+): 
+• Every email must include: List-Unsubscribe and List-Unsubscribe-Post headers. 
+• Your backend handles a POST request to the unsubscribe URL immediately. 
+• This lets Gmail/Apple Mail show a built-in 'Unsubscribe' button at the top of the email. 
+• ■ Bonus: Preference Centre — instead of a full unsubscribe, let people pick which lists to stay on. 
+ 
+M9 — Analytics & Reports 
+ 
+ 
+Main Dashboard widgets (shown when Admin logs in): 
+ 
+Widget What it shows 
+Total Contacts Total count with a growth trend (last 30 days). 
+Emails Sent Total sent in the selected date range. 
+--- PAGE 11 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 11 
+ 
+ 
+ 
+Widget What it shows 
+Avg. Open Rate % of emails that were opened. Industry average: ~21%. 
+Avg. Click Rate % of emails where a link was clicked. Average: ~2.5%. 
+Bounce Rate Turns amber/red if above 2% (AWS danger zone). 
+Complaint Rate Turns amber/red if above 0.1%. 
+Top 5 Campaigns Table of best-performing campaigns by open rate. 
+Recent Activity Live feed of the last 20 tracking events. 
+ 
+Campaign Report page (one per sent campaign): 
+• Summary numbers: Sent, Delivered, Unique Opens, Total Opens, Unique Clicks, Total Clicks, Bounces, 
+Complaints, Unsubscribes. 
+• Open rate over time: line chart — hourly for first 48h, then daily. 
+• Link click breakdown: table of every tracked link with click count and %. 
+• Device breakdown: desktop vs mobile vs tablet (from User-Agent). 
+• Per-contact activity: each recipient's open/click/bounce/unsubscribe status. 
+ 
+Key metrics formula sheet: 
+ 
+Metric Formula Target 
+Open Rate Unique Opens ÷ Delivered × 100 Above 20% 
+Click Rate Unique Clicks ÷ Delivered × 100 Above 2% 
+Bounce Rate Bounces ÷ Sent × 100 Keep below 2% 
+Unsubscribe Rate Unsubscribes ÷ Delivered × 100 Keep below 0.5% 
+Export: 
+• Campaign report  exportable as CSV (all per-contact event data). 
+• Contact list  exportable as CSV with all fields. 
+• ■ Bonus: PDF export of campaign summary report. 
+--- PAGE 12 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 12 
+ 
+ 
+5 Screens to Build — Complete Checklist 
+ 
+Every screen your app needs. Use this as a build checklist. All ■ screens are required. 
+ 
+Admin Screens (requires login): 
+ 
+# Screen Name URL Route Key Elements on This Screen 
+1 Login /login Email + password form, error messages, forgot password link. 
+2 Dashboard / KPI cards, open/click rate charts, recent activity feed. 
+3 Contact Lists /contacts/lists Grid of all lists, create new list button, list stats. 
+4 Contact List Detail /contacts/lists/:id Contact table, search bar, filter, bulk actions, import button. 
+5 Contact Detail /contacts/:id Profile fields, event history timeline, list memberships. 
+6 Import Contacts /contacts/import File upload widget, column mapper, 10-row preview, progress bar. 
+7 Segments /contacts/segments Segment list, rule builder with AND/OR logic, live count. 
+8 Template Library /templates Thumbnail grid, search, category filter, 5 starter templates. 
+9 Template Editor /templates/:id/edit DnD canvas, block palette, preview toggle (desktop/mobile), HTML 
+tab. 
+10 Campaigns List /campaigns Table with status badges, date, open rate, click rate, actions. 
+11 New Campaign — Step 1 /campaigns/new/details Name, subject, preview text, from name, from email fields. 
+12 New Campaign — Step 2 /campaigns/new/recipient 
+s 
+List/segment multi-select, exclusion picker, recipient count. 
+13 New Campaign — Step 3 /campaigns/new/design Template selector grid + button to open editor inline. 
+14 New Campaign — Step 4 /campaigns/new/review Full preview, test send button, schedule date/time/timezone picker. 
+15 Campaign Report /campaigns/:id/report All stats, line chart, link table, device breakdown, contact table. 
+16 Suppression List /settings/suppression Table of bounced/complained emails, add/remove manually. 
+17 Organisation Settings /settings/org Name, logo upload, default from-email, AWS SES config fields. 
+18 User Management /settings/users User list, invite by email, change roles, deactivate user. 
+ 
+Public Screens (no login — for email recipients): 
+ 
+# Screen Name URL Route Key Elements on This Screen 
+19 Unsubscribe Page /unsubscribe Friendly confirmation, re-subscribe option, organisation branding. 
+20 Preference Centre /preferences ■ Bonus — per-list subscription toggles for the subscriber. 
+--- PAGE 13 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 13 
+ 
+ 
+6 Backend API Routes 
+ 
+All routes except public tracking and unsubscribe routes require a JWT token in the Authorization: Bearer <token> 
+header. 
+ 
+ 
+Auth 
+ 
+Method Path What it does 
+POST /api/auth/login Login  returns JWT access token + refresh token. 
+POST /api/auth/logout Revoke the current session. 
+GET /api/auth/me Return the logged-in user's profile. 
+ 
+Contacts & Lists 
+ 
+Method Path What it does 
+GET /api/lists Get all contact lists. 
+POST /api/lists Create a new list. 
+GET /api/lists/:id Get one list + stats (count, bounce %, open %). 
+PUT /api/lists/:id Rename or update a list. 
+DELETE /api/lists/:id Delete a list. 
+GET /api/lists/:id/contacts Get contacts in a list (paginated + searchable). 
+POST /api/lists/:id/import Upload CSV file and start async import job. 
+GET /api/contacts/:id Get one contact + full email event history. 
+POST /api/contacts Add a single contact manually. 
+PUT /api/contacts/:id Update a contact's fields. 
+DELETE /api/contacts/:id Delete a contact. 
+GET /api/segments List all saved segments. 
+POST /api/segments Create a segment with filter rules. 
+GET /api/segments/:id/count Live contact count matching a segment's rules. 
+ 
+Templates 
+ 
+Method Path What it does 
+GET /api/templates List all templates. 
+POST /api/templates Create a template (saves JSON blocks + HTML). 
+GET /api/templates/:id Get one template with its blocks and HTML. 
+PUT /api/templates/:id Save/update a template. 
+DELETE /api/templates/:id Delete a template. 
+--- PAGE 14 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 14 
+ 
+ 
+ 
+Method Path What it does 
+POST /api/templates/:id/duplicate Copy a template into a new draft. 
+POST /api/templates/upload-asset Upload an image to S3, get back a CDN URL. 
+ 
+Campaigns 
+ 
+Method Path What it does 
+GET /api/campaigns List all campaigns (filter by status, date, tag). 
+POST /api/campaigns Create a new draft campaign. 
+GET /api/campaigns/:id Get campaign details and settings. 
+PUT /api/campaigns/:id Update a draft campaign. 
+DELETE /api/campaigns/:id Delete a draft campaign. 
+POST /api/campaigns/:id/send Send the campaign immediately. 
+POST /api/campaigns/:id/schedule Schedule the campaign for a future date/time. 
+POST /api/campaigns/:id/pause Pause a currently sending campaign. 
+POST /api/campaigns/:id/resume Resume a paused campaign from where it stopped. 
+POST /api/campaigns/:id/cancel Cancel a scheduled campaign. 
+POST /api/campaigns/:id/test Send test email to up to 5 addresses. 
+GET /api/campaigns/:id/report Get full analytics report for this campaign. 
+GET /api/campaigns/:id/progress Get live sending progress (sent / total). 
+ 
+Tracking & Public Routes (no token needed) 
+ 
+Method Path What it does 
+GET /track/open Record email open event. Return a 1×1 transparent PNG image. 
+GET /track/click Record link click. Redirect to original URL (HTTP 302). 
+GET /unsubscribe Show the unsubscribe confirmation page. 
+POST /unsubscribe Process unsubscribe (used by List-Unsubscribe-Post header). 
+GET /preferences ■ Show preference centre page. 
+POST /preferences ■ Update the subscriber's list preferences. 
+POST /webhooks/ses Receive bounce/complaint/delivery events from AWS SNS. 
+--- PAGE 15 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 15 
+ 
+ 
+7 Database — What Tables to Create 
+ 
+Use PostgreSQL. Every table you need is listed below. Refer to this when setting up your database or ORM models. 
+ 
+Table Key Fields What it stores 
+users id, email, password_hash, role, org_id, 
+created_at 
+Admin users of the platform. 
+organisations id, name, logo_url, from_email, 
+ses_config_set, aws_region 
+Your organisation's global settings. 
+contact_lists id, org_id, name, description, tags[] Named mailing lists (e.g. 'Newsletter', 'Training'). 
+contacts id, org_id, email (unique), first_name, 
+last_name, status, custom_fields (JSON), 
+source 
+Individual email subscribers. 
+contact_list_members contact_id, list_id, subscribed_at Which contacts belong to which lists (many-to-many). 
+segments id, org_id, name, rules (JSON) Saved dynamic filter rules. 
+templates id, org_id, name, category, blocks (JSON), 
+html, thumbnail_url 
+Email templates with block structure and rendered HTML. 
+campaigns id, org_id, name, subject, preview_text, 
+from_name, from_email, status, 
+template_id, scheduled_at, timezone 
+All campaigns and their settings. 
+campaign_sends id, campaign_id, contact_id, 
+ses_message_id, status, sent_at 
+One record per recipient per campaign. 
+email_events id, contact_id, campaign_id, event_type, 
+occurred_at, ip, user_agent, metadata 
+(JSON) 
+All tracking events: opens, clicks, bounces, complaints, 
+unsubscribes. 
+suppression_list id, org_id, email, reason, suppressed_at Emails that must NEVER receive any campaign. 
+import_jobs id, list_id, status, total_rows, added, 
+updated, skipped, errored, started_at 
+Tracks progress of CSV import jobs. 
+ 
+■ event_type values for email_events table 
+ 
+sent | delivered | opened | clicked | bounced | complained | unsubscribed 
+--- PAGE 16 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 16 
+ 
+ 
+8 AWS SES Setup — Step by Step 
+ 
+AWS SES is the engine that actually sends the emails. Here's how to set it up from scratch — even if you've never 
+used AWS before. 
+ 
+Step 1 — Create an AWS account 
+• Go to aws.amazon.com  sign up or log in. 
+• Search for SES (Simple Email Service) in the top search bar. 
+ 
+Step 2 — Verify your email or domain 
+• SES  Verified Identities  Create Identity. 
+• For the (easiest): verify a single email address. AWS sends a confirmation email — click the link. 
+• For production: verify your domain and set up DKIM (SES guides you through each step). 
+ 
+Step 3 — Create a Configuration Set 
+• SES  Configuration Sets  Create  name it email-platform-events. 
+• Add an event destination: choose SNS topic. 
+• Select all event types: Send, Delivery, Open, Click, Bounce, Complaint. 
+ 
+Step 4 — Connect SNS  SQS (for bounce/complaint processing) 
+• AWS SNS  Create a new topic. 
+• AWS SQS  Create a new queue  Subscribe it to your SNS topic. 
+• Your backend worker reads from this SQS queue to handle bounces and complaints. 
+ 
+Step 5 — Request production access 
+• By default SES is in 'sandbox' — you can only send to verified addresses (fine for hackathon). 
+• For real users: SES  Account Dashboard  Request Production Access. 
+ 
+Step 6 — Install the AWS SDK in your backend 
+ 
+Language Install Command 
+Node.js npm install @aws-sdk/client-ses @aws-sdk/client-s3 @aws-sdk/client-sqs 
+Python pip install boto3 
+ 
+■■ Never Hardcode AWS Keys in Your Code 
+ 
+Store credentials as environment variables: AWS_ACCESS_KEY_ID=your_key 
+AWS_SECRET_ACCESS_KEY=your_secret AWS_REGION=ap-south-1 Use a .env file locally and set environment 
+variables on your hosting platform (Render, Railway, Vercel, etc.). Never commit your .env file to GitHub — add it to 
+.gitignore! 
+--- PAGE 17 ---
+Email Campaign Platform — Functional Requirements Document Web Application Build Guide 
+|v1.0 
+Page 17 
+ 
+ 
+9 What to Submit — Deliverables & Judging 
+ 
+Required deliverables: 
+ 
+# Deliverable Details 
+1 GitHub Repo Public repository with all source code — frontend + backend. 
+2 README.md How to run locally. List all environment variables. Include AWS SES setup steps. Add an 
+architecture diagram. 
+3 Live Demo URL Fully deployed and working. Use Vercel/Netlify for frontend, Render/Railway/Fly.io for backend. 
+4 Demo Video 5-minute screen recording walking through all 9 modules working end-to-end. 
+5 API Docs Postman collection OR OpenAPI/Swagger spec covering all endpoints. 
+ 
+The Deadline for Submitting the Web Application is 12th May. 
+Please Send the GitHub Link or Application URL to: Mail - programassociate@theaischool.co 
+ 
+ 
+ 
+ 
+You're all set — start building! ■ 
+Start with M1 (Login) to get auth working, 
+then M2 (Contacts) to build the address book, 
+then the Template Builder and Campaigns. 
+ 
+Use any AI tool — Lovable, Cursor, Bolt, v0, or anything else you're comfortable with. 
+This document is your map. Build one section at a time. Good luck! 

@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id             String            @id @default(uuid())
+  name           String
+  logo_url       String?
+  from_email     String?
+  ses_config_set String?
+  aws_region     String?
+  users          User[]
+  contact_lists  ContactList[]
+  contacts       Contact[]
+  segments       Segment[]
+  templates      Template[]
+  campaigns      Campaign[]
+  suppressions   SuppressionList[]
+  created_at     DateTime          @default(now())
+}
+
+model User {
+  id             String       @id @default(uuid())
+  email          String       @unique
+  password_hash  String
+  role           String       // "SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"
+  org_id         String
+  organization   Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  active_status  Boolean      @default(true)
+  created_at     DateTime     @default(now())
+
+  @@index([org_id])
+}
+
+model ContactList {
+  id           String              @id @default(uuid())
+  org_id       String
+  organization Organization        @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  tags         String?             // Comma-separated or JSON string
+  members      ContactListMember[]
+  import_jobs  ImportJob[]
+  created_at   DateTime            @default(now())
+
+  @@index([org_id])
+}
+
+model Contact {
+  id            String              @id @default(uuid())
+  org_id        String
+  organization  Organization        @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  email         String              @unique
+  first_name    String?
+  last_name     String?
+  phone         String?
+  status        String              @default("active") // "active", "unsubscribed", "bounced", "complained"
+  custom_fields String?             // JSON string
+  source        String              @default("manual") // "manual", "import", "form", "api"
+  lists         ContactListMember[]
+  campaign_sends CampaignSend[]
+  email_events  EmailEvent[]
+  created_at    DateTime            @default(now())
+
+  @@index([org_id])
+  @@index([status])
+}
+
+model ContactListMember {
+  contact_id    String
+  contact       Contact     @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+  list_id       String
+  list          ContactList @relation(fields: [list_id], references: [id], onDelete: Cascade)
+  subscribed_at DateTime    @default(now())
+
+  @@id([contact_id, list_id])
+  @@index([contact_id])
+  @@index([list_id])
+}
+
+model Segment {
+  id           String       @id @default(uuid())
+  org_id       String
+  organization Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  name         String
+  rules        String       // JSON string
+  created_at   DateTime     @default(now())
+
+  @@index([org_id])
+}
+
+model Template {
+  id            String       @id @default(uuid())
+  org_id        String
+  organization  Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  name          String
+  category      String       @default("general")
+  blocks        String       // JSON string
+  html          String
+  thumbnail_url String?
+  campaigns     Campaign[]
+  created_at    DateTime     @default(now())
+
+  @@index([org_id])
+}
+
+model Campaign {
+  id            String         @id @default(uuid())
+  org_id        String
+  organization  Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  name          String
+  subject       String
+  preview_text  String?
+  from_name     String
+  from_email    String
+  reply_to      String?
+  status        String         @default("draft") // "draft", "scheduled", "sending", "sent", "paused", "cancelled"
+  template_id   String?
+  template      Template?      @relation(fields: [template_id], references: [id], onDelete: SetNull)
+  scheduled_at  DateTime?
+  timezone      String?
+  recipients_config String?    // JSON string storing target lists/segments & excluded lists
+  sends         CampaignSend[]
+  email_events  EmailEvent[]
+  created_at    DateTime       @default(now())
+
+  @@index([org_id])
+  @@index([status])
+}
+
+model CampaignSend {
+  id             String     @id @default(uuid())
+  campaign_id    String
+  campaign       Campaign   @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  contact_id     String
+  contact        Contact    @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+  ses_message_id String?
+  status         String     @default("sent") // "sent", "delivered", "bounced", "complained"
+  sent_at        DateTime   @default(now())
+
+  @@index([campaign_id])
+  @@index([contact_id])
+  @@index([status])
+}
+
+model EmailEvent {
+  id          String   @id @default(uuid())
+  contact_id  String
+  contact     Contact  @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+  campaign_id String
+  campaign    Campaign @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  event_type  String   // "sent", "delivered", "opened", "clicked", "bounced", "complained", "unsubscribed"
+  occurred_at DateTime @default(now())
+  ip          String?
+  user_agent  String?
+  metadata    String?  // JSON string e.g. clicked URL, bounce reason
+
+  @@index([contact_id])
+  @@index([campaign_id])
+  @@index([event_type])
+}
+
+model SuppressionList {
+  id            String       @id @default(uuid())
+  org_id        String
+  organization  Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  email         String       @unique
+  reason        String       // "bounced", "complained", "manual"
+  suppressed_at DateTime     @default(now())
+  manually_added Boolean     @default(false)
+  audit_log     String?      // JSON string tracking history
+
+  @@index([org_id])
+  @@index([email])
+}
+
+model ImportJob {
+  id         String      @id @default(uuid())
+  list_id    String
+  list       ContactList @relation(fields: [list_id], references: [id], onDelete: Cascade)
+  status     String      @default("pending") // "pending", "processing", "completed", "failed"
+  total_rows Int         @default(0)
+  added      Int         @default(0)
+  updated    Int         @default(0)
+  skipped    Int         @default(0)
+  errored    Int         @default(0)
+  started_at DateTime    @default(now())
+
+  @@index([list_id])
+}
