@@ -18,6 +18,7 @@ import {
   Zap,
   ShieldCheck,
   ChevronRight,
+  Check,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -33,6 +34,21 @@ export default function DashboardPage() {
   const [copilotQuery, setCopilotQuery] = useState("");
   const [copilotResponse, setCopilotResponse] = useState<any | null>(null);
   const [copilotGenerating, setCopilotGenerating] = useState(false);
+
+  const [onboardingStep, setOnboardingStep] = useState<number>(1);
+  const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const dismissed = localStorage.getItem("pulsesend:onboarding_completed") === "true";
+      setOnboardingDismissed(dismissed);
+    }
+  }, []);
+
+  const handleDismissOnboarding = () => {
+    localStorage.setItem("pulsesend:onboarding_completed", "true");
+    setOnboardingDismissed(true);
+  };
 
   const [isLoading, setIsLoading] = useState(true);
   const [liveStats, setLiveStats] = useState({
@@ -124,6 +140,75 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* ─── ONBOARDING PRODUCT TOUR (One-Time Setup Checklist) ────────── */}
+      <AnimatePresence mode="wait">
+        {!onboardingDismissed && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="p-5 bg-gradient-to-r from-[#7C5CFF]/10 via-[#7C5CFF]/5 to-transparent border border-[#7C5CFF]/20 rounded-lg backdrop-blur-md relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-[0_12px_40px_rgba(124,92,255,0.02)]"
+          >
+            {/* Decorative Corner Glow */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#7C5CFF] rounded-full filter blur-[80px] opacity-20 pointer-events-none" />
+
+            {/* Left: Info */}
+            <div className="space-y-2 flex-1 relative z-10">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold font-mono text-[#7C5CFF] bg-[#7C5CFF]/10 px-2 py-0.5 rounded border border-[#7C5CFF]/20 uppercase tracking-wider">
+                  Platform Setup Tour — Step {onboardingStep} of 3
+                </span>
+                <div className="flex gap-1">
+                  <span className={`w-1.5 h-1.5 rounded-full ${onboardingStep >= 1 ? "bg-[#7C5CFF]" : "bg-zinc-800"}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${onboardingStep >= 2 ? "bg-[#7C5CFF]" : "bg-zinc-800"}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${onboardingStep >= 3 ? "bg-[#7C5CFF]" : "bg-zinc-800"}`} />
+                </div>
+              </div>
+
+              <h3 className="text-sm font-bold text-white tracking-tight">
+                {onboardingStep === 1 && "📋 Step 1: Create Your First Mailing List"}
+                {onboardingStep === 2 && "👥 Step 2: Import Your First Contacts"}
+                {onboardingStep === 3 && "🚀 Step 3: Launch Your First Campaign"}
+              </h3>
+
+              <p className="text-xs text-zinc-400 max-w-xl leading-relaxed">
+                {onboardingStep === 1 && "Mailing lists allow you to group contacts and target specific subsets of your audience. Let's create your first segment to get started."}
+                {onboardingStep === 2 && "Manually add a test subscriber or upload a CSV file with our Tactile Mapping Wizard."}
+                {onboardingStep === 3 && "Draft your campaign content, select your target lists, choose an HTML template, and test AWS SES sending in seconds."}
+              </p>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-3 relative z-10 self-stretch md:self-auto justify-end">
+              <button
+                onClick={handleDismissOnboarding}
+                className="px-3 py-1.5 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 text-[11px] font-bold text-zinc-500 hover:text-zinc-300 font-mono rounded cursor-pointer transition uppercase"
+              >
+                Skip Tour
+              </button>
+
+              {onboardingStep < 3 ? (
+                <button
+                  onClick={() => setOnboardingStep((prev) => (prev + 1) as any)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded bg-zinc-900 hover:bg-zinc-800 border border-white/[0.04] text-[12px] font-bold text-zinc-200 hover:text-white transition cursor-pointer"
+                >
+                  <span>Done & Next</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleDismissOnboarding}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded bg-[#7C5CFF] text-white hover:bg-[#7C5CFF]/90 border border-white/5 text-[12px] font-bold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Complete Setup</span>
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ─── 2. KPI METRICS GRID (6 cards) ─────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
