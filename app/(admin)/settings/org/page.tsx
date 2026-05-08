@@ -17,12 +17,13 @@ export default function OrgSettingsPage() {
   // Load organization settings on mount
   useEffect(() => {
     async function loadOrgData() {
+      if (!user?.org_id) return;
       try {
-        const res = await fetch("/api/org");
+        const res = await fetch(`/api/org?orgId=${user.org_id}`);
         if (res.ok) {
           const data = await res.json();
-          setName(data.name || "");
-          setFromEmail(data.fromEmail || "");
+          setName(data.name || user.org_name || "");
+          setFromEmail(data.fromEmail || user.email || "");
           setRegion(data.region || "us-east-1");
           setConfigSet(data.configSet || "");
         }
@@ -31,7 +32,7 @@ export default function OrgSettingsPage() {
       }
     }
     loadOrgData();
-  }, []);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +48,7 @@ export default function OrgSettingsPage() {
           fromEmail,
           region,
           configSet,
+          orgId: user?.org_id,
         }),
       });
 
