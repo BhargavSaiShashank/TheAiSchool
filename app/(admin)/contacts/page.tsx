@@ -52,6 +52,61 @@ export default function ContactsPage() {
   const [newContactListId, setNewContactListId] = useState("none");
   const [addingContact, setAddingContact] = useState(false);
 
+  const [showAddExistingModal, setShowAddExistingModal] = useState(false);
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+  const [submittingExisting, setSubmittingExisting] = useState(false);
+
+  const handleAddExistingToActiveList = async () => {
+    if (selectedContactIds.length === 0) {
+      alert("Please select at least one contact.");
+      return;
+    }
+    setSubmittingExisting(true);
+    try {
+      const res = await fetch("/api/lists/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listId: selectedListFilter,
+          contactIds: selectedContactIds,
+        }),
+      });
+
+      if (res.ok) {
+        const updatedContacts = contacts.map((c) => {
+          if (selectedContactIds.includes(c.id)) {
+            const listIds = c.listIds ? [...c.listIds] : [];
+            if (!listIds.includes(selectedListFilter)) {
+              listIds.push(selectedListFilter);
+            }
+            return { ...c, listIds };
+          }
+          return c;
+        });
+        setContacts(updatedContacts);
+
+        const resLists = await fetch("/api/lists");
+        if (resLists.ok) {
+          const dataLists = await resLists.json();
+          if (dataLists && Array.isArray(dataLists)) {
+            setLists(dataLists);
+          }
+        }
+
+        setShowAddExistingModal(false);
+        setSelectedContactIds([]);
+      } else {
+        const errData = await res.json();
+        alert(`Failed to add contacts: ${errData.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      console.error("Failed to add existing contacts:", err);
+      alert(`Network error: ${err.message}`);
+    } finally {
+      setSubmittingExisting(false);
+    }
+  };
+
   const handleCreateContact = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newContactEmail) {
@@ -571,6 +626,25 @@ export default function ContactsPage() {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
+            {selectedListFilter !== "all" && (
+              <div className="p-4 bg-zinc-950/40 border border-[#7C5CFF]/20 rounded flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-xs font-bold text-zinc-300 font-mono">Managing Audience List: <span className="text-[#7C5CFF]">{lists.find(l => l.id === selectedListFilter)?.name}</span></h4>
+                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Subscribe other existing contacts in your directory directly to this mailing list.</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedContactIds([]);
+                    setShowAddExistingModal(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[#7C5CFF] border border-[#7C5CFF]/30 text-[11px] font-bold transition cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Existing Contacts</span>
+                </button>
+              </div>
+            )}
+
             {/* Filters Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="relative max-w-sm w-full">
@@ -1099,6 +1173,94 @@ export default function ContactsPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ADD EXISTING CONTACTS TO LIST MODAL */}
+        {showAddExistingModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-lg bg-card border border-border p-6 rounded-md shadow-lg space-y-6 flex flex-col max-h-[85vh]"
+            >
+              <div>
+                <h3 className="text-sm font-bold text-foreground tracking-tight">Add Existing Contacts to Mailing List</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Subscribe contacts in your database who are not already on this list.</p>
+              </div>
+
+              {/* List of Contacts */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[250px]">
+                {contacts.filter(c => !c.listIds?.includes(selectedListFilter)).length === 0 ? (
+                  <div className="text-center py-12 text-zinc-500 font-mono text-xs">
+                    All contacts in your database are already members of this list.
+                  </div>
+                ) : (
+                  contacts
+                    .filter(c => !c.listIds?.includes(selectedListFilter))
+                    .map((contact) => {
+                      const isChecked = selectedContactIds.includes(contact.id);
+                      return (
+                        <div 
+                          key={contact.id}
+                          onClick={() => {
+                            if (isChecked) {
+                              setSelectedContactIds(selectedContactIds.filter(id => id !== contact.id));
+                            } else {
+                              setSelectedContactIds([...selectedContactIds, contact.id]);
+                            }
+                          }}
+                          className={`p-3 rounded border text-xs flex items-center justify-between cursor-pointer transition ${
+                            isChecked 
+                              ? "bg-[#7C5CFF]/10 border-[#7C5CFF]/50 text-white" 
+                              : "bg-zinc-950/40 border-border/60 hover:bg-zinc-900/60 hover:border-zinc-800 text-zinc-300"
+                          }`}
+                        >
+                          <div className="space-y-0.5">
+                            <p className="font-bold font-mono">{contact.email}</p>
+                            <p className="text-[10px] text-zinc-500">
+                              {contact.firstName ? `${contact.firstName} ${contact.lastName || ""}` : "Unnamed Subscriber"} 
+                              {contact.company ? ` • ${contact.company}` : ""}
+                            </p>
+                          </div>
+                          <input 
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {}} // handled by row onClick
+                            className="w-4 h-4 accent-[#7C5CFF] pointer-events-none"
+                          />
+                        </div>
+                      );
+                    })
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-border shrink-0">
+                <span className="text-[10px] font-mono text-zinc-500 font-bold">
+                  {selectedContactIds.length} contacts selected
+                </span>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddExistingModal(false);
+                      setSelectedContactIds([]);
+                    }}
+                    className="px-4 py-2 rounded border border-border hover:bg-secondary text-muted-foreground text-xs font-semibold transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddExistingToActiveList}
+                    disabled={submittingExisting || selectedContactIds.length === 0}
+                    className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 text-xs font-semibold transition shadow-md border border-white/5 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {submittingExisting ? "Adding..." : `Add Selected to List`}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
