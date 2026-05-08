@@ -7,23 +7,61 @@ import { Building, Save, Cloud, Check } from "lucide-react";
 
 export default function OrgSettingsPage() {
   const { user } = useStore();
-  const [name, setName] = useState("PulseSend Inc.");
-  const [fromEmail, setFromEmail] = useState("hello@pulsesend.com");
+  const [name, setName] = useState("");
+  const [fromEmail, setFromEmail] = useState("");
   const [region, setRegion] = useState("us-east-1");
-  const [configSet, setConfigSet] = useState("pulsesend-events");
+  const [configSet, setConfigSet] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Load organization settings on mount
+  useEffect(() => {
+    async function loadOrgData() {
+      try {
+        const res = await fetch("/api/org");
+        if (res.ok) {
+          const data = await res.json();
+          setName(data.name || "");
+          setFromEmail(data.fromEmail || "");
+          setRegion(data.region || "us-east-1");
+          setConfigSet(data.configSet || "");
+        }
+      } catch (err) {
+        console.error("Failed to load organization settings.", err);
+      }
+    }
+    loadOrgData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setSaved(false);
 
-    // Latency simulation
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      const res = await fetch("/api/org", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          fromEmail,
+          region,
+          configSet,
+        }),
+      });
+
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } else {
+        alert("Failed to save organization parameters.");
+      }
+    } catch (err) {
+      console.error("Failed to save organization parameters:", err);
+      alert("A network error occurred while saving organization settings.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
