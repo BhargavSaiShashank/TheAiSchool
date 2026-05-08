@@ -13,7 +13,7 @@ export default function Header() {
     if (pathname.startsWith("/dashboard")) return "Dashboard";
     if (pathname.startsWith("/contacts")) return "Contacts Directory";
     if (pathname.startsWith("/templates")) return "Email Templates";
-    if (pathname.startsWith("/campaigns")) return "Campaign Wizard";
+    if (pathname.startsWith("/campaigns")) return "Campaign Dispatches";
     if (pathname.startsWith("/analytics")) return "Analytics Hub";
     if (pathname.startsWith("/settings/org")) return "Organisation Settings";
     if (pathname.startsWith("/settings/users")) return "Teammates Directory";
@@ -63,7 +63,7 @@ export default function Header() {
         </div>
 
         {/* Global Action Shortcut based on permissions */}
-        {user?.role !== "VIEWER" && !pathname.startsWith("/campaigns") && (
+        {user?.role !== "VIEWER" && !pathname.includes("/campaigns") && (
           <div className="flex items-center gap-2">
             <Link href="/campaigns?new=true">
               <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-primary text-white hover:bg-primary/95 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5">
