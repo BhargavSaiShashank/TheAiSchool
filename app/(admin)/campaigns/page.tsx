@@ -40,6 +40,16 @@ export default function CampaignsPage() {
       const params = new URLSearchParams(window.location.search);
       if (params.get("new") === "true") {
         setView("wizard");
+        
+        const sub = params.get("subject");
+        if (sub) {
+          setSubject(decodeURIComponent(sub));
+          setCampaignName(`AI Generated Campaign`);
+        }
+        const body = params.get("body");
+        if (body) {
+          setPreviewText(decodeURIComponent(body).substring(0, 120));
+        }
       }
     }
   }, []);

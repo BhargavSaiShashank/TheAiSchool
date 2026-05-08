@@ -553,7 +553,7 @@ export default function DashboardPage() {
                 <p className="text-zinc-500 text-[10px] uppercase font-bold mb-1">Body Preview</p>
                 <p className="text-zinc-300 whitespace-pre-wrap bg-zinc-950 p-3 rounded border border-white/[0.04] leading-relaxed">{copilotResponse.body}</p>
               </div>
-              <Link href="/campaigns">
+              <Link href={`/campaigns?new=true&subject=${encodeURIComponent(copilotResponse.subject)}&body=${encodeURIComponent(copilotResponse.body)}`}>
                 <button className="px-3 py-1.5 rounded bg-zinc-900 border border-white/[0.06] text-zinc-300 hover:text-white hover:border-[#7C5CFF]/30 transition font-bold text-[11px] cursor-pointer mt-1">
                   Use in Campaign →
                 </button>
