@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Preloader from "@/components/Preloader";
+import { toast } from "@/lib/toast";
 import {
   Send,
   Plus,
@@ -111,7 +112,7 @@ export default function CampaignsPage() {
 
   const handleSendTestEmail = async () => {
     if (!testEmailRecipient) {
-      alert("Please enter a recipient email address first.");
+      toast.error("Please enter a recipient email address first.");
       return;
     }
     setIsSendingTest(true);
@@ -126,12 +127,12 @@ export default function CampaignsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`Success! Real-time email successfully dispatched to ${testEmailRecipient} via AWS SES!`);
+        toast.success(`Success! Test email dispatched to ${testEmailRecipient} via AWS SES!`);
       } else {
-        alert(`AWS SES Dispatch Failed: ${data.error}`);
+        toast.error(`AWS SES Dispatch Failed: ${data.error}`);
       }
     } catch (err: any) {
-      alert(`Network error: ${err.message}`);
+      toast.error(`Network error: ${err.message}`);
     } finally {
       setIsSendingTest(false);
     }
@@ -173,12 +174,12 @@ export default function CampaignsPage() {
       clickRate: "—",
     };
     setCampaigns([duplicated, ...campaigns]);
-    alert(`Duplicated campaign into drafts: ${duplicated.name}`);
+    toast.success(`Duplicated campaign into drafts: ${duplicated.name}`);
   };
 
   // Trigger Re-send to Non-Openers
   const handleResendToNonOpeners = (name: string) => {
-    alert(`Generating duplicate campaign targeted explicitly to contacts who did not open: "${name}"`);
+    toast.info(`Generating duplicate campaign targeted explicitly to contacts who did not open: "${name}"`);
   };
 
   const handleSaveCampaign = async (status: "draft" | "sent") => {
