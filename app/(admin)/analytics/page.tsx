@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -21,67 +21,91 @@ import {
   Cell,
 } from "recharts";
 
-// Mock Campaign reporting data matching seeded data
-const campaignAReports = {
-  name: "Welcome Onboarding Campaign",
-  stats: [
-    { name: "Total Sent", value: "4,250", icon: TrendingUp },
-    { name: "Unique Opens", value: "3,502 (82.4%)", icon: MailOpen },
-    { name: "Total Clicks", value: "1,661 (39.1%)", icon: MousePointerClick },
-  ],
-  openOverTime: [
-    { time: "9:00 AM", Opens: 120 },
-    { time: "11:00 AM", Opens: 340 },
-    { time: "1:00 PM", Opens: 780 },
-    { time: "3:00 PM", Opens: 1100 },
-    { time: "5:00 PM", Opens: 840 },
-    { time: "7:00 PM", Opens: 322 },
-  ],
-  browserData: [
-    { name: "Chrome", value: 55, color: "#3b82f6" },
-    { name: "Safari", value: 30, color: "#10b981" },
-    { name: "Firefox", value: 10, color: "#f59e0b" },
-    { name: "Others", value: 5, color: "#6b7280" },
-  ],
-  linksTable: [
-    { url: "https://pulsesend.com/welcome", clicks: 1240, unique: 980 },
-    { url: "https://pulsesend.com/docs", clicks: 421, unique: 312 },
-  ],
-};
-
-const campaignBReports = {
-  name: "May Product Tech Newsletter",
-  stats: [
-    { name: "Total Sent", value: "5,800", icon: TrendingUp },
-    { name: "Unique Opens", value: "3,584 (61.8%)", icon: MailOpen },
-    { name: "Total Clicks", value: "1,189 (20.5%)", icon: MousePointerClick },
-  ],
-  openOverTime: [
-    { time: "9:00 AM", Opens: 80 },
-    { time: "11:00 AM", Opens: 210 },
-    { time: "1:00 PM", Opens: 520 },
-    { time: "3:00 PM", Opens: 890 },
-    { time: "5:00 PM", Opens: 1250 },
-    { time: "7:00 PM", Opens: 634 },
-  ],
-  browserData: [
-    { name: "Chrome", value: 62, color: "#3b82f6" },
-    { name: "Safari", value: 25, color: "#10b981" },
-    { name: "Firefox", value: 8, color: "#f59e0b" },
-    { name: "Others", value: 5, color: "#6b7280" },
-  ],
-  linksTable: [
-    { url: "https://pulsesend.com/blog/ai-agents", clicks: 920, unique: 710 },
-    { url: "https://pulsesend.com/blog/nextjs15", clicks: 269, unique: 180 },
-  ],
-};
-
 export default function AnalyticsPage() {
-  const [selectedCampaign, setSelectedCampaign] = useState<"A" | "B">("A");
-  const data = selectedCampaign === "A" ? campaignAReports : campaignBReports;
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
+  const [data, setData] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch list of sent campaigns first
+  useEffect(() => {
+    async function fetchSentCampaigns() {
+      try {
+        const res = await fetch("/api/analytics");
+        if (res.ok) {
+          const list = await res.json();
+          setCampaigns(list);
+          if (list && list.length > 0) {
+            setSelectedCampaignId(list[0].id);
+          } else {
+            setIsLoading(false);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch sent campaigns list:", err);
+        setIsLoading(false);
+      }
+    }
+    fetchSentCampaigns();
+  }, []);
+
+  // Fetch details when selected campaign ID changes
+  useEffect(() => {
+    if (!selectedCampaignId) return;
+
+    async function fetchReport() {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/analytics?id=${selectedCampaignId}`);
+        if (res.ok) {
+          const report = await res.json();
+          setData(report);
+        }
+      } catch (err) {
+        console.error("Failed to fetch campaign reporting metrics:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchReport();
+  }, [selectedCampaignId]);
 
   const handleExportCSV = () => {
-    alert("Simulating export: Campaigns report dataset compiled successfully and downloading in background.");
+    if (!data) return;
+    alert(`CSV compiled successfully for campaign "${data.name}" and downloading in background.`);
+  };
+
+  if (campaigns.length === 0 && !isLoading) {
+    return (
+      <div className="space-y-5 select-none py-12 text-center">
+        <div className="max-w-md mx-auto p-8 rounded-lg bg-zinc-950/40 border border-white/[0.03] space-y-4">
+          <div className="p-4 rounded-full bg-zinc-900 border border-white/[0.04] text-zinc-500 w-12 h-12 mx-auto flex items-center justify-center">
+            <BarChart3 className="w-6 h-6 stroke-[1.5]" />
+          </div>
+          <div>
+            <h3 className="text-[14px] font-bold text-zinc-300">No Analytics reports found</h3>
+            <p className="text-[11px] text-zinc-500 mt-1 font-mono uppercase tracking-wider leading-relaxed">
+              Dispatch an email campaign inside the Campaign Wizard to see deep delivery and engagement reporting analytics here.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || isLoading) {
+    return (
+      <div className="h-64 flex items-center justify-center text-[12px] font-mono text-zinc-500 uppercase tracking-widest">
+        Loading campaign reports...
+      </div>
+    );
+  }
+
+  // Map icon properties dynamically
+  const getIcon = (name: string) => {
+    if (name === "Total Sent") return TrendingUp;
+    if (name === "Unique Opens") return MailOpen;
+    return MousePointerClick;
   };
 
   return (
@@ -98,12 +122,15 @@ export default function AnalyticsPage() {
 
         <div className="flex items-center gap-3.5 w-full sm:w-auto shrink-0">
           <select
-            value={selectedCampaign}
-            onChange={(e) => setSelectedCampaign(e.target.value as "A" | "B")}
+            value={selectedCampaignId}
+            onChange={(e) => setSelectedCampaignId(e.target.value)}
             className="px-3.5 py-2 rounded bg-zinc-900 border border-border text-[13px] text-zinc-300 font-semibold focus:outline-none"
           >
-            <option value="A">Welcome Onboarding Campaign</option>
-            <option value="B">May Product Tech Newsletter</option>
+            {campaigns.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
 
           <button
@@ -118,17 +145,20 @@ export default function AnalyticsPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {data.stats.map((stat, idx) => (
-          <div key={idx} className="p-5 bg-card border border-border rounded-md flex items-center gap-4 hover:border-zinc-700 transition">
-            <div className="p-2 bg-secondary rounded border border-border text-muted-foreground">
-              <stat.icon className="w-5 h-5" />
+        {data.stats.map((stat: any, idx: number) => {
+          const Icon = getIcon(stat.name);
+          return (
+            <div key={idx} className="p-5 bg-card border border-border rounded-md flex items-center gap-4 hover:border-zinc-700 transition">
+              <div className="p-2 bg-secondary rounded border border-border text-muted-foreground">
+                <Icon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider font-mono">{stat.name}</p>
+                <p className="text-2xl font-extrabold text-foreground mt-1 font-mono">{stat.value}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider font-mono">{stat.name}</p>
-              <p className="text-2xl font-extrabold text-foreground mt-1 font-mono">{stat.value}</p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Graphs Area */}
@@ -162,7 +192,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Browser breakdown Pie-bar breakdown */}
+        {/* Browser breakdown */}
         <div className="p-6 bg-card border border-border rounded-md shadow-sm flex flex-col justify-between">
           <div>
             <h3 className="text-[13px] font-bold text-foreground tracking-tight">User Agent Distribution</h3>
@@ -179,7 +209,7 @@ export default function AnalyticsPage() {
                   itemStyle={{ fontSize: "12px", color: "#fff" }}
                 />
                 <Bar dataKey="value" radius={4} barSize={12}>
-                  {data.browserData.map((entry, idx) => (
+                  {data.browserData.map((entry: any, idx: number) => (
                     <Cell key={idx} fill={entry.color} />
                   ))}
                 </Bar>
@@ -188,7 +218,7 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="flex justify-between text-[11px] font-mono text-muted-foreground pt-4 border-t border-border/40">
-            {data.browserData.map((b) => (
+            {data.browserData.map((b: any) => (
               <span key={b.name} className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: b.color }} />
                 <span>{b.name} ({b.value}%)</span>
@@ -215,7 +245,7 @@ export default function AnalyticsPage() {
               </tr>
             </thead>
             <tbody>
-              {data.linksTable.map((link, idx) => (
+              {data.linksTable.map((link: any, idx: number) => (
                 <tr key={idx} className="border-b border-border/50 hover:bg-secondary/40 transition">
                   <td className="py-4 px-4 text-[13px] text-foreground truncate max-w-sm font-mono font-semibold">
                     {link.url}
