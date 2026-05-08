@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Preloader from "@/components/Preloader";
 import { toast } from "@/lib/toast";
+import { useStore } from "@/lib/store";
 import {
   Send,
   Plus,
@@ -32,8 +33,39 @@ import {
 const initialCampaigns: any[] = [];
 
 export default function CampaignsPage() {
+  const { user } = useStore();
   const [view, setView] = useState<"list" | "wizard" | "queue">("list");
   const [isLoading, setIsLoading] = useState(true);
+  const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
+
+  // Wizard States
+  const [campaignName, setCampaignName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [previewText, setPreviewText] = useState("");
+  const [fromName, setFromName] = useState("PulseSend Team");
+  const [fromEmail, setFromEmail] = useState("hello@pulsesend.com");
+  const [selectedLists, setSelectedLists] = useState<string[]>([]);
+  const [excludedLists, setExcludedLists] = useState<string[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [sendOption, setSendOption] = useState<"now" | "schedule">("now");
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
+  const [scheduleTimezone, setScheduleTimezone] = useState("UTC+5:30");
+
+  const [testEmailRecipient, setTestEmailRecipient] = useState("");
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
+  // Campaigns State
+  const [campaigns, setCampaigns] = useState(initialCampaigns);
+  const [lists, setLists] = useState<any[]>([]);
+
+  // Sync session details automatically
+  useEffect(() => {
+    if (user) {
+      setFromName(user.org_name || "PulseSend Team");
+      setFromEmail(user.email || "hello@pulsesend.com");
+    }
+  }, [user]);
   
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -53,10 +85,6 @@ export default function CampaignsPage() {
       }
     }
   }, []);
-  
-  // Campaigns State
-  const [campaigns, setCampaigns] = useState(initialCampaigns);
-  const [lists, setLists] = useState<any[]>([]);
 
   // Fetch live campaigns and mailing lists on mount
   useEffect(() => {
@@ -101,24 +129,7 @@ export default function CampaignsPage() {
     fetchMailingLists();
   }, [view]);
 
-  const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
 
-  // Wizard States
-  const [campaignName, setCampaignName] = useState("");
-  const [subject, setSubject] = useState("");
-  const [previewText, setPreviewText] = useState("");
-  const [fromName, setFromName] = useState("PulseSend Team");
-  const [fromEmail, setFromEmail] = useState("hello@pulsesend.com");
-  const [selectedLists, setSelectedLists] = useState<string[]>([]);
-  const [excludedLists, setExcludedLists] = useState<string[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState("");
-  const [sendOption, setSendOption] = useState<"now" | "schedule">("now");
-  const [scheduleDate, setScheduleDate] = useState("");
-  const [scheduleTime, setScheduleTime] = useState("");
-  const [scheduleTimezone, setScheduleTimezone] = useState("UTC+5:30");
-
-  const [testEmailRecipient, setTestEmailRecipient] = useState("");
-  const [isSendingTest, setIsSendingTest] = useState(false);
 
   const handleSendTestEmail = async () => {
     if (!testEmailRecipient) {
