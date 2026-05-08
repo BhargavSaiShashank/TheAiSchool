@@ -6,6 +6,7 @@ import { useStore } from "@/lib/store";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import Preloader from "@/components/Preloader";
+import CommandPalette from "@/components/CommandPalette";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -68,8 +69,42 @@ export default function AdminLayout({
     return null;
   }
 
+  // Visual Atmosphere System: Dynamic Section-Specific Glow Background
+  const getAtmosphereGlow = () => {
+    if (pathname.startsWith("/dashboard")) {
+      // Dashboard: subtle purple telemetry glow
+      return "radial-gradient(circle at 50% -10%, rgba(124, 92, 255, 0.08) 0%, rgba(124, 92, 255, 0) 60%)";
+    }
+    if (pathname.startsWith("/analytics")) {
+      // Analytics: cool blue data atmosphere
+      return "radial-gradient(circle at 50% -10%, rgba(59, 130, 246, 0.07) 0%, rgba(59, 130, 246, 0) 60%)";
+    }
+    if (pathname.startsWith("/templates")) {
+      // Templates: softer creative lighting tone
+      return "radial-gradient(circle at 50% -10%, rgba(99, 102, 241, 0.06) 0%, rgba(99, 102, 241, 0) 60%)";
+    }
+    if (pathname.includes("suppression")) {
+      // Suppression: darker with muted red undertones
+      return "radial-gradient(circle at 50% -10%, rgba(239, 68, 68, 0.04) 0%, rgba(239, 68, 68, 0) 65%)";
+    }
+    if (pathname.startsWith("/campaigns")) {
+      // Campaigns: balanced purple-blue intensity
+      return "radial-gradient(circle at 50% -10%, rgba(139, 92, 246, 0.07) 0%, rgba(59, 130, 246, 0.04) 40%, rgba(0, 0, 0, 0) 70%)";
+    }
+    // Default structured/clean low visual noise
+    return "radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 50%)";
+  };
+
   return (
-    <div className="flex-1 flex h-screen overflow-hidden bg-background relative">
+    <div className="flex-1 flex h-screen overflow-hidden bg-background relative selection:bg-primary/20 selection:text-primary-foreground">
+      {/* Visual Atmosphere Background Overlays */}
+      <div 
+        className="absolute inset-0 pointer-events-none transition-all duration-1000 ease-in-out"
+        style={{ backgroundImage: getAtmosphereGlow() }}
+      />
+      {/* Subtle Grid Overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-80" />
+
       <AnimatePresence>
         {pageChanging && (
           <motion.div
@@ -82,6 +117,9 @@ export default function AdminLayout({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global CMD+K / CTRL+K Command palette */}
+      <CommandPalette />
 
       {/* Sidebar (left) */}
       <Sidebar />
@@ -101,3 +139,4 @@ export default function AdminLayout({
     </div>
   );
 }
+
