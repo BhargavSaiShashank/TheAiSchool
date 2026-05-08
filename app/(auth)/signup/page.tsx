@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [orgName, setOrgName] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,11 +111,20 @@ export default function SignupPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-zinc-400 font-mono">
-              Password
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-zinc-400 font-mono">
+                Password
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-[10px] text-zinc-500 hover:text-white transition cursor-pointer"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Choose a strong password"
