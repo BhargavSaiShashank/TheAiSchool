@@ -141,6 +141,83 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ─── FLOATING POINT-AND-EXPLAIN COACHMARKS ────────────────────── */}
+      {!onboardingDismissed && (
+        <AnimatePresence>
+          {onboardingStep === 1 && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="fixed left-[256px] top-[146px] z-[9999] hidden lg:flex items-center gap-2 pointer-events-none"
+            >
+              {/* Arrow */}
+              <div className="w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-[10px] border-r-[#7C5CFF]" />
+              {/* Body */}
+              <div className="p-4 bg-[#06070a]/95 border border-[#7C5CFF] rounded-lg shadow-[0_12px_40px_rgba(124,92,255,0.18)] max-w-xs backdrop-blur-md">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-bold font-mono text-[#7C5CFF] bg-[#7C5CFF]/10 px-1.5 py-0.5 rounded border border-[#7C5CFF]/20 uppercase">
+                    Step 1
+                  </span>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Contacts Segment</h4>
+                </div>
+                <p className="text-[11px] text-zinc-300 leading-relaxed">
+                  Click here to access your Contacts Directory. You can manage lists, add new contacts manually, or upload CSV files!
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {onboardingStep === 2 && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="fixed left-[256px] top-[182px] z-[9999] hidden lg:flex items-center gap-2 pointer-events-none"
+            >
+              {/* Arrow */}
+              <div className="w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-[10px] border-r-[#7C5CFF]" />
+              {/* Body */}
+              <div className="p-4 bg-[#06070a]/95 border border-[#7C5CFF] rounded-lg shadow-[0_12px_40px_rgba(124,92,255,0.18)] max-w-xs backdrop-blur-md">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-bold font-mono text-[#7C5CFF] bg-[#7C5CFF]/10 px-1.5 py-0.5 rounded border border-[#7C5CFF]/20 uppercase">
+                    Step 2
+                  </span>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Contacts setup</h4>
+                </div>
+                <p className="text-[11px] text-zinc-300 leading-relaxed">
+                  Upload CSV spreadsheets, manage duplicates, and map columns on import in seconds!
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {onboardingStep === 3 && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="fixed right-[205px] top-[60px] z-[9999] hidden lg:flex items-center gap-2 pointer-events-none"
+            >
+              {/* Body */}
+              <div className="p-4 bg-[#06070a]/95 border border-[#7C5CFF] rounded-lg shadow-[0_12px_40px_rgba(124,92,255,0.18)] max-w-xs backdrop-blur-md">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-bold font-mono text-[#7C5CFF] bg-[#7C5CFF]/10 px-1.5 py-0.5 rounded border border-[#7C5CFF]/20 uppercase">
+                    Step 3
+                  </span>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">New Campaign</h4>
+                </div>
+                <p className="text-[11px] text-zinc-300 leading-relaxed">
+                  Ready to send? Click here to open the step-by-step Campaign Wizard, select templates, and send real-time tests!
+                </p>
+              </div>
+              {/* Arrow */}
+              <div className="w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-[10px] border-l-[#7C5CFF]" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
       {/* ─── ONBOARDING PRODUCT TOUR (One-Time Setup Checklist) ────────── */}
       <AnimatePresence mode="wait">
         {!onboardingDismissed && (
