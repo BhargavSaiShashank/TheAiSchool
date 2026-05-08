@@ -43,6 +43,71 @@ export default function ContactsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedListFilter, setSelectedListFilter] = useState("all");
+  const [showNewContactModal, setShowNewContactModal] = useState(false);
+  const [newContactEmail, setNewContactEmail] = useState("");
+  const [newContactFirstName, setNewContactFirstName] = useState("");
+  const [newContactLastName, setNewContactLastName] = useState("");
+  const [newContactCompany, setNewContactCompany] = useState("");
+  const [newContactCity, setNewContactCity] = useState("");
+  const [newContactListId, setNewContactListId] = useState("none");
+  const [addingContact, setAddingContact] = useState(false);
+
+  const handleCreateContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newContactEmail) {
+      alert("Please enter an email address.");
+      return;
+    }
+    setAddingContact(true);
+    try {
+      const res = await fetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newContactEmail,
+          firstName: newContactFirstName,
+          lastName: newContactLastName,
+          company: newContactCompany,
+          city: newContactCity,
+          listId: newContactListId,
+        }),
+      });
+
+      if (res.ok) {
+        const createdContact = await res.json();
+        const mappedContact = {
+          ...createdContact,
+          listIds: newContactListId !== "none" ? [newContactListId] : [],
+        };
+        setContacts([mappedContact, ...contacts]);
+        
+        // Refresh live list counts
+        const resLists = await fetch("/api/lists");
+        if (resLists.ok) {
+          const dataLists = await resLists.json();
+          if (dataLists && Array.isArray(dataLists)) {
+            setLists(dataLists);
+          }
+        }
+
+        setShowNewContactModal(false);
+        setNewContactEmail("");
+        setNewContactFirstName("");
+        setNewContactLastName("");
+        setNewContactCompany("");
+        setNewContactCity("");
+        setNewContactListId("none");
+      } else {
+        const errData = await res.json();
+        alert(`Failed to add contact: ${errData.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      console.error("Error creating contact manually:", err);
+      alert(`Network error: ${err.message}`);
+    } finally {
+      setAddingContact(false);
+    }
+  };
 
   // Fetch live lists and contacts from Supabase via Next.js API Routes on mount
   useEffect(() => {
@@ -545,6 +610,15 @@ export default function ContactsPage() {
                   <option value="bounced">Bounced</option>
                   <option value="complained">Complained</option>
                 </select>
+
+                <button
+                  type="button"
+                  onClick={() => setShowNewContactModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-primary text-white hover:bg-primary/90 text-xs font-bold shadow-sm border border-white/5 transition cursor-pointer shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Contact</span>
+                </button>
               </div>
             </div>
 
@@ -917,6 +991,111 @@ export default function ContactsPage() {
                 >
                   View Updated Contacts Directory
                 </button>
+              </div>
+            {/* ADD CONTACT MANUALLY MODAL */}
+            {showNewContactModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-full max-w-md bg-card border border-border p-6 rounded-md shadow-lg space-y-6"
+                >
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground tracking-tight">Add Contact Manually</h3>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Create a subscriber and assign them directly to a mailing list</p>
+                  </div>
+
+                  <form onSubmit={handleCreateContact} className="space-y-4 text-xs">
+                    <div className="space-y-1.5">
+                      <label className="font-semibold text-muted-foreground font-mono">Email Address *</label>
+                      <input
+                        type="email"
+                        value={newContactEmail}
+                        onChange={(e) => setNewContactEmail(e.target.value)}
+                        required
+                        placeholder="subscriber@domain.com"
+                        className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="font-semibold text-muted-foreground font-mono">First Name</label>
+                        <input
+                          type="text"
+                          value={newContactFirstName}
+                          onChange={(e) => setNewContactFirstName(e.target.value)}
+                          placeholder="First Name"
+                          className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-semibold text-muted-foreground font-mono">Last Name</label>
+                        <input
+                          type="text"
+                          value={newContactLastName}
+                          onChange={(e) => setNewContactLastName(e.target.value)}
+                          placeholder="Last Name"
+                          className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="font-semibold text-muted-foreground font-mono">Company</label>
+                        <input
+                          type="text"
+                          value={newContactCompany}
+                          onChange={(e) => setNewContactCompany(e.target.value)}
+                          placeholder="Company Name"
+                          className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-semibold text-muted-foreground font-mono">City</label>
+                        <input
+                          type="text"
+                          value={newContactCity}
+                          onChange={(e) => setNewContactCity(e.target.value)}
+                          placeholder="City"
+                          className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-semibold text-muted-foreground font-mono">Add Directly Into Mailing List</label>
+                      <select
+                        value={newContactListId}
+                        onChange={(e) => setNewContactListId(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-400 font-medium"
+                      >
+                        <option value="none">Do not assign to a list (general pool)</option>
+                        {lists.map((l) => (
+                          <option key={l.id} value={l.id}>{l.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                      <button
+                        type="button"
+                        onClick={() => setShowNewContactModal(false)}
+                        className="px-4 py-2 rounded border border-border hover:bg-secondary text-muted-foreground text-xs font-semibold transition cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={addingContact}
+                        className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 text-xs font-semibold transition shadow-md border border-white/5 cursor-pointer"
+                      >
+                        {addingContact ? "Adding..." : "Add Contact"}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
               </div>
             )}
           </motion.div>

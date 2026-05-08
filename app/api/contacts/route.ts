@@ -45,14 +45,20 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, firstName, lastName, status, company, city, jobTitle } = body;
+    const { email, firstName, lastName, status, company, city, jobTitle, listId, orgId } = body;
 
     if (!email) {
       return NextResponse.json({ error: "Email address is required" }, { status: 400 });
     }
 
-    // Get default seeded organization
-    let org = await prisma.organization.findFirst();
+    // Get specific or default organization
+    let org = null;
+    if (orgId) {
+      org = await prisma.organization.findUnique({ where: { id: orgId } });
+    }
+    if (!org) {
+      org = await prisma.organization.findFirst();
+    }
     if (!org) {
       org = await prisma.organization.create({
         data: {
@@ -73,14 +79,23 @@ export async function POST(req: Request) {
       },
     });
 
+    if (listId && listId !== "none") {
+      await prisma.contactListMember.create({
+        data: {
+          contact_id: newContact.id,
+          list_id: listId,
+        },
+      });
+    }
+
     return NextResponse.json({
       id: newContact.id,
       email: newContact.email,
       firstName: newContact.first_name || "",
       lastName: newContact.last_name || "",
       status: newContact.status,
-      company: company || "PulseSend Sandbox",
-      city: city || "Hyderabad",
+      company: company || "",
+      city: city || "",
       jobTitle: jobTitle || "Developer",
     });
   } catch (error: any) {
