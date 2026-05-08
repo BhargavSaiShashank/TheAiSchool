@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { Building, Save, Cloud, Check } from "lucide-react";
