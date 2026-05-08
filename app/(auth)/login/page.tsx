@@ -42,38 +42,28 @@ export default function LoginPage() {
     setError("");
     setSubmitting(true);
 
-    // Simulate silent latency for elite SaaS feel
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Simple, direct validation as per seeding:
-    // admin123 for superadmin, manager123 for manager, viewer123 for viewer
-    let role: "SUPER_ADMIN" | "CAMPAIGN_MANAGER" | "VIEWER" | null = null;
-    let userId = "";
-
-    if (email === "superadmin@pulsesend.com" && password === "admin123") {
-      role = "SUPER_ADMIN";
-      userId = "mock-user-id-1";
-    } else if (email === "manager@pulsesend.com" && password === "manager123") {
-      role = "CAMPAIGN_MANAGER";
-      userId = "mock-user-id-2";
-    } else if (email === "viewer@pulsesend.com" && password === "viewer123") {
-      role = "VIEWER";
-      userId = "mock-user-id-3";
-    }
-
-    if (role) {
-      resetIpAttempts();
-      login({
-        id: userId,
-        email,
-        role,
-        org_id: "mock-org-id-1",
-        org_name: "PulseSend Inc.",
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
-      router.push("/dashboard");
-    } else {
+
+      if (res.ok) {
+        const userSession = await res.json();
+        resetIpAttempts();
+        login(userSession);
+        router.push("/dashboard");
+      } else {
+        const data = await res.json();
+        incrementIpAttempts();
+        setError(data.error || "Invalid email address or security credentials.");
+        setSubmitting(false);
+      }
+    } catch (err) {
+      console.error("Login fetch error:", err);
       incrementIpAttempts();
-      setError("Invalid email address or security credentials.");
+      setError("Network error occurred during sign-in.");
       setSubmitting(false);
     }
   };
