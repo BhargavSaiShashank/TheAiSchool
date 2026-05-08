@@ -12,17 +12,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Delay routing slightly for a super-smooth premium loader experience
-    const timer = setTimeout(() => {
-      if (user) {
-        router.push("/dashboard");
-      } else {
-        router.push("/login");
-      }
-      setLoading(false);
-    }, 1200);
-
-    return () => clearTimeout(timer);
+    if (user) {
+      router.push("/dashboard");
+    } else {
+      router.push("/login");
+    }
   }, [user, router]);
 
   return (
