@@ -97,6 +97,7 @@ export default function ContactsPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvRows, setCsvRows] = useState<string[][]>([]);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [targetListId, setTargetListId] = useState<string>("none");
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({
     email: "0",
     firstName: "1",
@@ -264,7 +265,7 @@ export default function ContactsPage() {
       const res = await fetch("/api/contacts/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contacts: contactsToImport }),
+        body: JSON.stringify({ contacts: contactsToImport, listId: targetListId }),
       });
 
       setImportProgress(80);
@@ -278,12 +279,20 @@ export default function ContactsPage() {
           errored: results.errored || 0,
         });
 
-        // Refetch contacts list to update All Contacts tab instantly
+        // Refetch contacts and lists to update all views and counts instantly
         const resContacts = await fetch("/api/contacts");
         if (resContacts.ok) {
           const dataContacts = await resContacts.json();
           if (dataContacts && Array.isArray(dataContacts)) {
             setContacts(dataContacts);
+          }
+        }
+
+        const resLists = await fetch("/api/lists");
+        if (resLists.ok) {
+          const dataLists = await resLists.json();
+          if (dataLists && Array.isArray(dataLists)) {
+            setLists(dataLists);
           }
         }
 
@@ -816,6 +825,21 @@ export default function ContactsPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div className="p-4 rounded border border-zinc-900 bg-zinc-950/40 space-y-2">
+                  <label className="text-xs font-bold text-white uppercase font-mono">Import Into Mailing List</label>
+                  <p className="text-[10px] text-zinc-500 mt-0.5">Select a mailing list directory where these contacts will be assigned.</p>
+                  <select
+                    value={targetListId}
+                    onChange={(e) => setTargetListId(e.target.value)}
+                    className="w-full max-w-sm px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 focus:outline-none"
+                  >
+                    <option value="none">Do not assign to any list</option>
+                    {lists.map((l) => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6 border-t border-zinc-900">

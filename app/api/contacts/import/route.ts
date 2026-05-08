@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { contacts } = await req.json();
+    const { contacts, listId } = await req.json();
 
     if (!contacts || !Array.isArray(contacts)) {
       return NextResponse.json({ error: "Invalid contacts list provided" }, { status: 400 });
@@ -42,8 +42,10 @@ export async function POST(req: Request) {
           where: { email: c.email },
         });
 
+        let contactId = "";
+
         if (existing) {
-          await prisma.contact.update({
+          const updated = await prisma.contact.update({
             where: { email: c.email },
             data: {
               first_name: c.firstName || existing.first_name,
@@ -53,9 +55,10 @@ export async function POST(req: Request) {
               status: c.status || existing.status,
             },
           });
+          contactId = updated.id;
           updatedCount++;
         } else {
-          await prisma.contact.create({
+          const created = await prisma.contact.create({
             data: {
               email: c.email,
               first_name: c.firstName || "",
@@ -67,7 +70,25 @@ export async function POST(req: Request) {
               source: "import",
             },
           });
+          contactId = created.id;
           addedCount++;
+        }
+
+        // Assign contact to the target mailing list if specified
+        if (listId && listId !== "none" && contactId) {
+          await prisma.contactListMember.upsert({
+            where: {
+              contact_id_list_id: {
+                contact_id: contactId,
+                list_id: listId,
+              },
+            },
+            update: {},
+            create: {
+              contact_id: contactId,
+              list_id: listId,
+            },
+          });
         }
       } catch (err) {
         console.error("Error importing contact row:", c.email, err);
