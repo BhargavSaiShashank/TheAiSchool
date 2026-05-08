@@ -195,23 +195,23 @@ export default function DashboardPage() {
                 <AreaChart data={performanceData} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gSent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#7C5CFF" stopOpacity={0.18} />
+                      <stop offset="5%"  stopColor="#7C5CFF" stopOpacity={0.24} />
                       <stop offset="95%" stopColor="#7C5CFF" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="gOpens" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.14} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%"  stopColor="#06b6d4" stopOpacity={0.18} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="name" stroke="#3f3f46" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#3f3f46" fontSize={11} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="name" stroke="#27272a" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#27272a" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip
-                    contentStyle={{ background: "#0e0f12", borderColor: "#27272a", borderRadius: "6px", fontSize: "12px" }}
+                    contentStyle={{ background: "#06070a", borderColor: "rgba(255,255,255,0.06)", borderRadius: "6px", fontSize: "12px", backdropFilter: "blur(8px)" }}
                     labelStyle={{ fontWeight: "bold", color: "#f4f4f5" }}
                     itemStyle={{ color: "#a1a1aa" }}
                   />
-                  <Area type="monotone" dataKey="Sent"  stroke="#7C5CFF" strokeWidth={2} fillOpacity={1} fill="url(#gSent)"  />
-                  <Area type="monotone" dataKey="Opens" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#gOpens)" />
+                  <Area type="monotone" dataKey="Sent"  stroke="#7C5CFF" strokeWidth={2.5} activeDot={{ r: 5, strokeWidth: 0 }} fillOpacity={1} fill="url(#gSent)"  />
+                  <Area type="monotone" dataKey="Opens" stroke="#06b6d4" strokeWidth={2.5} activeDot={{ r: 5, strokeWidth: 0 }} fillOpacity={1} fill="url(#gOpens)" />
                 </AreaChart>
               </ResponsiveContainer>
             )}

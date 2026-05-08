@@ -7,6 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import Preloader from "@/components/Preloader";
 import CommandPalette from "@/components/CommandPalette";
+import ToastContainer from "@/components/ToastContainer";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -130,6 +131,7 @@ export default function AdminLayout({
 
       {/* Global CMD+K / CTRL+K Command palette */}
       <CommandPalette />
+      <ToastContainer />
 
       {/* Sidebar (left) */}
       <Sidebar />

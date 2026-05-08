@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Preloader from "@/components/Preloader";
+import { toast } from "@/lib/toast";
 import {
   Users,
   Plus,
@@ -58,7 +59,7 @@ export default function ContactsPage() {
 
   const handleAddExistingToActiveList = async () => {
     if (selectedContactIds.length === 0) {
-      alert("Please select at least one contact.");
+      toast.error("Please select at least one contact.");
       return;
     }
     setSubmittingExisting(true);
@@ -93,15 +94,16 @@ export default function ContactsPage() {
           }
         }
 
+        toast.success(`Successfully subscribed ${selectedContactIds.length} contact(s) to the mailing list!`);
         setShowAddExistingModal(false);
         setSelectedContactIds([]);
       } else {
         const errData = await res.json();
-        alert(`Failed to add contacts: ${errData.error || "Unknown error"}`);
+        toast.error(`Failed to add contacts: ${errData.error || "Unknown error"}`);
       }
     } catch (err: any) {
       console.error("Failed to add existing contacts:", err);
-      alert(`Network error: ${err.message}`);
+      toast.error(`Network error: ${err.message}`);
     } finally {
       setSubmittingExisting(false);
     }

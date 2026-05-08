@@ -32,7 +32,7 @@ export default function Header() {
   };
 
   return (
-    <header className="h-[52px] flex items-center justify-between px-6 border-b border-border bg-card/60 backdrop-blur-md select-none sticky top-0 z-10 shrink-0">
+    <header className="h-[52px] flex items-center justify-between px-6 border-b border-border bg-[#06070a]/40 backdrop-blur-md select-none sticky top-0 z-10 shrink-0">
       {/* Title & Path */}
       <div className="flex flex-col">
         <p className="text-[11px] font-semibold text-zinc-500 font-mono tracking-wider uppercase mb-0.5">
