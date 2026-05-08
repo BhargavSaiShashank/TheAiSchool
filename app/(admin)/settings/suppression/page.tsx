@@ -1,55 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldAlert,
   Search,
   Plus,
   Trash2,
-  AlertTriangle,
-  FileText,
-  UserCheck,
-  Check,
   Zap,
 } from "lucide-react";
 
-// Mock seeded Suppression list matching seed.js
-const initialSuppressions = [
-  { id: "s1", email: "bounced-user@badhost.com", reason: "hard_bounce", date: "3 days ago", log: "hard bounce detected by SES simulation: 550 5.1.1 User Unknown" },
-  { id: "s2", email: "complained-user@spamfilter.com", reason: "spam_complaint", date: "3 days ago", log: "spam complaint detected by SNS webhook" },
-  { id: "s3", email: "unsubscribed-client@outlook.com", reason: "manual_unsubscribe", date: "1 day ago", log: "clicked header list-unsubscribe link" },
-];
-
 export default function SuppressionPage() {
-  const [suppressions, setSuppressions] = useState(initialSuppressions);
+  const [suppressions, setSuppressions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newReason, setNewReason] = useState("hard_bounce");
   const [newNotes, setNewNotes] = useState("");
 
+  // Fetch live suppressions on mount
+  useEffect(() => {
+    async function fetchSuppressions() {
+      try {
+        const res = await fetch("/api/suppression");
+        if (res.ok) {
+          const data = await res.json();
+          setSuppressions(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch suppression list:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchSuppressions();
+  }, []);
+
   // Handler to add suppression manually
-  const handleAddSuppression = (e: React.FormEvent) => {
+  const handleAddSuppression = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmail.trim()) return;
-    const item = {
-      id: `s-${Date.now()}`,
-      email: newEmail,
-      reason: newReason,
-      date: "Just now",
-      log: newNotes || "manually added by administrator",
-    };
-    setSuppressions([item, ...suppressions]);
-    setNewEmail("");
-    setNewNotes("");
-    setShowAddModal(false);
+
+    try {
+      const res = await fetch("/api/suppression", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newEmail, reason: newReason, log: newNotes }),
+      });
+
+      if (res.ok) {
+        // Refresh list
+        const listRes = await fetch("/api/suppression");
+        if (listRes.ok) {
+          const data = await listRes.json();
+          setSuppressions(data);
+        }
+        setNewEmail("");
+        setNewNotes("");
+        setShowAddModal(false);
+      }
+    } catch (err) {
+      console.error("Failed to add suppression block:", err);
+    }
   };
 
   // Handler to delete suppression (remove block)
-  const handleRemoveSuppression = (id: string, email: string) => {
+  const handleRemoveSuppression = async (id: string, email: string) => {
     if (confirm(`Are you sure you want to remove ${email} from the suppression platform? They will receive future campaign dispatches.`)) {
-      setSuppressions(suppressions.filter((s) => s.id !== id));
+      try {
+        const res = await fetch(`/api/suppression?id=${id}`, {
+          method: "DELETE",
+        });
+
+        if (res.ok) {
+          setSuppressions(suppressions.filter((s) => s.id !== id));
+        }
+      } catch (err) {
+        console.error("Failed to delete suppression block:", err);
+      }
     }
   };
 
@@ -115,35 +144,49 @@ export default function SuppressionPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSuppressions.map((item) => (
-                    <tr key={item.id} className="border-b border-border/50 hover:bg-secondary/40 transition group">
-                      <td className="py-3 px-5">
-                        <p className="font-bold text-foreground font-mono text-[11px]">{item.email}</p>
-                        <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate max-w-sm">{item.log}</p>
-                      </td>
-                      <td className="py-3 px-5">
-                        <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
-                          item.reason === "hard_bounce"
-                            ? "bg-red-950/20 text-red-400 border border-red-900/30"
-                            : item.reason === "spam_complaint"
-                            ? "bg-amber-950/20 text-amber-400 border border-amber-900/30"
-                            : "bg-zinc-900 text-muted-foreground border border-border"
-                        }`}>
-                          {item.reason.replace("_", " ")}
-                        </span>
-                      </td>
-                      <td className="py-3 px-5 text-muted-foreground font-mono text-[11px]">{item.date}</td>
-                      <td className="py-3 px-5 text-right">
-                        <button
-                          onClick={() => handleRemoveSuppression(item.id, item.email)}
-                          className="text-muted-foreground hover:text-foreground transition p-1.5"
-                          title="Remove Suppression Block"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-zinc-500 font-mono tracking-widest text-[11px] uppercase">
+                        Loading safeguard blocks...
                       </td>
                     </tr>
-                  ))}
+                  ) : filteredSuppressions.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-zinc-500 font-mono tracking-wider text-[11px] uppercase">
+                        No suppressed addresses logged inside campaign safeguard center.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredSuppressions.map((item) => (
+                      <tr key={item.id} className="border-b border-border/50 hover:bg-secondary/40 transition group">
+                        <td className="py-3 px-5">
+                          <p className="font-bold text-foreground font-mono text-[11px]">{item.email}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate max-w-sm">{item.log}</p>
+                        </td>
+                        <td className="py-3 px-5">
+                          <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
+                            item.reason === "hard_bounce"
+                              ? "bg-red-950/20 text-red-400 border border-red-900/30"
+                              : item.reason === "spam_complaint"
+                              ? "bg-amber-950/20 text-amber-400 border border-amber-900/30"
+                              : "bg-zinc-900 text-muted-foreground border border-border"
+                          }`}>
+                            {item.reason.replace("_", " ")}
+                          </span>
+                        </td>
+                        <td className="py-3 px-5 text-muted-foreground font-mono text-[11px]">{item.date}</td>
+                        <td className="py-3 px-5 text-right">
+                          <button
+                            onClick={() => handleRemoveSuppression(item.id, item.email)}
+                            className="text-muted-foreground hover:text-foreground transition p-1.5"
+                            title="Remove Suppression Block"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
