@@ -94,7 +94,9 @@ export default function ContactsPage() {
   // CSV Import Wizard State
   const [importStep, setImportStep] = useState<1 | 2 | 3 | 4>(1);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [columnMapping, setColumnMapping] = useState({
+  const [csvRows, setCsvRows] = useState<string[][]>([]);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [columnMapping, setColumnMapping] = useState<Record<string, string>>({
     email: "0",
     firstName: "1",
     lastName: "2",
@@ -164,35 +166,142 @@ export default function ContactsPage() {
     setRules([...rules, { field: "email", operator: "contains", value: "" }]);
   };
 
-  // CSV File upload simulation
+  // CSV File upload with real dynamic parsing
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setCsvFile(e.target.files[0]);
-      setImportStep(2); // Preview & Map Columns
+      const file = e.target.files[0];
+      setCsvFile(file);
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result as string;
+        if (!text) return;
+        
+        const lines = text.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+        if (lines.length === 0) return;
+        
+        const parsed = lines.map(line => {
+          const result = [];
+          let current = "";
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              result.push(current.trim());
+              current = "";
+            } else {
+              current += char;
+            }
+          }
+          result.push(current.trim());
+          return result;
+        });
+
+        const headers = parsed[0];
+        const dataRows = parsed.slice(1);
+        
+        setCsvHeaders(headers);
+        setCsvRows(dataRows);
+
+        // Auto-detect mappings based on header name matches
+        const initialMapping: Record<string, string> = {
+          email: "none",
+          firstName: "none",
+          lastName: "none",
+          company: "none",
+          city: "none",
+        };
+
+        headers.forEach((h, index) => {
+          const lower = h.toLowerCase().replace(/_|[^\w]/g, "");
+          if (lower === "email") initialMapping.email = String(index);
+          else if (lower === "firstname" || lower === "first" || lower === "name") initialMapping.firstName = String(index);
+          else if (lower === "lastname" || lower === "last") initialMapping.lastName = String(index);
+          else if (lower === "company" || lower === "organization") initialMapping.company = String(index);
+          else if (lower === "city" || lower === "location") initialMapping.city = String(index);
+        });
+
+        // Fallbacks if no headers were detected
+        if (initialMapping.email === "none" && headers.length > 0) initialMapping.email = "0";
+
+        setColumnMapping(initialMapping);
+        setImportStep(2);
+      };
+      reader.readAsText(file);
     }
   };
 
-  // Run Import Simulation
-  const runImportJob = () => {
+  // Run Real Database-Backed Bulk Import
+  const runImportJob = async () => {
     setImportStep(3); // Progress screen
-    setImportProgress(0);
+    setImportProgress(10);
 
-    const interval = setInterval(() => {
-      setImportProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setImportResults({
-            added: 125,
-            updated: 34,
-            skipped: 12,
-            errored: 2,
-          });
-          setImportStep(4); // Final summary
-          return 100;
-        }
-        return prev + 10;
+    // Map each row based on columnMapping
+    const contactsToImport = csvRows.map(row => {
+      const getVal = (fieldKey: string) => {
+        const indexStr = columnMapping[fieldKey];
+        if (indexStr === "none" || !indexStr) return "";
+        const idx = parseInt(indexStr, 10);
+        return row[idx] || "";
+      };
+
+      return {
+        email: getVal("email"),
+        firstName: getVal("firstName"),
+        lastName: getVal("lastName"),
+        company: getVal("company"),
+        city: getVal("city"),
+        status: "active",
+      };
+    }).filter(c => c.email && c.email.includes("@"));
+
+    setImportProgress(40);
+
+    try {
+      const res = await fetch("/api/contacts/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contacts: contactsToImport }),
       });
-    }, 200);
+
+      setImportProgress(80);
+
+      if (res.ok) {
+        const results = await res.json();
+        setImportResults({
+          added: results.added || 0,
+          updated: results.updated || 0,
+          skipped: results.skipped || 0,
+          errored: results.errored || 0,
+        });
+
+        // Refetch contacts list to update All Contacts tab instantly
+        const resContacts = await fetch("/api/contacts");
+        if (resContacts.ok) {
+          const dataContacts = await resContacts.json();
+          if (dataContacts && Array.isArray(dataContacts)) {
+            setContacts(dataContacts);
+          }
+        }
+
+        setImportProgress(100);
+        setImportStep(4);
+      } else {
+        throw new Error("Bulk import failed on server");
+      }
+    } catch (err) {
+      console.error("Import job failed:", err);
+      setImportResults({
+        added: 0,
+        updated: 0,
+        skipped: 0,
+        errored: contactsToImport.length,
+      });
+      setImportProgress(100);
+      setImportStep(4);
+    }
   };
 
   // Filter contacts
@@ -647,28 +756,21 @@ export default function ContactsPage() {
                     <table className="w-full text-left">
                       <thead>
                         <tr className="border-b border-zinc-900 text-zinc-400 font-bold">
-                          <th className="pb-2">Col 0 (Email)</th>
-                          <th className="pb-2">Col 1 (First Name)</th>
-                          <th className="pb-2">Col 2 (Last Name)</th>
-                          <th className="pb-2">Col 3 (Company)</th>
-                          <th className="pb-2">Col 4 (City)</th>
+                          {csvHeaders.map((header, idx) => (
+                            <th key={idx} className="pb-2 pr-4">Col {idx} ({header})</th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="border-b border-zinc-900/40 py-2">
-                          <td className="text-zinc-300">priya@techcorp.com</td>
-                          <td>Priya</td>
-                          <td>Sharma</td>
-                          <td>TechCorp</td>
-                          <td>Bangalore</td>
-                        </tr>
-                        <tr className="border-b border-zinc-900/40 py-2">
-                          <td className="text-zinc-300">rahul@innovate.co</td>
-                          <td>Rahul</td>
-                          <td>Nair</td>
-                          <td>Innovate Ltd</td>
-                          <td>Chennai</td>
-                        </tr>
+                        {csvRows.slice(0, 3).map((row, rowIdx) => (
+                          <tr key={rowIdx} className="border-b border-zinc-900/40 py-2">
+                            {row.map((cell, cellIdx) => (
+                              <td key={cellIdx} className={cellIdx === 0 ? "text-zinc-300 py-2 pr-4" : "py-2 pr-4"}>
+                                {cell}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
@@ -681,15 +783,15 @@ export default function ContactsPage() {
                       <div key={field} className="flex flex-col gap-1.5 p-3.5 rounded bg-zinc-900/50 border border-zinc-900">
                         <label className="text-[10px] font-semibold text-zinc-500 uppercase font-mono">{field}</label>
                         <select
-                          value={columnMapping[field]}
+                          value={columnMapping[field] || "none"}
                           onChange={(e) => setColumnMapping({ ...columnMapping, [field]: e.target.value })}
                           className="px-2.5 py-1.5 rounded bg-zinc-950 border border-zinc-800 text-xs text-zinc-300 focus:outline-none"
                         >
-                          <option value="0">Column 0</option>
-                          <option value="1">Column 1</option>
-                          <option value="2">Column 2</option>
-                          <option value="3">Column 3</option>
-                          <option value="4">Column 4</option>
+                          {csvHeaders.map((header, idx) => (
+                            <option key={idx} value={String(idx)}>
+                              Column {idx} ({header})
+                            </option>
+                          ))}
                           <option value="none">Skip Field</option>
                         </select>
                       </div>
