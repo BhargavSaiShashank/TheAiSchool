@@ -32,13 +32,7 @@ interface PulseSendState {
 export const useStore = create<PulseSendState>()(
   persist(
     (set) => ({
-      user: {
-        id: "mock-user-id-1",
-        email: "superadmin@pulsesend.com",
-        role: "SUPER_ADMIN",
-        org_id: "mock-org-id-1",
-        org_name: "PulseSend Inc.",
-      }, // Default to seeded Super Admin for premium zero-login sandbox feel, can log out/switch
+      user: null,
       sidebarCollapsed: false,
       activeRoute: "/dashboard",
       commandPaletteOpen: false,
