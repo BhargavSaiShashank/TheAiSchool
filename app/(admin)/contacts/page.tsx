@@ -23,23 +23,10 @@ import {
 } from "lucide-react";
 
 // Mock Lists
-const initialLists = [
-  { id: "l1", name: "SaaS Innovators", description: "Early adopters and SaaS founders", count: 8, tags: ["SaaS", "Founders"] },
-  { id: "l2", name: "Monthly Newsletter", description: "General monthly marketing newsletter list", count: 6, tags: ["Marketing"] },
-  { id: "l3", name: "Enterprise Leads", description: "Fortune 500 company marketing leads", count: 12, tags: ["Enterprise", "B2B"] },
-];
+const initialLists: any[] = [];
 
 // Mock Contacts
-const initialContacts = [
-  { id: "c1", email: "aravind.k@theaischool.co", firstName: "Aravind", lastName: "Kumar", status: "active", company: "The AI School", city: "Hyderabad", jobTitle: "Director" },
-  { id: "c2", email: "priya.sharma@techcorp.com", firstName: "Priya", lastName: "Sharma", status: "active", company: "TechCorp", city: "Bangalore", jobTitle: "Product Lead" },
-  { id: "c3", email: "john.doe@example.com", firstName: "John", lastName: "Doe", status: "active", company: "Example Inc.", city: "Chennai", jobTitle: "Engineer" },
-  { id: "c4", email: "jane.smith@example.com", firstName: "Jane", lastName: "Smith", status: "active", company: "Acme Corp", city: "Hyderabad", jobTitle: "CEO" },
-  { id: "c5", email: "vikram.r@ventures.io", firstName: "Vikram", lastName: "Reddy", status: "unsubscribed", company: "Reddy Ventures", city: "Hyderabad", jobTitle: "Partner" },
-  { id: "c6", email: "bounced-user@badhost.com", firstName: "Bounced", lastName: "Contact", status: "bounced", company: "Bad Host", city: "Delhi", jobTitle: "Developer" },
-  { id: "c7", email: "complained-user@spamfilter.com", firstName: "Spam", lastName: "Reporter", status: "complained", company: "Spam Filter", city: "Mumbai", jobTitle: "Admin" },
-  { id: "c8", email: "rahul.nair@innovate.co", firstName: "Rahul", lastName: "Nair", status: "active", company: "Innovate Ltd", city: "Chennai", jobTitle: "CTO" },
-];
+const initialContacts: any[] = [];
 
 export default function ContactsPage() {
   const [activeTab, setActiveTab] = useState<"lists" | "contacts" | "segments" | "import">("lists");

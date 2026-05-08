@@ -28,11 +28,7 @@ import {
 } from "lucide-react";
 
 // Mock Campaign List
-const initialCampaigns = [
-  { id: "ca1", name: "Welcome Onboarding Campaign", subject: "Welcome to PulseSend - Let's send emails!", status: "Sent", sendDate: "3 days ago", recipients: 4250, openRate: "82.4%", clickRate: "39.1%" },
-  { id: "ca2", name: "May Product Tech Newsletter", subject: "PulseSend Monthly Roundup: Dynamic Templates & Analytics", status: "Sent", sendDate: "1 day ago", recipients: 5800, openRate: "61.8%", clickRate: "20.5%" },
-  { id: "ca3", name: "Summer Promotion Blast", subject: "Summer Sale: 50% Off Premium Plans", status: "Draft", sendDate: "—", recipients: 0, openRate: "—", clickRate: "—" },
-];
+const initialCampaigns: any[] = [];
 
 export default function CampaignsPage() {
   const [view, setView] = useState<"list" | "wizard" | "queue">("list");
@@ -251,52 +247,70 @@ export default function CampaignsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {campaigns.map((camp) => (
-                      <tr key={camp.id} className="border-b border-border/50 hover:bg-secondary/40 transition">
-                        <td className="py-4 px-5">
-                          <p className="text-[13px] font-bold text-foreground truncate max-w-xs">{camp.name}</p>
-                          <p className="text-[11px] text-muted-foreground truncate mt-0.5 max-w-xs font-mono">{camp.subject}</p>
-                        </td>
-                        <td className="py-4 px-5">
-                          <span className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded uppercase ${
-                            camp.status === "Sent"
-                              ? "bg-zinc-900 text-zinc-400 border border-border"
-                              : "bg-blue-950/20 text-blue-400 border border-blue-900/30"
-                          }`}>
-                            {camp.status}
-                          </span>
-                        </td>
-                        <td className="py-4 px-5 text-[13px] text-muted-foreground font-mono">
-                          {camp.sendDate}
-                        </td>
-                        <td className="py-4 px-5 text-right text-[13px] font-mono font-semibold text-emerald-400">
-                          {camp.openRate}
-                        </td>
-                        <td className="py-4 px-5 text-right text-[13px] font-mono font-semibold text-blue-400">
-                          {camp.clickRate}
-                        </td>
-                        <td className="py-4 px-5 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleDuplicate(camp)}
-                              className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
-                              title="Duplicate Campaign"
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
-                            {camp.status === "Sent" && (
-                              <button
-                                onClick={() => handleResendToNonOpeners(camp.name)}
-                                className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
-                                title="Re-send to non-openers"
-                              >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                              </button>
-                            )}
+                    {campaigns.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 px-5 text-center">
+                          <div className="flex flex-col items-center justify-center space-y-3.5">
+                            <div className="p-3 rounded-full bg-zinc-950/40 border border-white/[0.03] text-zinc-500">
+                              <Mail className="w-6 h-6 stroke-[1.5]" />
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-bold text-zinc-400">No campaigns found</p>
+                              <p className="text-[11px] text-zinc-500 max-w-xs mx-auto mt-1 font-medium font-mono uppercase tracking-wider leading-relaxed">
+                                Create your first high-performance email campaign with the designer wizard.
+                              </p>
+                            </div>
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      campaigns.map((camp) => (
+                        <tr key={camp.id} className="border-b border-border/50 hover:bg-secondary/40 transition">
+                          <td className="py-4 px-5">
+                            <p className="text-[13px] font-bold text-foreground truncate max-w-xs">{camp.name}</p>
+                            <p className="text-[11px] text-muted-foreground truncate mt-0.5 max-w-xs font-mono">{camp.subject}</p>
+                          </td>
+                          <td className="py-4 px-5">
+                            <span className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded uppercase ${
+                              camp.status === "Sent"
+                                ? "bg-zinc-900 text-zinc-400 border border-border"
+                                : "bg-blue-950/20 text-blue-400 border border-blue-900/30"
+                            }`}>
+                              {camp.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-5 text-[13px] text-muted-foreground font-mono">
+                            {camp.sendDate}
+                          </td>
+                          <td className="py-4 px-5 text-right text-[13px] font-mono font-semibold text-emerald-400">
+                            {camp.openRate}
+                          </td>
+                          <td className="py-4 px-5 text-right text-[13px] font-mono font-semibold text-blue-400">
+                            {camp.clickRate}
+                          </td>
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleDuplicate(camp)}
+                                className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
+                                title="Duplicate Campaign"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                              {camp.status === "Sent" && (
+                                <button
+                                  onClick={() => handleResendToNonOpeners(camp.name)}
+                                  className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
+                                  title="Re-send to non-openers"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
