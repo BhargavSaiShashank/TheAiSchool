@@ -42,6 +42,7 @@ export default function ContactsPage() {
   const [contacts, setContacts] = useState(initialContacts);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedListFilter, setSelectedListFilter] = useState("all");
 
   // Fetch live lists and contacts from Supabase via Next.js API Routes on mount
   useEffect(() => {
@@ -311,7 +312,8 @@ export default function ContactsPage() {
       (c.firstName + " " + c.lastName).toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.company.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesList = selectedListFilter === "all" || (c.listIds && c.listIds.includes(selectedListFilter));
+    return matchesSearch && matchesStatus && matchesList;
   });
 
   return (
@@ -415,7 +417,13 @@ export default function ContactsPage() {
                         </span>
                       ))}
                     </div>
-                    <button className="text-[12px] text-muted-foreground hover:text-primary font-mono font-bold transition">
+                    <button
+                      onClick={() => {
+                        setSelectedListFilter(list.id);
+                        setActiveTab("contacts");
+                      }}
+                      className="text-[12px] text-muted-foreground hover:text-primary font-mono font-bold transition cursor-pointer"
+                    >
                       Manage →
                     </button>
                   </div>
@@ -506,6 +514,17 @@ export default function ContactsPage() {
 
               <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
                 <SlidersHorizontal className="w-4 h-4 text-zinc-500" />
+                <select
+                  value={selectedListFilter}
+                  onChange={(e) => setSelectedListFilter(e.target.value)}
+                  className="px-3 py-1.5 rounded bg-zinc-900 border border-border text-xs text-zinc-300 font-medium font-mono focus:outline-none focus:border-zinc-700"
+                >
+                  <option value="all">All Lists</option>
+                  {lists.map((l) => (
+                    <option key={l.id} value={l.id}>{l.name}</option>
+                  ))}
+                </select>
+
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}

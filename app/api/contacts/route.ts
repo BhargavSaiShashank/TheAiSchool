@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     const contacts = await prisma.contact.findMany({
+      include: {
+        lists: true,
+      },
       orderBy: {
         created_at: "desc",
       },
@@ -28,6 +31,7 @@ export async function GET() {
         company: (customFields as any).company || "PulseSend Sandbox",
         city: (customFields as any).city || "Hyderabad",
         jobTitle: (customFields as any).jobTitle || "Developer",
+        listIds: c.lists.map((l) => l.list_id),
       };
     });
 
