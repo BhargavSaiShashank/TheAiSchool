@@ -73,6 +73,22 @@ export async function POST(req: Request) {
       });
     }
 
+    // Safely verify if templateId exists in the database before assigning it to prevent foreign key constraint crashes (e.g. on mock starter IDs like t1, t2)
+    let validTemplateId: string | null = null;
+    if (templateId && typeof templateId === "string") {
+      try {
+        const templateExists = await prisma.template.findUnique({
+          where: { id: templateId },
+        });
+        if (templateExists) {
+          validTemplateId = templateId;
+        }
+      } catch (err) {
+        // Safe fallback if not a valid UUID format or template does not exist
+        validTemplateId = null;
+      }
+    }
+
     const newCamp = await prisma.campaign.create({
       data: {
         name,
@@ -81,7 +97,7 @@ export async function POST(req: Request) {
         from_name: fromName || "PulseSend Team",
         from_email: fromEmail || "hello@pulsesend.com",
         status: status || "draft",
-        template_id: templateId || null,
+        template_id: validTemplateId,
         org_id: org.id,
       },
     });
