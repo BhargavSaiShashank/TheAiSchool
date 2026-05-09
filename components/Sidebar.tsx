@@ -37,6 +37,7 @@ export default function Sidebar() {
   ];
 
   const settingsItems = [
+    { name: "My Profile", href: "/settings/profile", icon: Sliders, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
     { name: "Organisation", href: "/settings/org", icon: Building, roles: ["SUPER_ADMIN"] },
     { name: "Users", href: "/settings/users", icon: Users, roles: ["SUPER_ADMIN"] },
     { name: "Suppression List", href: "/settings/suppression", icon: ShieldAlert, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER"] },
