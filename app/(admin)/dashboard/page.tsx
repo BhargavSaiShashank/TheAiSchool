@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
+import { useUser } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
@@ -33,6 +34,7 @@ import DeliveryPipelineHUD from "@/components/DeliveryPipelineHUD";
 
 export default function DashboardPage() {
   const { user } = useStore();
+  const { user: clerkUser } = useUser();
   const [copilotQuery, setCopilotQuery] = useState("");
   const [copilotResponse, setCopilotResponse] = useState<any | null>(null);
   const [copilotGenerating, setCopilotGenerating] = useState(false);
@@ -131,7 +133,7 @@ export default function DashboardPage() {
             Operational Overview — AWS eu-north-1
           </p>
           <h2 className="text-2xl font-black text-white tracking-tight leading-none">
-            Welcome back, <span className="text-[#7C5CFF]">{user?.email.split("@")[0] || "Admin"}</span>
+            Welcome back, <span className="text-[#7C5CFF]">{clerkUser?.username || clerkUser?.firstName || user?.email.split("@")[0] || "Admin"}</span>
           </h2>
         </div>
         <div className="flex items-center gap-2 shrink-0">
