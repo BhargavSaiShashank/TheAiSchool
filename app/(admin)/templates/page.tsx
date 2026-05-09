@@ -182,9 +182,7 @@ export default function TemplatesPage() {
               };
             });
 
-            // Wrap design loading in the official ready callback
-            // @ts-ignore
-            window.unlayer.ready(() => {
+            const loadSavedDesign = () => {
               const blocksData = selectedTemplate?.blocks || (selectedTemplate as any)?.content;
               if (blocksData) {
                 try {
@@ -200,7 +198,19 @@ export default function TemplatesPage() {
                   console.error("Error loading saved Unlayer design:", err);
                 }
               }
-            });
+            };
+
+            // Wrap design loading in the official ready callback with robust type safety checks
+            // @ts-ignore
+            if (window.unlayer && typeof window.unlayer.ready === "function") {
+              // @ts-ignore
+              window.unlayer.ready(() => {
+                loadSavedDesign();
+              });
+            } else {
+              // Fallback: load directly with a defensive delay to allow script binding
+              setTimeout(loadSavedDesign, 300);
+            }
           } catch (err) {
             console.error("Unlayer initialization failed:", err);
           }
