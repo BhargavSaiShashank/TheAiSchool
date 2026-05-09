@@ -56,10 +56,12 @@ export default function CampaignsPage() {
   const [isSendingTest, setIsSendingTest] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
 
   // Campaigns State
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [lists, setLists] = useState<any[]>([]);
+  const [dbTemplates, setDbTemplates] = useState<any[]>([]);
 
   // Sync session details automatically
   useEffect(() => {
@@ -131,8 +133,23 @@ export default function CampaignsPage() {
       }
     }
 
+    async function fetchDbTemplates() {
+      try {
+        const res = await fetch("/api/templates");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data)) {
+            setDbTemplates(data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch database templates.", err);
+      }
+    }
+
     fetchLiveCampaigns();
     fetchMailingLists();
+    fetchDbTemplates();
   }, [view]);
 
 
@@ -219,8 +236,11 @@ export default function CampaignsPage() {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const res = await fetch("/api/campaigns", {
-        method: "POST",
+      const url = editingCampaignId ? `/api/campaigns?id=${editingCampaignId}` : "/api/campaigns";
+      const method = editingCampaignId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: campaignName || "Untitled Campaign",
@@ -233,13 +253,20 @@ export default function CampaignsPage() {
         }),
       });
       if (res.ok) {
-        const newCamp = await res.json();
-        setCampaigns([newCamp, ...campaigns]);
+        const campResult = await res.json();
+        if (editingCampaignId) {
+          setCampaigns(campaigns.map((c) => (c.id === editingCampaignId ? campResult : c)));
+          toast.success(`Updated campaign draft: ${campResult.name}`);
+        } else {
+          setCampaigns([campResult, ...campaigns]);
+          toast.success(`Saved campaign: ${campResult.name}`);
+        }
       }
     } catch (err) {
       console.error("Failed to save campaign to Supabase, running simulation local state.", err);
     } finally {
       setIsSaving(false);
+      setEditingCampaignId(null);
     }
   };
 
@@ -312,12 +339,12 @@ export default function CampaignsPage() {
                       <tr>
                         <td colSpan={6} className="py-12 px-5 text-center">
                           <div className="flex flex-col items-center justify-center space-y-3.5">
-                            <div className="p-3 rounded-full bg-zinc-950/40 border border-white/[0.03] text-zinc-500">
+                            <div className="p-3 rounded-full bg-secondary border border-border text-muted-foreground">
                               <Mail className="w-6 h-6 stroke-[1.5]" />
                             </div>
                             <div>
-                              <p className="text-[13px] font-bold text-zinc-400">No campaigns found</p>
-                              <p className="text-[11px] text-zinc-500 max-w-xs mx-auto mt-1 font-medium font-mono uppercase tracking-wider leading-relaxed">
+                              <p className="text-[13px] font-bold text-muted-foreground">No campaigns found</p>
+                              <p className="text-[11px] text-muted-foreground/80 max-w-xs mx-auto mt-1 font-medium font-mono uppercase tracking-wider leading-relaxed">
                                 Create your first high-performance email campaign with the designer wizard.
                               </p>
                             </div>
@@ -334,7 +361,7 @@ export default function CampaignsPage() {
                           <td className="py-4 px-5">
                             <span className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded uppercase ${
                               camp.status === "Sent"
-                                ? "bg-zinc-900 text-zinc-400 border border-border"
+                                ? "bg-secondary text-muted-foreground border border-border"
                                 : "bg-blue-950/20 text-blue-400 border border-blue-900/30"
                             }`}>
                               {camp.status}
@@ -351,6 +378,22 @@ export default function CampaignsPage() {
                           </td>
                           <td className="py-4 px-5 text-right">
                             <div className="flex items-center justify-end gap-2">
+                              {camp.status !== "Sent" && (
+                                <button
+                                  onClick={() => {
+                                    setEditingCampaignId(camp.id);
+                                    setCampaignName(camp.name);
+                                    setSubject(camp.subject);
+                                    setPreviewText("");
+                                    setActiveStep(1);
+                                    setView("wizard");
+                                  }}
+                                  className="text-[#7C5CFF] hover:text-[#7C5CFF]/80 transition p-1.5 rounded hover:bg-[#7C5CFF]/10"
+                                  title="Edit & Send Draft"
+                                >
+                                  <Send className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleDuplicate(camp)}
                                 className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
@@ -386,23 +429,23 @@ export default function CampaignsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="p-8 bg-zinc-950 border border-zinc-900 rounded-lg glass space-y-8"
+            className="p-8 glass-hud rounded-lg space-y-8"
           >
             {/* Step Indicators Header */}
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-5">
+            <div className="flex items-center justify-between border-b border-border/50 pb-5">
               <div>
-                <h3 className="text-[15px] font-bold text-white tracking-tight">Campaign Design Wizard</h3>
-                <p className="text-[12px] text-zinc-500 mt-0.5">Build and schedule a high-performance email campaign</p>
+                <h3 className="text-[15px] font-bold text-foreground tracking-tight">Campaign Design Wizard</h3>
+                <p className="text-[12px] text-muted-foreground mt-0.5">Build and schedule a high-performance email campaign</p>
               </div>
 
-              <div className="flex items-center gap-3.5 text-[12px] font-mono font-bold text-zinc-500">
-                <span className={activeStep === 1 ? "text-white" : ""}>1. Details</span>
+              <div className="flex items-center gap-3.5 text-[12px] font-mono font-bold text-muted-foreground">
+                <span className={activeStep === 1 ? "text-foreground font-extrabold" : ""}>1. Details</span>
                 <span>/</span>
-                <span className={activeStep === 2 ? "text-white" : ""}>2. Audience</span>
+                <span className={activeStep === 2 ? "text-foreground font-extrabold" : ""}>2. Audience</span>
                 <span>/</span>
-                <span className={activeStep === 3 ? "text-white" : ""}>3. Design</span>
+                <span className={activeStep === 3 ? "text-foreground font-extrabold" : ""}>3. Design</span>
                 <span>/</span>
-                <span className={activeStep === 4 ? "text-white" : ""}>4. Review</span>
+                <span className={activeStep === 4 ? "text-foreground font-extrabold" : ""}>4. Review</span>
               </div>
             </div>
 
@@ -410,61 +453,61 @@ export default function CampaignsPage() {
             {activeStep === 1 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-semibold text-zinc-400 font-mono">Campaign Name (Internal Only)</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">Campaign Name (Internal Only)</label>
                   <input
                     type="text"
                     value={campaignName}
                     onChange={(e) => setCampaignName(e.target.value)}
                     placeholder="e.g. May Product Newsletter Blast"
                     required
-                    className="w-full px-3.5 py-2 rounded bg-zinc-900 border border-zinc-850 focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                    className="w-full px-3.5 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400 font-mono">Email Subject Line</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">Email Subject Line</label>
                   <input
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="What the recipient sees in their inbox..."
                     required
-                    className="w-full px-3.5 py-2 rounded bg-zinc-900 border border-zinc-850 focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                    className="w-full px-3.5 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400 font-mono">Preview Text</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">Preview Text</label>
                   <input
                     type="text"
                     value={previewText}
                     onChange={(e) => setPreviewText(e.target.value)}
                     placeholder="Short summary displayed after the subject line..."
-                    className="w-full px-3.5 py-2 rounded bg-zinc-900 border border-zinc-850 focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                    className="w-full px-3.5 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400 font-mono">Sender Name</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">Sender Name</label>
                   <input
                     type="text"
                     value={fromName}
                     onChange={(e) => setFromName(e.target.value)}
                     placeholder="e.g. PulseSend Marketing"
                     required
-                    className="w-full px-3.5 py-2 rounded bg-zinc-900 border border-zinc-850 focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                    className="w-full px-3.5 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400 font-mono">Sender Email Address</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">Sender Email Address</label>
                   <input
                     type="email"
                     value={fromEmail}
                     onChange={(e) => setFromEmail(e.target.value)}
                     placeholder="hello@pulsesend.com"
                     required
-                    className="w-full px-3.5 py-2 rounded bg-zinc-900 border border-zinc-850 focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                    className="w-full px-3.5 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground"
                   />
                 </div>
               </div>
@@ -475,26 +518,26 @@ export default function CampaignsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Inclusion mailing lists */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-white uppercase font-mono">Include Contact Lists</h4>
+                  <h4 className="text-xs font-bold text-foreground uppercase font-mono">Include Contact Lists</h4>
                   <div className="space-y-2">
                     {lists.length === 0 ? (
-                      <p className="text-xs text-zinc-500 font-mono italic">No mailing lists discovered. Please create a mailing list under Contacts first.</p>
+                      <p className="text-xs text-muted-foreground font-mono italic">No mailing lists discovered. Please create a mailing list under Contacts first.</p>
                     ) : (
                       lists.map((list) => {
                         const isChecked = selectedLists.includes(list.id);
                         return (
-                          <label key={list.id} className="flex items-center gap-3 p-3 rounded bg-zinc-900/40 border border-zinc-900 cursor-pointer hover:border-zinc-800 transition">
+                          <label key={list.id} className="flex items-center gap-3 p-3 rounded bg-secondary/40 border border-border cursor-pointer hover:border-primary/50 transition">
                             <input
                               type="checkbox"
                               checked={isChecked}
                               onChange={(e) => {
                                 setSelectedLists(e.target.checked ? [...selectedLists, list.id] : selectedLists.filter(id => id !== list.id));
                               }}
-                              className="w-4 h-4 rounded border-zinc-800 text-white bg-black focus:ring-0"
+                              className="w-4 h-4 rounded border-border text-[#7C5CFF] bg-black focus:ring-0"
                             />
                             <div>
-                              <p className="text-xs font-bold text-zinc-300">{list.name}</p>
-                              <p className="text-[10px] text-zinc-500 font-mono mt-0.5">{selectedLists.includes(list.id) ? `${list.count || 0} contacts active` : "Audience excluded"}</p>
+                              <p className="text-xs font-bold text-foreground">{list.name}</p>
+                              <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{selectedLists.includes(list.id) ? `${list.count || 0} contacts active` : "Audience excluded"}</p>
                             </div>
                           </label>
                         );
@@ -505,26 +548,26 @@ export default function CampaignsPage() {
 
                 {/* Exclusions */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-white uppercase font-mono">Exclude Contact Lists (Optional)</h4>
+                  <h4 className="text-xs font-bold text-foreground uppercase font-mono">Exclude Contact Lists (Optional)</h4>
                   <div className="space-y-2">
                     {lists.length === 0 ? (
-                      <p className="text-xs text-zinc-500 font-mono italic">No mailing lists discovered.</p>
+                      <p className="text-xs text-muted-foreground font-mono italic">No mailing lists discovered.</p>
                     ) : (
                       lists.map((list) => {
                         const isChecked = excludedLists.includes(list.id);
                         return (
-                          <label key={list.id} className="flex items-center gap-3 p-3 rounded bg-zinc-900/20 border border-zinc-900/60 cursor-pointer hover:border-zinc-800 transition">
+                          <label key={list.id} className="flex items-center gap-3 p-3 rounded bg-secondary/20 border border-border cursor-pointer hover:border-primary/50 transition">
                             <input
                               type="checkbox"
                               checked={isChecked}
                               onChange={(e) => {
                                 setExcludedLists(e.target.checked ? [...excludedLists, list.id] : excludedLists.filter(id => id !== list.id));
                               }}
-                              className="w-4 h-4 rounded border-zinc-800 text-red-500 bg-black focus:ring-0"
+                              className="w-4 h-4 rounded border-border text-red-500 bg-black focus:ring-0"
                             />
                             <div>
-                              <p className="text-xs font-bold text-zinc-400">{list.name}</p>
-                              <p className="text-[10px] text-zinc-600 font-mono mt-0.5">{excludedLists.includes(list.id) ? "Suppress matching" : "Suppress excluded"}</p>
+                              <p className="text-xs font-bold text-foreground">{list.name}</p>
+                              <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{excludedLists.includes(list.id) ? "Suppress matching" : "Suppress excluded"}</p>
                             </div>
                           </label>
                         );
@@ -534,15 +577,15 @@ export default function CampaignsPage() {
                 </div>
 
                 {/* Live Count estimation footer */}
-                <div className="md:col-span-2 p-4 rounded border border-zinc-850 bg-zinc-900/40 flex items-center justify-between">
+                <div className="md:col-span-2 p-4 rounded border border-border bg-secondary/40 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Users className="w-5 h-5 text-zinc-500" />
+                    <Users className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-xs font-bold text-zinc-300">Deduplicated Recipients</p>
-                      <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Auto-filtering duplicate, unsubscribed, and suppressed contacts</p>
+                      <p className="text-xs font-bold text-foreground">Deduplicated Recipients</p>
+                      <p className="text-[10px] text-muted-foreground font-mono mt-0.5">Auto-filtering duplicate, unsubscribed, and suppressed contacts</p>
                     </div>
                   </div>
-                  <span className="text-sm font-extrabold font-mono text-white">
+                  <span className="text-sm font-extrabold font-mono text-foreground">
                     {totalRecipientsCount.toLocaleString()} contacts
                   </span>
                 </div>
@@ -552,23 +595,26 @@ export default function CampaignsPage() {
             {/* STEP 3: DESIGN SELECTION */}
             {activeStep === 3 && (
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-white uppercase font-mono">Select Template Design</h4>
+                <h4 className="text-xs font-bold text-foreground uppercase font-mono">Select Template Design</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {["Welcome Onboard", "Monthly Tech Newsletter", "Product Promotion Blast"].map((temp, i) => {
-                    const tempId = `t${i+1}`;
-                    const isSelected = selectedTemplateId === tempId;
+                  {(dbTemplates.length > 0 ? dbTemplates : [
+                    { id: "t1", name: "Welcome Onboard", category: "starter block" },
+                    { id: "t2", name: "Monthly Tech Newsletter", category: "starter block" },
+                    { id: "t3", name: "Product Promotion Blast", category: "starter block" }
+                  ]).map((temp) => {
+                    const isSelected = selectedTemplateId === temp.id;
                     return (
                       <div
-                        key={tempId}
-                        onClick={() => setSelectedTemplateId(tempId)}
-                        className={`p-4 rounded-lg border bg-zinc-900/40 cursor-pointer transition flex items-center gap-3.5 group hover:border-zinc-700 ${
-                          isSelected ? "border-blue-500 bg-blue-950/10" : "border-zinc-900"
+                        key={temp.id}
+                        onClick={() => setSelectedTemplateId(temp.id)}
+                        className={`p-4 rounded-lg border bg-secondary/40 cursor-pointer transition flex items-center gap-3.5 group hover:border-primary/50 ${
+                          isSelected ? "border-[#7C5CFF] bg-[#7C5CFF]/10" : "border-border"
                         }`}
                       >
-                        <Layout className="w-5 h-5 text-zinc-500" />
+                        <Layout className="w-5 h-5 text-[#7C5CFF]" />
                         <div>
-                          <p className="text-xs font-bold text-zinc-300 truncate max-w-[150px]">{temp}</p>
-                          <p className="text-[9px] text-zinc-500 font-mono uppercase mt-0.5 font-bold">starter block</p>
+                          <p className="text-xs font-bold text-foreground truncate max-w-[150px]">{temp.name}</p>
+                          <p className="text-[9px] text-zinc-500 font-mono uppercase mt-0.5 font-bold">{temp.category || "Custom"}</p>
                         </div>
                       </div>
                     );

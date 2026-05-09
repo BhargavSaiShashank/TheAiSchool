@@ -16,6 +16,7 @@ interface PulseSendState {
   commandPaletteOpen: boolean;
   ipAttempts: number;
   ipLockedUntil: string | null;
+  theme: "dark" | "light";
   
   // Actions
   login: (user: UserSession) => void;
@@ -27,6 +28,7 @@ interface PulseSendState {
   incrementIpAttempts: () => void;
   lockIp: (minutes: number) => void;
   resetIpAttempts: () => void;
+  toggleTheme: () => void;
 }
 
 export const useStore = create<PulseSendState>()(
@@ -38,6 +40,7 @@ export const useStore = create<PulseSendState>()(
       commandPaletteOpen: false,
       ipAttempts: 0,
       ipLockedUntil: null,
+      theme: "dark",
 
       login: (user) => set({ user }),
       logout: () => set({ user: null }),
@@ -45,6 +48,7 @@ export const useStore = create<PulseSendState>()(
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
       setActiveRoute: (route) => set({ activeRoute: route }),
       setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
+      toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
       
       incrementIpAttempts: () => set((state) => {
         const attempts = state.ipAttempts + 1;

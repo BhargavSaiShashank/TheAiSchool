@@ -609,27 +609,27 @@ export default function ContactsPage() {
 
             {/* Stats summary strip above cards — totals derived from the same lists data the cards use */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 bg-zinc-950/40 border border-white/[0.04] rounded-lg flex items-center gap-3">
+              <div className="p-4 glass-hud rounded-lg flex items-center gap-3">
                 <Users className="w-5 h-5 text-[#7C5CFF] shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Total Lists</p>
-                  <p className="text-2xl font-black text-zinc-100 font-mono">{lists.length}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Total Lists</p>
+                  <p className="text-2xl font-black text-foreground font-mono">{lists.length}</p>
                 </div>
               </div>
-              <div className="p-4 bg-zinc-950/40 border border-white/[0.04] rounded-lg flex items-center gap-3">
+              <div className="p-4 glass-hud rounded-lg flex items-center gap-3">
                 <Database className="w-5 h-5 text-emerald-500 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Total Contacts</p>
-                  <p className="text-2xl font-black text-zinc-100 font-mono">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Total Contacts</p>
+                  <p className="text-2xl font-black text-foreground font-mono">
                     {lists.reduce((sum, l) => sum + (l.count ?? 0), 0).toLocaleString()}
                   </p>
                 </div>
               </div>
-              <div className="p-4 bg-zinc-950/40 border border-white/[0.04] rounded-lg flex items-center gap-3">
+              <div className="p-4 glass-hud rounded-lg flex items-center gap-3">
                 <FileText className="w-5 h-5 text-blue-400 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider font-mono">Active Subscribers</p>
-                  <p className="text-2xl font-black text-zinc-100 font-mono">{contacts.filter(c => c.status === "active").length}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Active Subscribers</p>
+                  <p className="text-2xl font-black text-foreground font-mono">{contacts.filter(c => c.status === "active").length}</p>
                 </div>
               </div>
             </div>

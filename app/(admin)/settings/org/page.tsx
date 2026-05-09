@@ -68,10 +68,10 @@ export default function OrgSettingsPage() {
 
   return (
     <div className="space-y-8 select-none">
-      <div className="max-w-2xl p-6 bg-card border border-border rounded-md shadow-sm space-y-6">
+      <div className="max-w-2xl p-6 glass-hud rounded-lg space-y-6">
         <div>
           <h3 className="text-sm font-bold text-foreground tracking-tight flex items-center gap-2">
-            <Building className="w-[18px] h-[18px] text-zinc-400" />
+            <Building className="w-[18px] h-[18px] text-muted-foreground" />
             <span>Organisation Setup Parameters</span>
           </h3>
           <p className="text-[10px] text-muted-foreground mt-0.5">Manage details and AWS SES integrations for {user?.org_name}</p>
@@ -86,7 +86,7 @@ export default function OrgSettingsPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3.5 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                className="w-full px-3.5 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground"
               />
             </div>
 
@@ -97,7 +97,7 @@ export default function OrgSettingsPage() {
                 value={fromEmail}
                 onChange={(e) => setFromEmail(e.target.value)}
                 required
-                className="w-full px-3.5 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                className="w-full px-3.5 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground"
               />
             </div>
 
@@ -109,7 +109,7 @@ export default function OrgSettingsPage() {
               <select
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
-                className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-400 font-medium"
+                className="w-full px-3 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground font-medium"
               >
                 <option value="us-east-1">us-east-1 (N. Virginia)</option>
                 <option value="us-west-2">us-west-2 (Oregon)</option>
@@ -124,7 +124,7 @@ export default function OrgSettingsPage() {
                 value={configSet}
                 onChange={(e) => setConfigSet(e.target.value)}
                 placeholder="e.g. pulsesend-events"
-                className="w-full px-3.5 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200 font-mono"
+                className="w-full px-3.5 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground font-mono"
               />
             </div>
           </div>

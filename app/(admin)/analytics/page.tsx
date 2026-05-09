@@ -78,13 +78,13 @@ export default function AnalyticsPage() {
   if (campaigns.length === 0 && !isLoading) {
     return (
       <div className="space-y-5 select-none py-12 text-center">
-        <div className="max-w-md mx-auto p-8 rounded-lg bg-zinc-950/40 border border-white/[0.03] space-y-4">
-          <div className="p-4 rounded-full bg-zinc-900 border border-white/[0.04] text-zinc-500 w-12 h-12 mx-auto flex items-center justify-center">
+        <div className="max-w-md mx-auto p-8 rounded-lg glass-hud space-y-4">
+          <div className="p-4 rounded-full bg-secondary border border-border text-muted-foreground w-12 h-12 mx-auto flex items-center justify-center">
             <BarChart3 className="w-6 h-6 stroke-[1.5]" />
           </div>
           <div>
-            <h3 className="text-[14px] font-bold text-zinc-300">No Analytics reports found</h3>
-            <p className="text-[11px] text-zinc-500 mt-1 font-mono uppercase tracking-wider leading-relaxed">
+            <h3 className="text-[14px] font-bold text-foreground">No Analytics reports found</h3>
+            <p className="text-[11px] text-muted-foreground mt-1 font-mono uppercase tracking-wider leading-relaxed">
               Dispatch an email campaign inside the Campaign Wizard to see deep delivery and engagement reporting analytics here.
             </p>
           </div>
@@ -95,7 +95,7 @@ export default function AnalyticsPage() {
 
   if (!data || isLoading) {
     return (
-      <div className="h-64 flex items-center justify-center text-[12px] font-mono text-zinc-500 uppercase tracking-widest">
+      <div className="h-64 flex items-center justify-center text-[12px] font-mono text-muted-foreground uppercase tracking-widest">
         Loading campaign reports...
       </div>
     );
@@ -113,18 +113,18 @@ export default function AnalyticsPage() {
       {/* Campaign Selector Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-zinc-400" />
+          <h2 className="text-[15px] font-bold text-foreground tracking-tight flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-muted-foreground" />
             <span>Campaign Reporting Analytics</span>
           </h2>
-          <p className="text-[12px] text-zinc-500 mt-0.5">Visualize user engagement and deliverability metrics per dispatch</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5">Visualize user engagement and deliverability metrics per dispatch</p>
         </div>
 
         <div className="flex items-center gap-3.5 w-full sm:w-auto shrink-0">
           <select
             value={selectedCampaignId}
             onChange={(e) => setSelectedCampaignId(e.target.value)}
-            className="px-3.5 py-2 rounded bg-zinc-900 border border-border text-[13px] text-zinc-300 font-semibold focus:outline-none"
+            className="px-3.5 py-2 rounded bg-secondary border border-border text-[13px] text-foreground font-semibold focus:outline-none"
           >
             {campaigns.map((c) => (
               <option key={c.id} value={c.id}>
@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-zinc-900 border border-border hover:border-zinc-700 text-muted-foreground hover:text-foreground text-[13px] font-mono font-bold transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-secondary border border-border hover:border-primary text-muted-foreground hover:text-foreground text-[13px] font-mono font-bold transition cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>

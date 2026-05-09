@@ -90,11 +90,11 @@ export default function SuppressionPage() {
   return (
     <div className="space-y-8 select-none">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 rounded-md bg-card border border-border shadow-sm relative overflow-hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 rounded-lg glass-hud relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-40 bg-red-500/[0.01] rounded-full blur-[40px] pointer-events-none" />
         <div className="space-y-1.5 z-10">
           <div className="flex items-center gap-2">
-            <span className="text-xs bg-red-950/20 border border-red-900/40 text-red-400 px-2.5 py-0.5 rounded-full font-mono flex items-center gap-1">
+            <span className="text-xs bg-red-500/10 dark:bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 px-2.5 py-0.5 rounded-full font-mono flex items-center gap-1">
               <ShieldAlert className="w-3.5 h-3.5" />
               Campaign Safeguard Active
             </span>
@@ -120,7 +120,7 @@ export default function SuppressionPage() {
         {/* Suppression Table directory */}
         <div className="lg:col-span-2 space-y-4">
           <div className="relative max-w-md">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-zinc-500">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground">
               <Search className="w-4 h-4" />
             </div>
             <input
@@ -128,11 +128,11 @@ export default function SuppressionPage() {
               placeholder="Search suppression logs by email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 rounded bg-zinc-900 border border-border text-xs text-zinc-300 placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition"
+              className="w-full pl-9 pr-4 py-1.5 rounded bg-secondary border border-border text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary transition"
             />
           </div>
 
-          <div className="bg-card border border-border rounded-md overflow-hidden shadow-sm">
+          <div className="glass-hud rounded-lg overflow-hidden">
             <div className="overflow-x-auto text-xs">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -146,13 +146,13 @@ export default function SuppressionPage() {
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-zinc-500 font-mono tracking-widest text-[11px] uppercase">
+                      <td colSpan={4} className="py-8 text-center text-muted-foreground font-mono tracking-widest text-[11px] uppercase">
                         Loading safeguard blocks...
                       </td>
                     </tr>
                   ) : filteredSuppressions.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-zinc-500 font-mono tracking-wider text-[11px] uppercase">
+                      <td colSpan={4} className="py-8 text-center text-muted-foreground font-mono tracking-wider text-[11px] uppercase">
                         No suppressed addresses logged inside campaign safeguard center.
                       </td>
                     </tr>
@@ -166,10 +166,10 @@ export default function SuppressionPage() {
                         <td className="py-3 px-5">
                           <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
                             item.reason === "hard_bounce"
-                              ? "bg-red-950/20 text-red-400 border border-red-900/30"
+                              ? "bg-red-500/10 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
                               : item.reason === "spam_complaint"
-                              ? "bg-amber-950/20 text-amber-400 border border-amber-900/30"
-                              : "bg-zinc-900 text-muted-foreground border border-border"
+                              ? "bg-amber-500/10 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                              : "bg-secondary text-muted-foreground border border-border"
                           }`}>
                             {item.reason.replace("_", " ")}
                           </span>
@@ -194,7 +194,7 @@ export default function SuppressionPage() {
         </div>
 
         {/* Safeguard Automated Escalations Sidebar */}
-        <div className="p-6 bg-card border border-border rounded-md shadow-sm space-y-6">
+        <div className="p-6 glass-hud rounded-lg space-y-6">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-amber-400" />
             <h3 className="text-sm font-bold text-foreground tracking-tight">Soft Bounce Safeguard Escalations</h3>
@@ -206,7 +206,7 @@ export default function SuppressionPage() {
             </p>
             
             <div className="space-y-3.5 font-mono text-[11px]">
-              <div className="p-3.5 rounded border border-border bg-secondary/10 flex items-start gap-2.5">
+              <div className="p-3.5 rounded border border-border bg-secondary/40 flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-muted-foreground">1</span>
                 <div>
                   <p className="text-foreground font-bold">1st Soft Bounce</p>
@@ -214,7 +214,7 @@ export default function SuppressionPage() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded border border-border bg-secondary/10 flex items-start gap-2.5">
+              <div className="p-3.5 rounded border border-border bg-secondary/40 flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-muted-foreground">2</span>
                 <div>
                   <p className="text-foreground font-bold">2nd Soft Bounce</p>
@@ -222,10 +222,10 @@ export default function SuppressionPage() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded border border-border bg-secondary/10 flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-red-950/40 border border-red-900/40 flex items-center justify-center font-bold text-red-400">3</span>
+              <div className="p-3.5 rounded border border-border bg-secondary/40 flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-red-500/10 dark:bg-red-500/10 border border-red-500/20 flex items-center justify-center font-bold text-red-600 dark:text-red-400">3</span>
                 <div>
-                  <p className="text-red-400 font-bold">3rd Soft Bounce</p>
+                  <p className="text-red-600 dark:text-red-400 font-bold">3rd Soft Bounce</p>
                   <p className="text-muted-foreground mt-0.5">Escalated to Hard Bounce. Contact permanently suppressed.</p>
                 </div>
               </div>
@@ -242,7 +242,7 @@ export default function SuppressionPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-card border border-border p-6 rounded-md shadow-lg space-y-6"
+              className="w-full max-w-md glass-hud p-6 rounded-lg space-y-6"
             >
               <div>
                 <h3 className="text-sm font-bold text-foreground tracking-tight">Block Subscriber Email</h3>
@@ -258,7 +258,7 @@ export default function SuppressionPage() {
                     onChange={(e) => setNewEmail(e.target.value)}
                     placeholder="subscriber@example.com"
                     required
-                    className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                    className="w-full px-3 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground"
                   />
                 </div>
 
@@ -267,7 +267,7 @@ export default function SuppressionPage() {
                   <select
                     value={newReason}
                     onChange={(e) => setNewReason(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-400 font-medium"
+                    className="w-full px-3 py-2.5 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground font-medium"
                   >
                     <option value="hard_bounce">Hard Bounce</option>
                     <option value="spam_complaint">Spam Complaint</option>
@@ -281,7 +281,7 @@ export default function SuppressionPage() {
                     value={newNotes}
                     onChange={(e) => setNewNotes(e.target.value)}
                     placeholder="Enter notes for audit trail log history..."
-                    className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200 h-24 resize-none"
+                    className="w-full px-3 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground h-24 resize-none"
                   />
                 </div>
 

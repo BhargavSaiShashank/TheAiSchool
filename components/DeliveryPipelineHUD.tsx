@@ -132,18 +132,18 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
   }, [speedMultiplier, isSimulating]);
 
   return (
-    <div className="p-5 bg-zinc-950/40 border border-white/[0.04] rounded-lg relative overflow-hidden">
+    <div className="p-5 glass-hud rounded-lg relative overflow-hidden">
       {/* Dynamic Background Grid Pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(rgba(124,92,255,0.015)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
       {/* Title block */}
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div>
-          <h3 className="text-[13px] font-bold text-zinc-100 tracking-tight flex items-center gap-1.5">
+          <h3 className="text-[13px] font-bold text-foreground tracking-tight flex items-center gap-1.5">
             <Activity className="w-4 h-4 text-[#7C5CFF]" />
             Metabolic Delivery Pipeline HUD
           </h3>
-          <p className="text-[11px] text-zinc-500 mt-0.5 font-medium">Real-time telemetry and dispatch network velocity</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Real-time telemetry and dispatch network velocity</p>
         </div>
         <button
           onClick={handleSimulate}
@@ -178,12 +178,12 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
             className="flex flex-col items-center pointer-events-auto cursor-pointer group"
           >
             <div className={`w-11 h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
-              activeNode === 1 ? "bg-[#7C5CFF]/20 border-[#7C5CFF]" : "bg-zinc-900/80 border-white/[0.04]"
+              activeNode === 1 ? "bg-[#7C5CFF]/20 border-[#7C5CFF]" : "bg-card border-border"
             }`}>
-              <Users className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
+              <Users className="w-4 h-4 text-muted-foreground group-hover:text-primary transition" />
             </div>
-            <span className="text-[10px] font-bold text-zinc-400 mt-2 font-mono uppercase group-hover:text-white transition">Audience</span>
-            <span className="text-[11px] font-bold text-zinc-600 font-mono mt-0.5">{liveStats?.totalAudience || "0"}</span>
+            <span className="text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-primary transition">Audience</span>
+            <span className="text-[11px] font-bold text-foreground font-mono mt-0.5">{liveStats?.totalAudience || "0"}</span>
           </div>
 
           {/* Node 2: Campaign Engine */}
@@ -193,11 +193,11 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
             className="flex flex-col items-center pointer-events-auto cursor-pointer group"
           >
             <div className={`w-11 h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
-              activeNode === 2 ? "bg-[#7C5CFF]/20 border-[#7C5CFF]" : "bg-zinc-900/80 border-white/[0.04]"
+              activeNode === 2 ? "bg-[#7C5CFF]/20 border-[#7C5CFF]" : "bg-card border-border"
             }`}>
-              <Cpu className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
+              <Cpu className="w-4 h-4 text-muted-foreground group-hover:text-primary transition" />
             </div>
-            <span className="text-[10px] font-bold text-zinc-400 mt-2 font-mono uppercase group-hover:text-white transition">Engine</span>
+            <span className="text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-primary transition">Engine</span>
             <span className="text-[11px] font-bold text-[#7C5CFF] font-mono mt-0.5">{liveStats?.totalDispatched && liveStats.totalDispatched !== "0" ? "Active" : "Inactive"}</span>
           </div>
 
@@ -208,12 +208,12 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
             className="flex flex-col items-center pointer-events-auto cursor-pointer group"
           >
             <div className={`w-11 h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
-              activeNode === 3 ? "bg-[#7C5CFF]/20 border-[#7C5CFF]" : "bg-zinc-900/80 border-white/[0.04]"
+              activeNode === 3 ? "bg-[#7C5CFF]/20 border-[#7C5CFF]" : "bg-card border-border"
             }`}>
-              <Send className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
+              <Send className="w-4 h-4 text-muted-foreground group-hover:text-primary transition" />
             </div>
-            <span className="text-[10px] font-bold text-zinc-400 mt-2 font-mono uppercase group-hover:text-white transition">AWS SES</span>
-            <span className="text-[11px] font-bold text-zinc-600 font-mono mt-0.5">Ping: 32ms</span>
+            <span className="text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-primary transition">AWS SES</span>
+            <span className="text-[11px] font-bold text-foreground font-mono mt-0.5">Ping: 32ms</span>
           </div>
 
           {/* Node 4: Inbox Success */}
@@ -223,12 +223,12 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
             className="flex flex-col items-center pointer-events-auto cursor-pointer group"
           >
             <div className={`w-11 h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
-              activeNode === 4 ? "bg-emerald-950/30 border-emerald-500" : "bg-zinc-900/80 border-white/[0.04]"
+              activeNode === 4 ? "bg-emerald-500/20 border-emerald-500" : "bg-card border-border"
             }`}>
-              <Mail className="w-4 h-4 text-emerald-400 group-hover:text-white transition" />
+              <Mail className="w-4 h-4 text-emerald-500 group-hover:text-emerald-400 transition" />
             </div>
-            <span className="text-[10px] font-bold text-zinc-400 mt-2 font-mono uppercase group-hover:text-white transition">Delivered</span>
-            <span className="text-[11px] font-bold text-emerald-400 font-mono mt-0.5">{liveStats?.totalDispatched && liveStats.totalDispatched !== "0" && liveStats.deliverability !== "—" ? liveStats.deliverability : "0.0%"}</span>
+            <span className="text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-emerald-500 transition">Delivered</span>
+            <span className="text-[11px] font-bold text-emerald-500 font-mono mt-0.5">{liveStats?.totalDispatched && liveStats.totalDispatched !== "0" && liveStats.deliverability !== "—" ? liveStats.deliverability : "0.0%"}</span>
           </div>
         </div>
       </div>

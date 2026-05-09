@@ -26,7 +26,7 @@ import {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, sidebarCollapsed, toggleSidebar, logout } = useStore();
+  const { user, sidebarCollapsed, toggleSidebar, logout, theme } = useStore();
 
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
@@ -56,7 +56,7 @@ export default function Sidebar() {
     <motion.aside
       animate={{ width: sidebarCollapsed ? 56 : 240 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-col h-screen border-r border-border bg-[#06070a]/40 backdrop-blur-md text-muted-foreground select-none relative z-20 shrink-0 shadow-sm"
+      className="flex flex-col h-screen border-r border-border bg-background text-muted-foreground select-none relative z-20 shrink-0 shadow-sm"
     >
       {/* Brand Header */}
       <div className="h-[52px] flex items-center justify-between px-4 border-b border-border shrink-0">
@@ -93,7 +93,7 @@ export default function Sidebar() {
       <div className="flex-1 overflow-y-auto py-4 px-2.5 space-y-5">
         <div>
           {!sidebarCollapsed && (
-            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
               Campaigns
             </p>
           )}
@@ -112,7 +112,7 @@ export default function Sidebar() {
                 >
                   <div
                     className={`flex items-center gap-3 px-3 py-2 rounded-md font-medium text-[13px] transition relative cursor-pointer group ${
-                      isActive ? "text-[#F5F7FA] font-bold" : "text-zinc-400 hover:text-[#F5F7FA]"
+                      isActive ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {isActive && (
@@ -122,7 +122,7 @@ export default function Sidebar() {
                         transition={{ type: "spring", stiffness: 380, damping: 28 }}
                       />
                     )}
-                    <item.icon className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+                    <item.icon className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-muted-foreground group-hover:text-foreground"}`} />
                     {!sidebarCollapsed && <span className="relative z-10">{item.name}</span>}
                   </div>
                 </Link>
@@ -135,7 +135,7 @@ export default function Sidebar() {
         {allowedSettingsItems.length > 0 && (
           <div>
             {!sidebarCollapsed && (
-              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider px-3 mb-2">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
                 Settings
               </p>
             )}
@@ -154,7 +154,7 @@ export default function Sidebar() {
                   >
                     <div
                       className={`flex items-center gap-3 px-3 py-2 rounded-md font-medium text-[13px] transition relative cursor-pointer group ${
-                        isActive ? "text-[#F5F7FA] font-bold" : "text-zinc-400 hover:text-[#F5F7FA]"
+                        isActive ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {isActive && (
@@ -164,7 +164,7 @@ export default function Sidebar() {
                           transition={{ type: "spring", stiffness: 380, damping: 28 }}
                         />
                       )}
-                      <item.icon className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+                      <item.icon className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-muted-foreground group-hover:text-foreground"}`} />
                       {!sidebarCollapsed && <span className="relative z-10">{item.name}</span>}
                     </div>
                   </Link>
@@ -193,7 +193,7 @@ export default function Sidebar() {
           <div className="flex items-center gap-2.5 overflow-hidden">
             <UserButton
               appearance={{
-                baseTheme: dark,
+                baseTheme: theme === "light" ? undefined : dark,
               }}
             />
             {!sidebarCollapsed && (

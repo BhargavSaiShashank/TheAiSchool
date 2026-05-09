@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Plus, Trash2, Mail, Check } from "lucide-react";
+import { useStore } from "@/lib/store";
 
 export default function TeammatesPage() {
+  const { user: currentLoggedUser, login } = useStore();
   const [teammates, setTeammates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -67,6 +69,14 @@ export default function TeammatesPage() {
         setTeammates(
           teammates.map((u) => (u.id === id ? { ...u, role } : u))
         );
+        const editedTeammate = teammates.find((u) => u.id === id);
+        if (currentLoggedUser && editedTeammate && (
+          currentLoggedUser.id === id || 
+          currentLoggedUser.email === editedTeammate.email ||
+          currentLoggedUser.email === "synced@clerk.user"
+        )) {
+          login({ ...currentLoggedUser, role: role as any });
+        }
       }
     } catch (err) {
       console.error("Failed to update teammate role:", err);
@@ -108,7 +118,7 @@ export default function TeammatesPage() {
         </button>
       </div>
 
-      <div className="bg-card border border-border rounded-md overflow-hidden shadow-sm max-w-4xl">
+      <div className="glass-hud rounded-lg overflow-hidden max-w-4xl">
         <div className="overflow-x-auto text-xs">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -122,13 +132,13 @@ export default function TeammatesPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-zinc-500 font-mono tracking-widest text-[11px] uppercase">
+                  <td colSpan={4} className="py-8 text-center text-muted-foreground font-mono tracking-widest text-[11px] uppercase">
                     Loading directory...
                   </td>
                 </tr>
               ) : teammates.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-zinc-500 font-mono tracking-wider text-[11px] uppercase">
+                  <td colSpan={4} className="py-8 text-center text-muted-foreground font-mono tracking-wider text-[11px] uppercase">
                     No teammates found inside organization registry.
                   </td>
                 </tr>
@@ -145,7 +155,7 @@ export default function TeammatesPage() {
                       <select
                         value={user.role}
                         onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                        className="px-2 py-1 rounded bg-secondary border border-border text-[10px] text-zinc-300 font-semibold font-mono focus:outline-none"
+                        className="px-2 py-1 rounded bg-secondary border border-border text-[10px] text-foreground font-semibold font-mono focus:outline-none"
                       >
                         <option value="SUPER_ADMIN">SUPER ADMIN</option>
                         <option value="CAMPAIGN_MANAGER">CAMPAIGN MANAGER</option>
@@ -155,8 +165,8 @@ export default function TeammatesPage() {
                     <td className="py-3.5 px-5">
                       <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
                         user.status === "Active"
-                          ? "bg-emerald-950/20 text-emerald-400 border border-emerald-900/30"
-                          : "bg-amber-950/20 text-amber-400 border border-amber-900/30"
+                          ? "bg-emerald-500/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                          : "bg-amber-500/10 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
                       }`}>
                         {user.status}
                       </span>
@@ -186,7 +196,7 @@ export default function TeammatesPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-card border border-border p-6 rounded-md shadow-lg space-y-6"
+              className="w-full max-w-md glass-hud p-6 rounded-lg space-y-6"
             >
               <div>
                 <h3 className="text-sm font-bold text-foreground tracking-tight">Invite Teammate</h3>
@@ -197,14 +207,14 @@ export default function TeammatesPage() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground font-mono">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <input
                       type="email"
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
                       placeholder="teammate@example.com"
                       required
-                      className="w-full pl-9 pr-4 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                      className="w-full pl-9 pr-4 py-2 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground"
                     />
                   </div>
                 </div>
@@ -214,7 +224,7 @@ export default function TeammatesPage() {
                   <select
                     value={newRole}
                     onChange={(e) => setNewRole(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-400 font-medium"
+                    className="w-full px-3 py-2.5 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground font-medium"
                   >
                     <option value="SUPER_ADMIN">SUPER ADMIN (Full Access)</option>
                     <option value="CAMPAIGN_MANAGER">CAMPAIGN MANAGER (Campaign Access)</option>

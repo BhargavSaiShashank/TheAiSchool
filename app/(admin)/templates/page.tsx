@@ -245,7 +245,7 @@ export default function TemplatesPage() {
       if (window.unlayer) {
         // @ts-ignore
         window.unlayer.exportHtml(async (data: any) => {
-          const { design } = data;
+          const { design, html } = data;
 
           const res = await fetch("/api/templates", {
             method: "POST",
@@ -255,6 +255,7 @@ export default function TemplatesPage() {
               name: selectedTemplate.name || "Untitled Template",
               category: selectedTemplate.category || "General",
               content: JSON.stringify(design), // Stringify Unlayer design structure
+              html: html || "",
             }),
           });
 
@@ -321,10 +322,10 @@ export default function TemplatesPage() {
             className="space-y-6"
           >
             {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.04] pb-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/50 pb-5">
               <div>
-                <h2 className="text-sm font-bold text-zinc-100 uppercase font-mono tracking-tight">Template Library</h2>
-                <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider font-mono">Creative Infrastructure Workspace</p>
+                <h2 className="text-sm font-bold text-foreground uppercase font-mono tracking-tight">Template Library</h2>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider font-mono">Creative Infrastructure Workspace</p>
               </div>
               <button
                 onClick={() => {
@@ -340,7 +341,7 @@ export default function TemplatesPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.04] pb-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/50 pb-5">
               <div className="relative max-w-xs w-full">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-zinc-500">
                   <Search className="w-4 h-4" />
@@ -350,7 +351,7 @@ export default function TemplatesPage() {
                   placeholder="Search templates..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 rounded bg-zinc-900 border border-white/[0.04] text-xs text-zinc-300 placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition"
+                  className="w-full pl-9 pr-4 py-1.5 rounded bg-secondary border border-border text-xs text-foreground placeholder-zinc-500 focus:outline-none focus:border-zinc-700 transition"
                 />
               </div>
 
@@ -364,7 +365,7 @@ export default function TemplatesPage() {
                       className={`relative px-3 py-1.5 rounded text-[10px] font-semibold font-mono tracking-wider uppercase border transition cursor-pointer ${
                         isActive
                           ? "text-white border-transparent"
-                          : "text-zinc-400 border-white/[0.04] hover:text-white"
+                          : "text-muted-foreground border-border hover:text-foreground"
                       }`}
                     >
                       {isActive && (
@@ -393,10 +394,10 @@ export default function TemplatesPage() {
                     className="h-full"
                   >
                     <CardSpotlight>
-                      <div className="p-4 bg-zinc-950/40 border border-white/[0.04] rounded-md flex flex-col justify-between h-full overflow-hidden">
+                      <div className="p-4 glass-hud rounded-md flex flex-col justify-between h-full overflow-hidden">
                         <div className="space-y-4">
                           {/* Thumbnail representation */}
-                          <div className="relative h-40 bg-zinc-900 rounded-md border border-white/[0.04] overflow-hidden">
+                          <div className="relative h-40 bg-secondary rounded-md border border-border overflow-hidden">
                             {template.thumbnail ? (
                               <img
                                 src={template.thumbnail}
@@ -404,29 +405,29 @@ export default function TemplatesPage() {
                                 className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-zinc-750 font-mono text-[10px]">
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground font-mono text-[10px]">
                                 Empty Preview
                               </div>
                             )}
-                            <span className="absolute top-2.5 left-2.5 text-[9px] bg-zinc-950/90 border border-white/[0.06] px-2 py-0.5 rounded text-zinc-200 font-mono font-bold uppercase tracking-wide">
+                            <span className="absolute top-2.5 left-2.5 text-[9px] bg-secondary border border-border px-2 py-0.5 rounded text-foreground font-mono font-bold uppercase tracking-wide">
                               {template.category}
                             </span>
                           </div>
 
                           <div className="space-y-1">
-                            <h3 className="font-bold text-zinc-200 group-hover:text-[#7C5CFF] transition text-xs">
+                            <h3 className="font-bold text-foreground group-hover:text-[#7C5CFF] transition text-xs">
                               {template.name}
                             </h3>
-                            <p className="text-[10px] text-zinc-500 font-mono font-semibold uppercase">
+                            <p className="text-[10px] text-muted-foreground font-mono font-semibold uppercase">
                               {template.count}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between mt-6 pt-3 border-t border-white/[0.04] text-xs">
+                        <div className="flex items-center justify-between mt-6 pt-3 border-t border-border/50 text-xs">
                           <button
                             onClick={() => alert(`Duplicated template: ${template.name}`)}
-                            className="text-zinc-500 hover:text-zinc-300 p-1 rounded"
+                            className="text-muted-foreground hover:text-foreground p-1 rounded"
                             title="Duplicate Template"
                           >
                             <Copy className="w-4 h-4" />
@@ -436,7 +437,7 @@ export default function TemplatesPage() {
                               setSelectedTemplate(template);
                               setView("editor");
                             }}
-                            className="px-3.5 py-1.5 rounded bg-zinc-900 border border-white/[0.04] text-zinc-300 hover:text-white font-semibold transition cursor-pointer"
+                            className="px-3.5 py-1.5 rounded bg-secondary border border-border text-muted-foreground hover:text-foreground font-semibold transition cursor-pointer"
                           >
                             Open Editor
                           </button>
@@ -447,13 +448,13 @@ export default function TemplatesPage() {
                 ))}
               </div>
             ) : (
-              <div className="p-12 bg-zinc-950/40 border border-white/[0.04] rounded-lg text-center space-y-4 max-w-md mx-auto">
+              <div className="p-12 glass-hud rounded-lg text-center space-y-4 max-w-md mx-auto">
                 <div className="w-12 h-12 rounded-full bg-[#7C5CFF]/10 border border-[#7C5CFF]/20 flex items-center justify-center mx-auto">
                   <FileCode className="w-5 h-5 text-[#7C5CFF]" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-zinc-200 uppercase font-mono">No Templates Found</h4>
-                  <p className="text-[10px] text-zinc-500 font-medium">Your creative library is empty. Create your first drag-and-drop newsletter template to get started.</p>
+                  <h4 className="text-xs font-bold text-foreground uppercase font-mono">No Templates Found</h4>
+                  <p className="text-[10px] text-muted-foreground font-medium">Your creative library is empty. Create your first drag-and-drop newsletter template to get started.</p>
                 </div>
                 <button
                   onClick={() => {

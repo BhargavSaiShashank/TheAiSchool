@@ -1,13 +1,13 @@
 "use client";
 
 import { useStore } from "@/lib/store";
-import { Search, Bell, Plus } from "lucide-react";
+import { Search, Bell, Plus, Sun, Moon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function Header() {
   const pathname = usePathname();
-  const { user } = useStore();
+  const { user, theme, toggleTheme } = useStore();
 
   const getPageTitle = () => {
     if (pathname.startsWith("/dashboard")) return "Dashboard";
@@ -32,7 +32,7 @@ export default function Header() {
   };
 
   return (
-    <header className="h-[52px] flex items-center justify-between px-6 border-b border-border bg-[#06070a]/40 backdrop-blur-md select-none sticky top-0 z-10 shrink-0">
+    <header className="h-[52px] flex items-center justify-between px-6 border-b border-border bg-background select-none sticky top-0 z-50 shrink-0">
       {/* Title & Path */}
       <div className="flex flex-col">
         <p className="text-[11px] font-semibold text-zinc-500 font-mono tracking-wider uppercase mb-0.5">
@@ -47,16 +47,16 @@ export default function Header() {
       <div className="flex items-center gap-5">
         {/* Command Search Bar feel */}
         <div className="relative max-w-xs hidden sm:block">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-zinc-500">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-muted-foreground">
             <Search className="w-4 h-4" />
           </div>
           <input
             type="text"
             placeholder="Search platform..."
-            className="w-64 pl-9 pr-8 py-1.5 rounded bg-zinc-900 border border-border text-[13px] text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-700 focus:bg-zinc-950 focus:ring-1 focus:ring-zinc-700 transition"
+            className="w-64 pl-9 pr-8 py-1.5 rounded bg-secondary border border-border text-[13px] text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/40 focus:bg-card focus:ring-1 focus:ring-primary/40 transition"
           />
           <div className="absolute inset-y-0 right-2.5 flex items-center pointer-events-none">
-            <kbd className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-zinc-850 text-zinc-500 border border-border shadow-inner">
+            <kbd className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-card text-muted-foreground border border-border shadow-inner">
               ⌘K
             </kbd>
           </div>
@@ -73,6 +73,19 @@ export default function Header() {
             </Link>
           </div>
         )}
+
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className="p-1.5 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer relative overflow-hidden"
+          title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+        >
+          {theme === "light" ? (
+            <Sun className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+          ) : (
+            <Moon className="w-4 h-4 text-violet-400 fill-violet-400/20" />
+          )}
+        </button>
 
         {/* Alerts Dot */}
         <button className="relative p-1.5 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer">
