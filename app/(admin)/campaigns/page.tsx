@@ -161,16 +161,22 @@ export default function CampaignsPage() {
 
   // Queue simulation state
   const [queueStatus, setQueueStatus] = useState<"sending" | "paused" | "completed">("sending");
-  const [sentCount, setSentCount] = useState(12450);
-  const [totalCount, setTotalCount] = useState(50000);
+  const [sentCount, setSentCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Simulation effect for Campaign Sending Queue
+  // Simulation effect for Campaign Sending Queue using actual dynamic contact counts
   useEffect(() => {
-    if (view !== "queue" || queueStatus !== "sending") return;
+    if (view !== "queue" || queueStatus !== "sending" || totalCount === 0) {
+      if (totalCount === 0 && view === "queue" && queueStatus === "sending") {
+        setQueueStatus("completed");
+      }
+      return;
+    }
 
     const interval = setInterval(() => {
       setSentCount((prev) => {
-        const next = prev + Math.floor(Math.random() * 1200 + 400);
+        const step = Math.max(1, Math.floor(totalCount / 5));
+        const next = prev + Math.floor(Math.random() * step + 1);
         if (next >= totalCount) {
           clearInterval(interval);
           setQueueStatus("completed");
@@ -178,7 +184,7 @@ export default function CampaignsPage() {
         }
         return next;
       });
-    }, 2000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [view, queueStatus, totalCount]);
@@ -227,19 +233,19 @@ export default function CampaignsPage() {
     }
   };
 
-  // Launch Queue Sending Simulation
-  const handleSendCampaignNow = async () => {
-    await handleSaveCampaign("sent");
-    setSentCount(0);
-    setTotalCount(selectedLists.includes("l1") ? 4250 : 12450);
-    setQueueStatus("sending");
-    setView("queue");
-  };
-
-  // Calculate dynamic recipients count
+  // Calculate dynamic recipients count based on actual database lists selected
   const totalRecipientsCount = lists
     .filter((list) => selectedLists.includes(list.id) && !excludedLists.includes(list.id))
     .reduce((sum, list) => sum + (list.count ?? 0), 0);
+
+  // Launch Queue Sending Simulation with real database counts
+  const handleSendCampaignNow = async () => {
+    await handleSaveCampaign("sent");
+    setSentCount(0);
+    setTotalCount(totalRecipientsCount);
+    setQueueStatus("sending");
+    setView("queue");
+  };
 
   return (
     <div className="space-y-8 select-none">
