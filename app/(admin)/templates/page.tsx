@@ -131,35 +131,56 @@ export default function TemplatesPage() {
 
   // Initialize Unlayer instance when script is loaded
   useEffect(() => {
-    if (unlayerLoaded && view === "editor") {
-      // @ts-ignore
-      if (window.unlayer) {
+    if (!unlayerLoaded || view !== "editor") return;
+
+    let timeoutId: any;
+    let attempts = 0;
+
+    const tryInit = () => {
+      const container = document.getElementById("editor-container");
+      if (container) {
         // @ts-ignore
-        window.unlayer.init({
-          id: "editor-container",
-          displayMode: "email",
-          appearance: {
-            theme: "dark",
-          }
-        });
-
-        // Load existing JSON design layout if it matches Unlayer structure
-        if (selectedTemplate && selectedTemplate.content) {
+        if (window.unlayer) {
           try {
-            const parsed = typeof selectedTemplate.content === "string"
-              ? JSON.parse(selectedTemplate.content)
-              : selectedTemplate.content;
+            // @ts-ignore
+            window.unlayer.init({
+              id: "editor-container",
+              displayMode: "email",
+              appearance: {
+                theme: "dark",
+              }
+            });
 
-            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-              // @ts-ignore
-              window.unlayer.loadDesign(parsed);
+            // Load existing JSON design layout if it matches Unlayer structure
+            if (selectedTemplate && selectedTemplate.content) {
+              try {
+                const parsed = typeof selectedTemplate.content === "string"
+                  ? JSON.parse(selectedTemplate.content)
+                  : selectedTemplate.content;
+
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                  // @ts-ignore
+                  window.unlayer.loadDesign(parsed);
+                }
+              } catch (err) {
+                console.error("Error loading saved Unlayer design:", err);
+              }
             }
           } catch (err) {
-            console.error("Error loading saved Unlayer design:", err);
+            console.error("Unlayer initialization failed:", err);
           }
         }
+      } else if (attempts < 10) {
+        attempts++;
+        timeoutId = setTimeout(tryInit, 100); // Retry every 100ms
       }
-    }
+    };
+
+    tryInit();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [unlayerLoaded, view, selectedTemplate]);
 
   // Handle Save Template using Unlayer exportHtml API

@@ -15,10 +15,23 @@ export async function POST(req: Request) {
       list_id: listId,
     }));
 
-    await prisma.contactListMember.createMany({
-      data,
-      skipDuplicates: true,
-    });
+    // Cross-DB compatible batch inserts (supporting SQLite/PostgreSQL)
+    for (const item of data) {
+      try {
+        await prisma.contactListMember.upsert({
+          where: {
+            contact_id_list_id: {
+              contact_id: item.contact_id,
+              list_id: item.list_id,
+            }
+          },
+          update: {}, // Skip duplicates by doing nothing on update
+          create: item,
+        });
+      } catch (err) {
+        console.error("Duplicate contact list member insertion skipped:", err);
+      }
+    }
 
     return NextResponse.json({ success: true, count: contactIds.length });
   } catch (error: any) {
