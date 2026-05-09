@@ -300,14 +300,9 @@ export default function DashboardPage() {
       {/* ─── 2. KPI METRICS GRID (6 cards) ─────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         {stats.map((stat, i) => (
-          <motion.div
+          <div
             key={stat.label}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.015, y: -2 }}
-            whileTap={{ scale: 0.985 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="premium-slab cursor-pointer overflow-hidden"
+            className="premium-slab cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.015] active:scale-[0.985]"
           >
             <CardSpotlight>
               <div className="p-4 flex flex-col justify-between h-full w-full">
@@ -327,7 +322,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </CardSpotlight>
-          </motion.div>
+          </div>
         ))}
       </div>
 
