@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import CardSpotlight from "@/components/CardSpotlight";
 import {
   FileCode,
   Search,
@@ -229,77 +230,94 @@ export default function TemplatesPage() {
               </div>
 
               <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 max-w-full">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1 rounded text-[10px] font-semibold font-mono tracking-wider uppercase border transition cursor-pointer ${
-                      selectedCategory === cat
-                        ? "bg-[#7C5CFF] text-white border-[#7C5CFF] shadow"
-                        : "text-zinc-400 border-white/[0.04] hover:text-white"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+                {categories.map((cat) => {
+                  const isActive = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`relative px-3 py-1.5 rounded text-[10px] font-semibold font-mono tracking-wider uppercase border transition cursor-pointer ${
+                        isActive
+                          ? "text-white border-transparent"
+                          : "text-zinc-400 border-white/[0.04] hover:text-white"
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="active-template-cat"
+                          className="absolute inset-0 bg-[#7C5CFF] rounded"
+                          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                        />
+                      )}
+                      <span className="relative z-10">{cat}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Template Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTemplates.map((template) => (
-                <div
+                <motion.div
                   key={template.id}
-                  className="p-4 bg-zinc-950/40 border border-white/[0.04] rounded-md flex flex-col justify-between hover:border-zinc-800 transition duration-300 group overflow-hidden"
+                  whileHover={{ scale: 1.015, y: -2 }}
+                  whileTap={{ scale: 0.985 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="h-full"
                 >
-                  <div className="space-y-4">
-                    {/* Thumbnail representation */}
-                    <div className="relative h-40 bg-zinc-900 rounded-md border border-white/[0.04] overflow-hidden">
-                      {template.thumbnail ? (
-                        <img
-                          src={template.thumbnail}
-                          alt={template.name}
-                          className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-750 font-mono text-[10px]">
-                          Empty Preview
+                  <CardSpotlight>
+                    <div className="p-4 bg-zinc-950/40 border border-white/[0.04] rounded-md flex flex-col justify-between h-full overflow-hidden">
+                      <div className="space-y-4">
+                        {/* Thumbnail representation */}
+                        <div className="relative h-40 bg-zinc-900 rounded-md border border-white/[0.04] overflow-hidden">
+                          {template.thumbnail ? (
+                            <img
+                              src={template.thumbnail}
+                              alt={template.name}
+                              className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-750 font-mono text-[10px]">
+                              Empty Preview
+                            </div>
+                          )}
+                          <span className="absolute top-2.5 left-2.5 text-[9px] bg-zinc-950/90 border border-white/[0.06] px-2 py-0.5 rounded text-zinc-200 font-mono font-bold uppercase tracking-wide">
+                            {template.category}
+                          </span>
                         </div>
-                      )}
-                      <span className="absolute top-2.5 left-2.5 text-[9px] bg-zinc-950/90 border border-white/[0.06] px-2 py-0.5 rounded text-zinc-200 font-mono font-bold uppercase tracking-wide">
-                        {template.category}
-                      </span>
-                    </div>
 
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-zinc-200 group-hover:text-[#7C5CFF] transition text-xs">
-                        {template.name}
-                      </h3>
-                      <p className="text-[10px] text-zinc-500 font-mono font-semibold uppercase">
-                        {template.count}
-                      </p>
-                    </div>
-                  </div>
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-zinc-200 group-hover:text-[#7C5CFF] transition text-xs">
+                            {template.name}
+                          </h3>
+                          <p className="text-[10px] text-zinc-500 font-mono font-semibold uppercase">
+                            {template.count}
+                          </p>
+                        </div>
+                      </div>
 
-                  <div className="flex items-center justify-between mt-6 pt-3 border-t border-white/[0.04] text-xs">
-                    <button
-                      onClick={() => alert(`Duplicated template: ${template.name}`)}
-                      className="text-zinc-500 hover:text-zinc-300 p-1 rounded"
-                      title="Duplicate Template"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedTemplate(template);
-                        setView("editor");
-                      }}
-                      className="px-3.5 py-1.5 rounded bg-zinc-900 border border-white/[0.04] text-zinc-300 hover:text-white font-semibold transition cursor-pointer"
-                    >
-                      Open Editor
-                    </button>
-                  </div>
-                </div>
+                      <div className="flex items-center justify-between mt-6 pt-3 border-t border-white/[0.04] text-xs">
+                        <button
+                          onClick={() => alert(`Duplicated template: ${template.name}`)}
+                          className="text-zinc-500 hover:text-zinc-300 p-1 rounded"
+                          title="Duplicate Template"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedTemplate(template);
+                            setView("editor");
+                          }}
+                          className="px-3.5 py-1.5 rounded bg-zinc-900 border border-white/[0.04] text-zinc-300 hover:text-white font-semibold transition cursor-pointer"
+                        >
+                          Open Editor
+                        </button>
+                      </div>
+                    </div>
+                  </CardSpotlight>
+                </motion.div>
               ))}
             </div>
           </motion.div>
@@ -329,9 +347,12 @@ export default function TemplatesPage() {
                   <h3 className="text-xs font-bold text-zinc-100 uppercase font-mono tracking-tight leading-none mb-1">
                     {selectedTemplate?.name || "Blank Template"}
                   </h3>
-                  <span className="text-[9px] text-zinc-500 font-mono font-bold uppercase">
-                    {autosaveStatus}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${autosaveStatus === "Saving changes..." ? "bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"}`} />
+                    <span className="text-[9px] text-zinc-500 font-mono font-bold uppercase">
+                      {autosaveStatus}
+                    </span>
+                  </div>
                 </div>
               </div>
 
