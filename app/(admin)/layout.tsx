@@ -113,6 +113,35 @@ export default function AdminLayout({
         className="absolute inset-0 pointer-events-none transition-all duration-1000 ease-in-out"
         style={{ backgroundImage: getAtmosphereGlow() }}
       />
+      {/* Floating Ambient Glowing Blobs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30 z-0">
+        <motion.div
+          animate={{
+            x: [0, 30, -15, 0],
+            y: [0, -20, 15, 0],
+            scale: [1, 1.1, 0.95, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-[-10%] left-[15%] w-[450px] h-[450px] bg-[#7C5CFF]/[0.05] rounded-full blur-[130px]"
+        />
+        <motion.div
+          animate={{
+            x: [0, -40, 20, 0],
+            y: [0, 30, -20, 0],
+            scale: [1, 0.95, 1.05, 1],
+          }}
+          transition={{
+            duration: 30,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] bg-[#3B82F6]/[0.04] rounded-full blur-[140px]"
+        />
+      </div>
       {/* Subtle Grid Overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-80" />
 

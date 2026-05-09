@@ -109,22 +109,18 @@ export default function Sidebar() {
                 >
                   <div
                     className={`flex items-center gap-3 px-3 py-2 rounded-md font-medium text-[13px] transition relative cursor-pointer group ${
-                      isActive
-                        ? "text-[#F5F7FA] bg-white/[0.03] font-semibold border border-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                        : "text-zinc-400 hover:text-[#F5F7FA] hover:bg-white/[0.015]"
+                      isActive ? "text-[#F5F7FA] font-bold" : "text-zinc-400 hover:text-[#F5F7FA]"
                     }`}
                   >
                     {isActive && (
-                      <div className="absolute left-0 top-1/4 bottom-1/4 w-[2px] rounded-r-md bg-[#7C5CFF] shadow-[0_0_8px_#7C5CFF]" />
-                    )}
-                    <item.icon className={`w-[15px] h-[15px] shrink-0 transition ${isActive ? "text-[#7C5CFF]" : "text-zinc-500 group-hover:text-zinc-300"}`} />
-                    {!sidebarCollapsed && <span>{item.name}</span>}
-                    {isActive && !sidebarCollapsed && (
                       <motion.div
-                        layoutId="active-nav-indicator"
-                        className="absolute right-3 w-1.5 h-1.5 rounded-full bg-[#7C5CFF] shadow-[0_0_8px_#7C5CFF]"
+                        layoutId="active-nav-pill"
+                        className="absolute inset-0 bg-[#7C5CFF]/[0.08] border border-[#7C5CFF]/20 rounded-md shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_12px_rgba(124,92,255,0.03)]"
+                        transition={{ type: "spring", stiffness: 380, damping: 28 }}
                       />
                     )}
+                    <item.icon className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+                    {!sidebarCollapsed && <span className="relative z-10">{item.name}</span>}
                   </div>
                 </Link>
               );
@@ -155,22 +151,18 @@ export default function Sidebar() {
                   >
                     <div
                       className={`flex items-center gap-3 px-3 py-2 rounded-md font-medium text-[13px] transition relative cursor-pointer group ${
-                        isActive
-                          ? "text-[#F5F7FA] bg-white/[0.03] font-semibold border border-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                          : "text-zinc-400 hover:text-[#F5F7FA] hover:bg-white/[0.015]"
+                        isActive ? "text-[#F5F7FA] font-bold" : "text-zinc-400 hover:text-[#F5F7FA]"
                       }`}
                     >
                       {isActive && (
-                        <div className="absolute left-0 top-1/4 bottom-1/4 w-[2px] rounded-r-md bg-[#7C5CFF] shadow-[0_0_8px_#7C5CFF]" />
-                      )}
-                      <item.icon className={`w-[15px] h-[15px] shrink-0 transition ${isActive ? "text-[#7C5CFF]" : "text-zinc-500 group-hover:text-zinc-300"}`} />
-                      {!sidebarCollapsed && <span>{item.name}</span>}
-                      {isActive && !sidebarCollapsed && (
                         <motion.div
-                          layoutId="active-setting-indicator"
-                          className="absolute right-3 w-1.5 h-1.5 rounded-full bg-[#7C5CFF]"
+                          layoutId="active-settings-pill"
+                          className="absolute inset-0 bg-[#7C5CFF]/[0.08] border border-[#7C5CFF]/20 rounded-md shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_12px_rgba(124,92,255,0.03)]"
+                          transition={{ type: "spring", stiffness: 380, damping: 28 }}
                         />
                       )}
+                      <item.icon className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-zinc-500 group-hover:text-zinc-300"}`} />
+                      {!sidebarCollapsed && <span className="relative z-10">{item.name}</span>}
                     </div>
                   </Link>
                 );

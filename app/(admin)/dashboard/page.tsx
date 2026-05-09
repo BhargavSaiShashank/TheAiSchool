@@ -28,6 +28,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
+import CardSpotlight from "@/components/CardSpotlight";
 
 export default function DashboardPage() {
   const { user } = useStore();
@@ -294,23 +295,29 @@ export default function DashboardPage() {
             key={stat.label}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1], delay: i * 0.03 }}
-            className="p-4 bg-zinc-950/20 backdrop-blur-md border border-white/[0.03] rounded-lg flex flex-col justify-between transition-all duration-300 group cursor-default shadow-[inset_0_1px_1px_rgba(255,255,255,0.01),0_8px_30px_rgba(0,0,0,0.5)] hover:border-[#7C5CFF]/30 hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(124,92,255,0.03)]"
+            whileHover={{ scale: 1.015, y: -2 }}
+            whileTap={{ scale: 0.985 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className="bg-zinc-950/20 backdrop-blur-md border border-white/[0.03] rounded-lg cursor-pointer shadow-[inset_0_1px_1px_rgba(255,255,255,0.01),0_8px_30px_rgba(0,0,0,0.5)] hover:border-[#7C5CFF]/30 hover:shadow-[0_12px_40px_rgba(124,92,255,0.03)] overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[9px] font-bold text-zinc-500 font-mono uppercase tracking-widest leading-tight">
-                {stat.label}
-              </p>
-              <stat.icon className={`w-3.5 h-3.5 shrink-0 ${stat.accent} opacity-60 group-hover:opacity-100 transition duration-300`} />
-            </div>
-            <div>
-              <p className={`text-2xl font-black font-mono tracking-tight leading-none ${stat.accent}`}>
-                {stat.value}
-              </p>
-              <p className="text-[10px] text-zinc-500 mt-2 font-semibold leading-tight font-mono uppercase">
-                {stat.sub}
-              </p>
-            </div>
+            <CardSpotlight>
+              <div className="p-4 flex flex-col justify-between h-full w-full">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[9px] font-bold text-zinc-500 font-mono uppercase tracking-widest leading-tight">
+                    {stat.label}
+                  </p>
+                  <stat.icon className={`w-3.5 h-3.5 shrink-0 ${stat.accent} opacity-60 group-hover:opacity-100 transition duration-300`} />
+                </div>
+                <div>
+                  <p className={`text-2xl font-black font-mono tracking-tight leading-none ${stat.accent}`}>
+                    {stat.value}
+                  </p>
+                  <p className="text-[10px] text-zinc-500 mt-2 font-semibold leading-tight font-mono uppercase">
+                    {stat.sub}
+                  </p>
+                </div>
+              </div>
+            </CardSpotlight>
           </motion.div>
         ))}
       </div>
