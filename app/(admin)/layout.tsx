@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useStore } from "@/lib/store";
+import { useUser } from "@clerk/nextjs";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import Preloader from "@/components/Preloader";
@@ -18,7 +19,8 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useStore();
+  const { user, login } = useStore();
+  const { user: clerkUser, isLoaded } = useUser();
   const [mounted, setMounted] = useState(false);
   const [pageChanging, setPageChanging] = useState(false);
   const [hasHydrated, setHasHydrated] = useState(false);
@@ -31,17 +33,41 @@ export default function AdminLayout({
     };
   }, []);
 
+  // Real-time Clerk session synchronization into Zustand store
   useEffect(() => {
-    if (!hasHydrated) return;
-    setMounted(true);
-    if (!user) {
+    if (!isLoaded) return;
+
+    if (!clerkUser) {
+      useStore.getState().logout();
       router.push("/login");
+      return;
     }
-  }, [user, router, hasHydrated]);
+
+    // Sync database organization details into Zustand store
+    if (!user || user.id !== clerkUser.id) {
+      const syncSession = async () => {
+        try {
+          const res = await fetch("/api/auth/me");
+          if (res.ok) {
+            const dbUser = await res.json();
+            login(dbUser);
+          }
+        } catch (error) {
+          console.error("Failed to sync Clerk session with DB:", error);
+        }
+      };
+      syncSession();
+    }
+  }, [clerkUser, isLoaded, user, login, router]);
+
+  useEffect(() => {
+    if (!hasHydrated || !isLoaded) return;
+    setMounted(true);
+  }, [hasHydrated, isLoaded]);
 
   // Trigger cinematic preloader on route change
   useEffect(() => {
-    if (!mounted || !user) return;
+    if (!mounted || !user || !clerkUser) return;
     setPageChanging(true);
 
     // Safety fallback: guaranteed to fade out after a maximum of 950ms if no page event is dispatched!
@@ -76,8 +102,8 @@ export default function AdminLayout({
     };
   }, [mounted]);
 
-  if (!mounted || !user) {
-    return null;
+  if (!mounted || !user || !clerkUser) {
+    return <Preloader />;
   }
 
   // Visual Atmosphere System: Dynamic Section-Specific Glow Background
