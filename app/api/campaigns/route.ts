@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { formatDistanceToNow } from "date-fns";
 import { prisma } from "@/lib/prisma";
+import { pushToCampaignQueue } from "@/lib/sqs";
 
 export async function GET() {
   try {
@@ -85,6 +86,13 @@ export async function POST(req: Request) {
 
     // If campaign is sent, auto-generate realistic relational dispatches and event logs in database
     if (status === "sent") {
+      // Push campaign dispatch task to AWS SQS queue for high-scale processing
+      try {
+        await pushToCampaignQueue(newCamp.id);
+      } catch (sqsErr) {
+        console.error("Failed to push campaign dispatch job to AWS SQS:", sqsErr);
+      }
+
       const contacts = await prisma.contact.findMany({
         where: { org_id: org.id },
       });
