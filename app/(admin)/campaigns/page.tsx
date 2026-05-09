@@ -55,6 +55,8 @@ export default function CampaignsPage() {
   const [testEmailRecipient, setTestEmailRecipient] = useState("");
   const [isSendingTest, setIsSendingTest] = useState(false);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   // Campaigns State
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [lists, setLists] = useState<any[]>([]);
@@ -210,6 +212,8 @@ export default function CampaignsPage() {
   };
 
   const handleSaveCampaign = async (status: "draft" | "sent") => {
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       const res = await fetch("/api/campaigns", {
         method: "POST",
@@ -230,6 +234,8 @@ export default function CampaignsPage() {
       }
     } catch (err) {
       console.error("Failed to save campaign to Supabase, running simulation local state.", err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -238,8 +244,9 @@ export default function CampaignsPage() {
     .filter((list) => selectedLists.includes(list.id) && !excludedLists.includes(list.id))
     .reduce((sum, list) => sum + (list.count ?? 0), 0);
 
-  // Launch Queue Sending Simulation with real database counts
+  // Launch Queue Sending Simulation with real database counts and debouncing
   const handleSendCampaignNow = async () => {
+    if (isSaving) return;
     await handleSaveCampaign("sent");
     setSentCount(0);
     setTotalCount(totalRecipientsCount);
@@ -665,16 +672,19 @@ export default function CampaignsPage() {
 
               <div className="flex gap-3">
                 <button
+                  type="button"
+                  disabled={isSaving}
                   onClick={async () => {
                     await handleSaveCampaign("draft");
                     setView("list");
                   }}
-                  className="px-4 py-1.5 rounded border border-zinc-850 hover:bg-zinc-900 text-xs font-semibold text-zinc-400 hover:text-white transition cursor-pointer"
+                  className="px-4 py-1.5 rounded border border-zinc-850 hover:bg-zinc-900 text-xs font-semibold text-zinc-400 hover:text-white transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Draft
+                  {isSaving ? "Saving..." : "Save Draft"}
                 </button>
                 {activeStep < 4 ? (
                   <button
+                    type="button"
                     onClick={() => setActiveStep((prev) => (prev < 4 ? (prev + 1) as any : 4))}
                     className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-semibold shadow transition cursor-pointer"
                   >
@@ -683,11 +693,13 @@ export default function CampaignsPage() {
                   </button>
                 ) : (
                   <button
+                    type="button"
+                    disabled={isSaving}
                     onClick={handleSendCampaignNow}
-                    className="flex items-center gap-1.5 px-5 py-1.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-extrabold shadow transition cursor-pointer"
+                    className="flex items-center gap-1.5 px-5 py-1.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-extrabold shadow transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>Confirm & Send Now</span>
+                    <span>{isSaving ? "Launching..." : "Confirm & Send Now"}</span>
                   </button>
                 )}
               </div>
