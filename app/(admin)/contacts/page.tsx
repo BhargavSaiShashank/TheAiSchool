@@ -202,17 +202,27 @@ export default function ContactsPage() {
   }, []);
 
   // Segment Builder State
-  const [segmentName, setSegmentName] = useState("");
+   const [segmentName, setSegmentName] = useState("");
   const [logicalOperator, setLogicalOperator] = useState<"AND" | "OR">("AND");
   const [rules, setRules] = useState([
     { field: "city", operator: "equals", value: "Hyderabad" },
     { field: "status", operator: "equals", value: "active" },
   ]);
-  const [liveSegmentCount, setLiveSegmentCount] = useState(3);
-  const [savedSegments, setSavedSegments] = useState([
-    { id: "s1", name: "Hyderabad Founders", count: 3 },
-    { id: "s2", name: "Chennai Active Audience", count: 2 },
-  ]);
+  const [liveSegmentCount, setLiveSegmentCount] = useState(0);
+  const [savedSegments, setSavedSegments] = useState<any[]>([]);
+
+  const handleSaveSegment = () => {
+    const name = prompt("Enter a name for this segment:", "Active Subscribers");
+    if (!name || !name.trim()) return;
+
+    const newSegment = {
+      id: `s-${Date.now()}`,
+      name: name.trim(),
+      count: liveSegmentCount,
+    };
+    setSavedSegments([...savedSegments, newSegment]);
+    toast.success(`Segment "${name}" saved successfully!`);
+  };
 
   // CSV Import Wizard State
   const [importStep, setImportStep] = useState<1 | 2 | 3 | 4>(1);
@@ -265,24 +275,36 @@ export default function ContactsPage() {
     setShowNewListModal(false);
   };
 
-  // Live Count simulation in Segment Builder based on rules
+  // Live Count calculation in Segment Builder based on rules and active contacts
   useEffect(() => {
-    // Basic dynamic logic simulation
-    let count = contacts.length;
-    const hasCityHyderabad = rules.some(r => r.field === "city" && r.value.toLowerCase() === "hyderabad");
-    const hasCityChennai = rules.some(r => r.field === "city" && r.value.toLowerCase() === "chennai");
-    const hasStatusActive = rules.some(r => r.field === "status" && r.value.toLowerCase() === "active");
-
-    if (logicalOperator === "AND") {
-      if (hasCityHyderabad && hasStatusActive) count = 3;
-      else if (hasCityChennai && hasStatusActive) count = 2;
-      else if (hasStatusActive) count = 5;
-      else count = 0;
-    } else {
-      if (hasCityHyderabad || hasCityChennai) count = 5;
-      else count = contacts.length;
+    if (contacts.length === 0) {
+      setLiveSegmentCount(0);
+      return;
     }
-    setLiveSegmentCount(count);
+
+    const matching = contacts.filter((c) => {
+      const results = rules.map((r) => {
+        const fieldVal = String(c[r.field as keyof typeof c] || "").toLowerCase();
+        const matchVal = String(r.value || "").toLowerCase();
+
+        if (r.operator === "equals") {
+          return fieldVal === matchVal;
+        } else if (r.operator === "contains") {
+          return fieldVal.includes(matchVal);
+        } else if (r.operator === "not_equals") {
+          return fieldVal !== matchVal;
+        }
+        return false;
+      });
+
+      if (logicalOperator === "AND") {
+        return results.every((res) => res === true);
+      } else {
+        return results.some((res) => res === true);
+      }
+    });
+
+    setLiveSegmentCount(matching.length);
   }, [rules, logicalOperator, contacts]);
 
   // Add rule in Segment builder
@@ -852,7 +874,10 @@ export default function ContactsPage() {
                     <p className="text-[9px] font-semibold text-zinc-500 font-mono uppercase tracking-wider">Estimated Audience</p>
                     <p className="text-xs font-bold font-mono text-white mt-0.5">{liveSegmentCount} contacts</p>
                   </div>
-                  <button className="px-4 py-1.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-semibold shadow-md transition cursor-pointer">
+                  <button
+                    onClick={handleSaveSegment}
+                    className="px-4 py-1.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-semibold shadow-md transition cursor-pointer"
+                  >
                     Save Segment
                   </button>
                 </div>
@@ -867,17 +892,29 @@ export default function ContactsPage() {
               </div>
 
               <div className="space-y-3">
-                {savedSegments.map((seg) => (
-                  <div key={seg.id} className="p-4 rounded bg-zinc-900/40 border border-zinc-900 flex items-center justify-between hover:border-zinc-800 transition">
-                    <div>
-                      <p className="text-xs font-bold text-zinc-300">{seg.name}</p>
-                      <p className="text-[10px] text-zinc-500 mt-0.5 font-mono">{seg.count} contacts match</p>
+                {savedSegments.length > 0 ? (
+                  savedSegments.map((seg) => (
+                    <div key={seg.id} className="p-4 rounded bg-zinc-900/40 border border-zinc-900 flex items-center justify-between hover:border-zinc-800 transition">
+                      <div>
+                        <p className="text-xs font-bold text-zinc-300">{seg.name}</p>
+                        <p className="text-[10px] text-zinc-500 mt-0.5 font-mono">{seg.count} contacts match</p>
+                      </div>
+                      <button className="p-1 text-zinc-500 hover:text-white transition">
+                        <Play className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <button className="p-1 text-zinc-500 hover:text-white transition">
-                      <Play className="w-3.5 h-3.5" />
-                    </button>
+                  ))
+                ) : (
+                  <div className="p-6 border border-dashed border-zinc-900 rounded-lg text-center space-y-2 bg-zinc-950/20">
+                    <AlertCircle className="w-4.5 h-4.5 text-zinc-600 mx-auto" />
+                    <div>
+                      <p className="text-[10px] font-bold text-zinc-500 font-mono uppercase">No Saved Segments</p>
+                      <p className="text-[9px] text-zinc-600 mt-0.5 leading-relaxed">
+                        Create filter rules on the left and click "Save Segment" to persist them.
+                      </p>
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </motion.div>
