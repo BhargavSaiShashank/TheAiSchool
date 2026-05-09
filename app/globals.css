@@ -56,6 +56,10 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+button, input, select, textarea {
+  font-family: inherit;
+}
+
 /* Premium Linear Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
