@@ -142,6 +142,8 @@ export default function TemplatesPage() {
         // @ts-ignore
         if (window.unlayer) {
           try {
+            container.innerHTML = ""; // Clear any stale or duplicate iframes before fresh init!
+
             // @ts-ignore
             window.unlayer.init({
               id: "editor-container",
@@ -151,21 +153,25 @@ export default function TemplatesPage() {
               }
             });
 
-            // Load existing JSON design layout if it matches Unlayer structure
-            if (selectedTemplate && selectedTemplate.content) {
-              try {
-                const parsed = typeof selectedTemplate.content === "string"
-                  ? JSON.parse(selectedTemplate.content)
-                  : selectedTemplate.content;
+            // Wrap design loading in the official ready callback
+            // @ts-ignore
+            window.unlayer.ready(() => {
+              const blocksData = selectedTemplate?.blocks || (selectedTemplate as any)?.content;
+              if (blocksData) {
+                try {
+                  const parsed = typeof blocksData === "string"
+                    ? JSON.parse(blocksData)
+                    : blocksData;
 
-                if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-                  // @ts-ignore
-                  window.unlayer.loadDesign(parsed);
+                  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                    // @ts-ignore
+                    window.unlayer.loadDesign(parsed);
+                  }
+                } catch (err) {
+                  console.error("Error loading saved Unlayer design:", err);
                 }
-              } catch (err) {
-                console.error("Error loading saved Unlayer design:", err);
               }
-            }
+            });
           } catch (err) {
             console.error("Unlayer initialization failed:", err);
           }
