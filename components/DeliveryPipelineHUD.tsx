@@ -116,8 +116,6 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = isSimulating ? "#10B981" : p.color;
-        ctx.shadowBlur = isSimulating ? 12 : 6;
-        ctx.shadowColor = isSimulating ? "#10B981" : p.color;
         ctx.fill();
       });
 
