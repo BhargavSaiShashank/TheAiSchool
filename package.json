@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clear-db": "node prisma/clear.js"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.1045.0",
