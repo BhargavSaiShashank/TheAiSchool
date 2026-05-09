@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   Grid,
   Zap,
+  Edit2,
 } from "lucide-react";
 
 interface CanvasBlock {
@@ -50,6 +51,12 @@ export default function TemplatesPage() {
   // Library filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // Metadata creation and editing states
+  const [showNewTemplateModal, setShowNewTemplateModal] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState("");
+  const [newTemplateCategory, setNewTemplateCategory] = useState("Newsletter");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   // Editor States
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
@@ -262,6 +269,21 @@ export default function TemplatesPage() {
     }
   };
 
+  const handleConfirmCreateTemplate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTemplateName.trim()) return;
+
+    setSelectedTemplate({
+      id: "new",
+      name: newTemplateName.trim(),
+      category: newTemplateCategory,
+      thumbnail: "",
+      count: "New",
+    });
+    setShowNewTemplateModal(false);
+    setView("editor");
+  };
+
   // Inject Merge Tag Helper
   const injectMergeTag = (tag: string) => {
     if (selectedBlockIdx === null) return;
@@ -306,14 +328,9 @@ export default function TemplatesPage() {
               </div>
               <button
                 onClick={() => {
-                  setSelectedTemplate({
-                    id: "new",
-                    name: "Blank Template",
-                    category: "General",
-                    thumbnail: "",
-                    count: "New",
-                  });
-                  setView("editor");
+                  setNewTemplateName("");
+                  setNewTemplateCategory("Newsletter");
+                  setShowNewTemplateModal(true);
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#7C5CFF] text-white hover:opacity-95 text-xs font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
               >
@@ -440,14 +457,9 @@ export default function TemplatesPage() {
                 </div>
                 <button
                   onClick={() => {
-                    setSelectedTemplate({
-                      id: "new",
-                      name: "Blank Template",
-                      category: "General",
-                      thumbnail: "",
-                      count: "New",
-                    });
-                    setView("editor");
+                    setNewTemplateName("");
+                    setNewTemplateCategory("Newsletter");
+                    setShowNewTemplateModal(true);
                   }}
                   className="px-4 py-2 mt-2 rounded bg-[#7C5CFF] text-white hover:opacity-95 text-[10px] font-mono font-bold tracking-wide uppercase cursor-pointer mx-auto block"
                 >
@@ -478,14 +490,32 @@ export default function TemplatesPage() {
                 >
                   <Undo2 className="w-4 h-4" />
                 </button>
-                <div>
-                  <h3 className="text-xs font-bold text-zinc-100 uppercase font-mono tracking-tight leading-none mb-1">
-                    {selectedTemplate?.name || "Blank Template"}
-                  </h3>
+                <div className="flex flex-col gap-1">
+                  {isEditingTitle ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={selectedTemplate?.name || ""}
+                        onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
+                        onBlur={() => setIsEditingTitle(false)}
+                        onKeyDown={(e) => { if (e.key === "Enter") setIsEditingTitle(false); }}
+                        autoFocus
+                        className="px-2 py-0.5 rounded bg-zinc-950 border border-[#7C5CFF]/30 text-xs text-white font-mono uppercase tracking-tight focus:outline-none focus:border-[#7C5CFF]"
+                      />
+                      <button onClick={() => setIsEditingTitle(false)} className="text-[10px] text-emerald-400 font-bold hover:underline cursor-pointer">Done</button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setIsEditingTitle(true)}>
+                      <h3 className="text-xs font-bold text-zinc-100 uppercase font-mono tracking-tight leading-none">
+                        {selectedTemplate?.name || "Blank Template"}
+                      </h3>
+                      <Edit2 className="w-3 h-3 text-zinc-500 group-hover:text-white transition opacity-0 group-hover:opacity-100" />
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5">
                     <span className={`w-1.5 h-1.5 rounded-full ${autosaveStatus === "Saving changes..." ? "bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"}`} />
                     <span className="text-[9px] text-zinc-500 font-mono font-bold uppercase">
-                      {autosaveStatus}
+                      {autosaveStatus} — {selectedTemplate?.category || "General"}
                     </span>
                   </div>
                 </div>
@@ -535,6 +565,83 @@ export default function TemplatesPage() {
           </motion.div>
         )}
 
+      </AnimatePresence>
+
+      {/* CREATE NEW TEMPLATE DETAILS MODAL */}
+      <AnimatePresence>
+        {showNewTemplateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNewTemplateModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            {/* Modal Body */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", stiffness: 350, damping: 28 }}
+              className="relative w-full max-w-md bg-[#090a0f] border border-white/[0.06] rounded-2xl p-6 shadow-2xl space-y-6 overflow-hidden select-none"
+            >
+              <div>
+                <h3 className="text-sm font-bold text-white tracking-tight uppercase font-mono">Create Template Details</h3>
+                <p className="text-[10px] text-zinc-500 mt-0.5">Define your design assets and categorizations</p>
+              </div>
+
+              <form onSubmit={handleConfirmCreateTemplate} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-zinc-400 font-mono">Template Name</label>
+                  <input
+                    type="text"
+                    value={newTemplateName}
+                    onChange={(e) => setNewTemplateName(e.target.value)}
+                    placeholder="e.g. Summer Special Offer"
+                    required
+                    autoFocus
+                    className="w-full px-3 py-2 rounded bg-zinc-900/60 border border-white/[0.04] focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-zinc-400 font-mono">Template Category</label>
+                  <select
+                    value={newTemplateCategory}
+                    onChange={(e) => setNewTemplateCategory(e.target.value)}
+                    className="w-full px-3 py-2 rounded bg-zinc-900 border border-white/[0.04] focus:outline-none focus:border-zinc-700 text-sm text-zinc-200 font-mono"
+                  >
+                    <option value="Welcome">Welcome</option>
+                    <option value="Newsletter">Newsletter</option>
+                    <option value="Promotional">Promotional</option>
+                    <option value="Event Invite">Event Invite</option>
+                    <option value="Training Notice">Training Notice</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.04]">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewTemplateModal(false)}
+                    className="px-4 py-2 rounded border border-white/[0.04] hover:bg-zinc-900 text-zinc-400 text-xs font-semibold transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded bg-[#7C5CFF] text-white hover:opacity-95 text-xs font-semibold transition shadow-md border border-white/5 cursor-pointer"
+                  >
+                    Continue to Builder
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
     </div>
   );
