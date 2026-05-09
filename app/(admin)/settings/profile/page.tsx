@@ -62,14 +62,21 @@ export default function ProfileSettingsPage() {
       });
 
       if (res.ok) {
+        const updatedOrg = await res.json();
         if (user) {
           login({
             ...user,
-            org_name: orgName,
+            org_name: updatedOrg.name || orgName,
           });
         }
         setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
+        setTimeout(() => {
+          setSaveSuccess(false);
+          window.location.reload(); // Bulletproof reload to rehydrate all sidebar & layout contexts!
+        }, 800);
+      } else {
+        const errText = await res.text();
+        console.error("POST /api/org failed with status:", res.status, errText);
       }
     } catch (err) {
       console.error("Failed to update organization details:", err);
@@ -183,7 +190,7 @@ export default function ProfileSettingsPage() {
                 <input
                   type="text"
                   required
-                  value={user?.email.split("@")[0] || ""}
+                  value={user?.email?.split("@")[0] || ""}
                   disabled
                   className="w-full bg-zinc-900/20 border border-zinc-800/40 rounded px-3 py-2 text-xs text-zinc-500 cursor-not-allowed font-sans"
                 />
