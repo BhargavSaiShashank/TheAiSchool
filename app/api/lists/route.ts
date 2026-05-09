@@ -1,20 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSecureOrgId } from "@/lib/auth-utils";
 
-export async function GET(req: Request) {
+/**
+ * Fetches only the segmentation lists created by the authenticated workspace.
+ */
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const orgId = searchParams.get("orgId") || req.headers.get("x-org-id");
-
-    let targetOrgId: string | undefined = orgId || undefined;
-    if (!targetOrgId) {
-      const org = await prisma.organization.findFirst();
-      targetOrgId = org?.id || undefined;
-    }
+    const orgId = await getSecureOrgId(req);
 
     const lists = await prisma.contactList.findMany({
       where: {
-        org_id: targetOrgId,
+        org_id: orgId,
       },
       include: {
         members: true,
@@ -34,36 +31,30 @@ export async function GET(req: Request) {
 
     return NextResponse.json(formattedLists);
   } catch (error: any) {
-    console.error("GET /api/lists error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("GET /api/lists fault:", error.message);
+    return NextResponse.json({ error: "Session failure: Unauthorized" }, { status: 401 });
   }
 }
 
-export async function POST(req: Request) {
+/**
+ * Creates new segmentation structures strictly within user context boundaries.
+ */
+export async function POST(req: NextRequest) {
   try {
+    const orgId = await getSecureOrgId(req);
     const body = await req.json();
     const { name, description } = body;
 
     if (!name) {
-      return NextResponse.json({ error: "List name is required" }, { status: 400 });
-    }
-
-    // Get default seeded organization
-    let org = await prisma.organization.findFirst();
-    if (!org) {
-      org = await prisma.organization.create({
-        data: {
-          name: "Default Org",
-        },
-      });
+      return NextResponse.json({ error: "List descriptor label is mandatory" }, { status: 400 });
     }
 
     const newList = await prisma.contactList.create({
       data: {
         name,
         description,
-        org_id: org.id,
-        tags: "New,Live",
+        org_id: orgId,
+        tags: "Fresh,Segment",
       },
     });
 
@@ -72,10 +63,10 @@ export async function POST(req: Request) {
       name: newList.name,
       description: newList.description || "",
       count: 0,
-      tags: ["New", "Live"],
+      tags: ["Fresh", "Segment"],
     });
   } catch (error: any) {
-    console.error("POST /api/lists error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("POST /api/lists fault:", error.message);
+    return NextResponse.json({ error: "Action disallowed: Authentication required" }, { status: 401 });
   }
 }

@@ -3,21 +3,15 @@ import { formatDistanceToNow } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { pushToCampaignQueue } from "@/lib/sqs";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { getSecureOrgId } from "@/lib/auth-utils";
 
-export async function GET(req: Request) {
+export async function GET(req: any) {
   try {
-    const { searchParams } = new URL(req.url);
-    const orgId = searchParams.get("orgId") || req.headers.get("x-org-id");
-
-    let targetOrgId: string | undefined = orgId || undefined;
-    if (!targetOrgId) {
-      const org = await prisma.organization.findFirst();
-      targetOrgId = org?.id || undefined;
-    }
+    const orgId = await getSecureOrgId(req);
 
     const campaigns = await prisma.campaign.findMany({
       where: {
-        org_id: targetOrgId,
+        org_id: orgId,
       },
       include: {
         sends: true,
@@ -67,23 +61,14 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: any) {
   try {
+    const orgId = await getSecureOrgId(req);
     const body = await req.json();
     const { name, subject, previewText, fromName, fromEmail, status, templateId } = body;
 
     if (!name || !subject) {
       return NextResponse.json({ error: "Campaign name and subject are required" }, { status: 400 });
-    }
-
-    // Get default seeded organization
-    let org = await prisma.organization.findFirst();
-    if (!org) {
-      org = await prisma.organization.create({
-        data: {
-          name: "Default Org",
-        },
-      });
     }
 
     // Safely verify if templateId exists in the database before assigning it to prevent foreign key constraint crashes (e.g. on mock starter IDs like t1, t2)
@@ -111,7 +96,7 @@ export async function POST(req: Request) {
         from_email: fromEmail || "hello@pulsesend.com",
         status: status || "draft",
         template_id: validTemplateId,
-        org_id: org.id,
+        org_id: orgId,
       },
     });
 
@@ -129,7 +114,7 @@ export async function POST(req: Request) {
       }
 
       const contacts = await prisma.contact.findMany({
-        where: { org_id: org.id },
+        where: { org_id: orgId },
       });
 
       sentCount = contacts.length;
@@ -311,8 +296,9 @@ export async function POST(req: Request) {
   }
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: any) {
   try {
+    const orgId = await getSecureOrgId(req);
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -361,9 +347,8 @@ export async function PUT(req: Request) {
         console.error("Failed to push campaign dispatch job to AWS SQS:", sqsErr);
       }
 
-      const org = await prisma.organization.findFirst();
       const contacts = await prisma.contact.findMany({
-        where: { org_id: org?.id },
+        where: { org_id: orgId },
       });
 
       sentCount = contacts.length;

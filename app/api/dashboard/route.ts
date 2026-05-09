@@ -2,16 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { subDays, startOfDay, format } from "date-fns";
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const orgId = searchParams.get("orgId") || req.headers.get("x-org-id");
+import { getSecureOrgId } from "@/lib/auth-utils";
 
-    let targetOrgId: string | undefined = orgId || undefined;
-    if (!targetOrgId) {
-      const org = await prisma.organization.findFirst();
-      targetOrgId = org?.id || undefined;
-    }
+export async function GET(req: any) {
+  try {
+    const targetOrgId = await getSecureOrgId(req);
 
     // 1. Get Core aggregates filtered by organization
     const totalAudience = await prisma.contact.count({

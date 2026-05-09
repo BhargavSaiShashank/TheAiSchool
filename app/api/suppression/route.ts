@@ -1,78 +1,73 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
+import { getSecureOrgId } from "@/lib/auth-utils";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const orgId = await getSecureOrgId(req);
+
     const list = await prisma.suppressionList.findMany({
+      where: { org_id: orgId },
       orderBy: { suppressed_at: "desc" },
     });
 
     const formatted = list.map((item) => ({
       id: item.id,
       email: item.email,
-      reason: item.reason, // e.g. 'hard_bounce', 'spam_complaint', 'manual_unsubscribe'
+      reason: item.reason,
       date: formatDistanceToNow(new Date(item.suppressed_at), { addSuffix: true }),
-      log: item.reason === "hard_bounce" 
-        ? "hard bounce detected by SES simulation: 550 5.1.1 User Unknown"
-        : item.reason === "spam_complaint"
-        ? "spam complaint detected by SNS webhook"
-        : "manually added by administrator or unsubscribe link click",
+      log: item.audit_log || "System auto-suppressed",
     }));
 
     return NextResponse.json(formatted);
   } catch (error: any) {
-    console.error("GET /api/suppression error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const orgId = await getSecureOrgId(req);
     const { email, reason, log } = await req.json();
 
     if (!email || !reason) {
-      return NextResponse.json({ error: "Email and reason are required" }, { status: 400 });
-    }
-
-    let org = await prisma.organization.findFirst();
-    if (!org) {
-      org = await prisma.organization.create({
-        data: { name: "Default Org" },
-      });
+      return NextResponse.json({ error: "Field inputs missing" }, { status: 400 });
     }
 
     const created = await prisma.suppressionList.create({
       data: {
         email,
         reason,
-        org_id: org.id,
+        org_id: orgId,
+        audit_log: log || "Manually added via security dash",
       },
     });
 
     return NextResponse.json(created);
   } catch (error: any) {
-    console.error("POST /api/suppression error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Action denied" }, { status: 401 });
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
   try {
+    const orgId = await getSecureOrgId(req);
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
-    if (!id) {
-      return NextResponse.json({ error: "Suppression ID is required" }, { status: 400 });
-    }
+    if (!id) return NextResponse.json({ error: "Missing record identifier" }, { status: 400 });
 
-    await prisma.suppressionList.delete({
-      where: { id },
+    // Use deleteMany combined with org_id for secure deletion verification
+    await prisma.suppressionList.deleteMany({
+      where: {
+        id: id,
+        org_id: orgId
+      },
     });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("DELETE /api/suppression error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Deletion execution failed" }, { status: 401 });
   }
 }

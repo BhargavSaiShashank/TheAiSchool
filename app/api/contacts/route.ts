@@ -1,20 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSecureOrgId } from "@/lib/auth-utils";
 
-export async function GET(req: Request) {
+/**
+ * Securely fetches ONLY the contacts owned by the active user's organization.
+ */
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const orgId = searchParams.get("orgId") || req.headers.get("x-org-id");
-
-    let targetOrgId: string | undefined = orgId || undefined;
-    if (!targetOrgId) {
-      const org = await prisma.organization.findFirst();
-      targetOrgId = org?.id || undefined;
-    }
+    const orgId = await getSecureOrgId(req);
 
     const contacts = await prisma.contact.findMany({
       where: {
-        org_id: targetOrgId,
+        org_id: orgId,
       },
       include: {
         lists: true,
@@ -31,7 +28,7 @@ export async function GET(req: Request) {
           customFields = JSON.parse(c.custom_fields);
         }
       } catch (e) {
-        console.error("Error parsing contact custom fields:", e);
+        // Ignore field errors gracefully
       }
 
       return {
@@ -40,55 +37,41 @@ export async function GET(req: Request) {
         firstName: c.first_name || "",
         lastName: c.last_name || "",
         status: c.status,
-        company: (customFields as any).company || "PulseSend Sandbox",
-        city: (customFields as any).city || "Hyderabad",
-        jobTitle: (customFields as any).jobTitle || "Developer",
+        company: (customFields as any).company || "",
+        city: (customFields as any).city || "",
+        jobTitle: (customFields as any).jobTitle || "",
         listIds: c.lists.map((l) => l.list_id),
       };
     });
 
     return NextResponse.json(formattedContacts);
   } catch (error: any) {
-    console.error("GET /api/contacts error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("GET /api/contacts authorization fault:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 401 });
   }
 }
 
-export async function POST(req: Request) {
+/**
+ * Securely injects a new subscriber ONLY within the active user's workspace.
+ */
+export async function POST(req: NextRequest) {
   try {
+    const orgId = await getSecureOrgId(req);
     const body = await req.json();
-    const { email, firstName, lastName, status, company, city, jobTitle, listId, orgId } = body;
+    const { email, firstName, lastName, status, company, city, jobTitle, listId } = body;
 
     if (!email) {
-      return NextResponse.json({ error: "Email address is required" }, { status: 400 });
+      return NextResponse.json({ error: "Email address is mandatory" }, { status: 400 });
     }
 
-    // Resolve organization context from request body, headers, or query parameters
-    const { searchParams } = new URL(req.url);
-    const resolvedOrgId = orgId || req.headers.get("x-org-id") || searchParams.get("orgId");
-
-    let org = null;
-    if (resolvedOrgId) {
-      org = await prisma.organization.findUnique({ where: { id: resolvedOrgId } });
-    }
-    if (!org) {
-      org = await prisma.organization.findFirst();
-    }
-    if (!org) {
-      org = await prisma.organization.create({
-        data: {
-          name: "Default Org",
-        },
-      });
-    }
-
+    // Create within strict org isolation
     const newContact = await prisma.contact.create({
       data: {
         email,
         first_name: firstName,
         last_name: lastName,
         status: status || "active",
-        org_id: org.id,
+        org_id: orgId,
         custom_fields: JSON.stringify({ company, city, jobTitle }),
         source: "manual",
       },
@@ -109,12 +92,9 @@ export async function POST(req: Request) {
       firstName: newContact.first_name || "",
       lastName: newContact.last_name || "",
       status: newContact.status,
-      company: company || "",
-      city: city || "",
-      jobTitle: jobTitle || "Developer",
     });
   } catch (error: any) {
-    console.error("POST /api/contacts error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("POST /api/contacts authorization fault:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 401 });
   }
 }
