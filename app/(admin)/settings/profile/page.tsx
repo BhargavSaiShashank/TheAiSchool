@@ -7,7 +7,7 @@ import { dark } from "@clerk/themes";
 import { Sliders, Building, ShieldAlert, Sparkles, Save, Check } from "lucide-react";
 
 export default function ProfileSettingsPage() {
-  const { user } = useStore();
+  const { user, login } = useStore();
   const [activeTab, setActiveTab] = useState<"personal" | "org">("personal");
 
   // Organization state fields
@@ -62,6 +62,12 @@ export default function ProfileSettingsPage() {
       });
 
       if (res.ok) {
+        if (user) {
+          login({
+            ...user,
+            org_name: orgName,
+          });
+        }
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       }
