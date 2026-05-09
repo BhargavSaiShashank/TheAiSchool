@@ -30,15 +30,6 @@ import {
   Zap,
 } from "lucide-react";
 
-const starterTemplates = [
-  // Each thumbnail is thematically distinct — no duplicate images
-  { id: "t1", name: "Welcome Onboard",         category: "Welcome",        thumbnail: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=350&h=200&q=80", count: "Used in 3 campaigns" },
-  { id: "t2", name: "Monthly Tech Newsletter",  category: "Newsletter",     thumbnail: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=350&h=200&q=80", count: "Used in 1 campaign" },
-  { id: "t3", name: "Product Promotion Blast",  category: "Promotional",    thumbnail: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=350&h=200&q=80", count: "Draft" },
-  { id: "t4", name: "AI Hackathon Event Invite",category: "Event Invite",   thumbnail: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=350&h=200&q=80", count: "Used in 2 campaigns" },
-  { id: "t5", name: "AWS Training Notice",      category: "Training Notice", thumbnail: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=350&h=200&q=80", count: "Draft" },
-];
-
 interface CanvasBlock {
   id: string;
   type: string;
@@ -52,7 +43,7 @@ interface CanvasBlock {
 
 export default function TemplatesPage() {
   const [view, setView] = useState<"library" | "editor">("library");
-  const [templates, setTemplates] = useState<any[]>(starterTemplates);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -257,69 +248,96 @@ export default function TemplatesPage() {
             </div>
 
             {/* Template Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTemplates.map((template) => (
-                <motion.div
-                  key={template.id}
-                  whileHover={{ scale: 1.015, y: -2 }}
-                  whileTap={{ scale: 0.985 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className="h-full"
+            {filteredTemplates.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTemplates.map((template) => (
+                  <motion.div
+                    key={template.id}
+                    whileHover={{ scale: 1.015, y: -2 }}
+                    whileTap={{ scale: 0.985 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    className="h-full"
+                  >
+                    <CardSpotlight>
+                      <div className="p-4 bg-zinc-950/40 border border-white/[0.04] rounded-md flex flex-col justify-between h-full overflow-hidden">
+                        <div className="space-y-4">
+                          {/* Thumbnail representation */}
+                          <div className="relative h-40 bg-zinc-900 rounded-md border border-white/[0.04] overflow-hidden">
+                            {template.thumbnail ? (
+                              <img
+                                src={template.thumbnail}
+                                alt={template.name}
+                                className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-zinc-750 font-mono text-[10px]">
+                                Empty Preview
+                              </div>
+                            )}
+                            <span className="absolute top-2.5 left-2.5 text-[9px] bg-zinc-950/90 border border-white/[0.06] px-2 py-0.5 rounded text-zinc-200 font-mono font-bold uppercase tracking-wide">
+                              {template.category}
+                            </span>
+                          </div>
+
+                          <div className="space-y-1">
+                            <h3 className="font-bold text-zinc-200 group-hover:text-[#7C5CFF] transition text-xs">
+                              {template.name}
+                            </h3>
+                            <p className="text-[10px] text-zinc-500 font-mono font-semibold uppercase">
+                              {template.count}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-6 pt-3 border-t border-white/[0.04] text-xs">
+                          <button
+                            onClick={() => alert(`Duplicated template: ${template.name}`)}
+                            className="text-zinc-500 hover:text-zinc-300 p-1 rounded"
+                            title="Duplicate Template"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedTemplate(template);
+                              setView("editor");
+                            }}
+                            className="px-3.5 py-1.5 rounded bg-zinc-900 border border-white/[0.04] text-zinc-300 hover:text-white font-semibold transition cursor-pointer"
+                          >
+                            Open Editor
+                          </button>
+                        </div>
+                      </div>
+                    </CardSpotlight>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-12 bg-zinc-950/40 border border-white/[0.04] rounded-lg text-center space-y-4 max-w-md mx-auto">
+                <div className="w-12 h-12 rounded-full bg-[#7C5CFF]/10 border border-[#7C5CFF]/20 flex items-center justify-center mx-auto">
+                  <FileCode className="w-5 h-5 text-[#7C5CFF]" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold text-zinc-200 uppercase font-mono">No Templates Found</h4>
+                  <p className="text-[10px] text-zinc-500 font-medium">Your creative library is empty. Create your first drag-and-drop newsletter template to get started.</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedTemplate({
+                      id: "new",
+                      name: "Blank Template",
+                      category: "General",
+                      thumbnail: "",
+                      count: "New",
+                    });
+                    setView("editor");
+                  }}
+                  className="px-4 py-2 mt-2 rounded bg-[#7C5CFF] text-white hover:opacity-95 text-[10px] font-mono font-bold tracking-wide uppercase cursor-pointer mx-auto block"
                 >
-                  <CardSpotlight>
-                    <div className="p-4 bg-zinc-950/40 border border-white/[0.04] rounded-md flex flex-col justify-between h-full overflow-hidden">
-                      <div className="space-y-4">
-                        {/* Thumbnail representation */}
-                        <div className="relative h-40 bg-zinc-900 rounded-md border border-white/[0.04] overflow-hidden">
-                          {template.thumbnail ? (
-                            <img
-                              src={template.thumbnail}
-                              alt={template.name}
-                              className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-zinc-750 font-mono text-[10px]">
-                              Empty Preview
-                            </div>
-                          )}
-                          <span className="absolute top-2.5 left-2.5 text-[9px] bg-zinc-950/90 border border-white/[0.06] px-2 py-0.5 rounded text-zinc-200 font-mono font-bold uppercase tracking-wide">
-                            {template.category}
-                          </span>
-                        </div>
-
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-zinc-200 group-hover:text-[#7C5CFF] transition text-xs">
-                            {template.name}
-                          </h3>
-                          <p className="text-[10px] text-zinc-500 font-mono font-semibold uppercase">
-                            {template.count}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between mt-6 pt-3 border-t border-white/[0.04] text-xs">
-                        <button
-                          onClick={() => alert(`Duplicated template: ${template.name}`)}
-                          className="text-zinc-500 hover:text-zinc-300 p-1 rounded"
-                          title="Duplicate Template"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedTemplate(template);
-                            setView("editor");
-                          }}
-                          className="px-3.5 py-1.5 rounded bg-zinc-900 border border-white/[0.04] text-zinc-300 hover:text-white font-semibold transition cursor-pointer"
-                        >
-                          Open Editor
-                        </button>
-                      </div>
-                    </div>
-                  </CardSpotlight>
-                </motion.div>
-              ))}
-            </div>
+                  Create Your First Template
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 
