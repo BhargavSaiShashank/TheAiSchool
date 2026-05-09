@@ -12,6 +12,7 @@ export default function SignupPage() {
         <SignUp
           signInUrl="/login"
           forceRedirectUrl="/dashboard"
+          routing="hash"
           appearance={{
             variables: {
               colorPrimary: "#ffffff",
