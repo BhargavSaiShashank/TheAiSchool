@@ -16,14 +16,8 @@ export default function SignupPage() {
           routing="hash"
           appearance={{
             baseTheme: dark,
-            variables: {
-              colorPrimary: "#ffffff",
-              colorBackground: "#09090b",
-            },
             elements: {
               card: "border-none bg-transparent shadow-none",
-              formButtonPrimary: "bg-white hover:bg-zinc-200 text-black",
-              footerActionLink: "text-zinc-300 hover:text-white font-bold",
             },
           }}
         />
