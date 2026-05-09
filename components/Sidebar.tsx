@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
+import { UserButton } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -188,9 +190,11 @@ export default function Sidebar() {
       <div className="p-3 border-t border-border bg-secondary/20 shrink-0">
         <div className="flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-100 text-xs font-semibold shrink-0 uppercase border border-zinc-700 shadow-sm">
-              {user?.email[0] || "A"}
-            </div>
+            <UserButton
+              appearance={{
+                baseTheme: dark,
+              }}
+            />
             {!sidebarCollapsed && (
               <div className="overflow-hidden">
                 <p className="text-xs font-bold text-foreground truncate leading-none mb-1">
