@@ -153,6 +153,35 @@ export default function TemplatesPage() {
               }
             });
 
+            // Register secure AWS S3 image upload callback
+            // @ts-ignore
+            window.unlayer.registerCallback("image", (file, done) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(file.attachments[0]);
+              reader.onload = async () => {
+                try {
+                  const res = await fetch("/api/upload", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      file: reader.result,
+                      fileName: file.attachments[0].name,
+                      fileType: file.attachments[0].type,
+                    }),
+                  });
+
+                  if (res.ok) {
+                    const data = await res.json();
+                    done({ progress: 100, url: data.url });
+                  } else {
+                    console.error("Upload endpoint returned error status.");
+                  }
+                } catch (err) {
+                  console.error("Failed to stream image to secure S3 storage:", err);
+                }
+              };
+            });
+
             // Wrap design loading in the official ready callback
             // @ts-ignore
             window.unlayer.ready(() => {

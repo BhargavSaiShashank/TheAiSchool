@@ -101,23 +101,6 @@ export async function POST(req: Request) {
       }));
       await prisma.campaignSend.createMany({ data: sendData });
 
-      // If AWS SQS is configured, push the dispatch payloads directly onto the SQS Queue for high-scale processing
-      if (process.env.AWS_SQS_QUEUE_URL && !process.env.AWS_SQS_QUEUE_URL.includes("your-account-id")) {
-        try {
-          const { pushToCampaignQueue } = require("@/lib/sqs");
-          for (const contact of contacts) {
-            await pushToCampaignQueue({
-              campaignId: newCamp.id,
-              recipientEmail: contact.email,
-              subject,
-              htmlContent: "PulseSend Campaign Email Content",
-            });
-          }
-        } catch (sqsErr) {
-          console.error("Failed to push campaign messages to AWS SQS queue:", sqsErr);
-        }
-      }
-
       // Build all events in memory first, then batch insert
       const eventData: {
         contact_id: string;

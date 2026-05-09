@@ -3,22 +3,26 @@ import { uploadToS3 } from "@/lib/s3";
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const formData = await req.json();
+    const { file, fileName, fileType } = formData;
 
     if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+      return NextResponse.json({ error: "No file data provided" }, { status: 400 });
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // Unlayer or dropzone uploads sometimes send base64 data strings
+    const base64Data = file.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
 
-    // Stream upload directly to S3
-    const publicUrl = await uploadToS3(buffer, file.name, file.type);
+    const uploadedUrl = await uploadToS3(
+      buffer,
+      fileName || "upload.png",
+      fileType || "image/png"
+    );
 
-    return NextResponse.json({ success: true, url: publicUrl });
+    return NextResponse.json({ url: uploadedUrl });
   } catch (error: any) {
-    console.error("POST /api/upload S3 upload error:", error);
-    return NextResponse.json({ error: error.message || "Failed to upload file to S3" }, { status: 500 });
+    console.error("POST /api/upload error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
