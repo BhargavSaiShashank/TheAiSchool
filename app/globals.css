@@ -21,7 +21,8 @@
   --color-input: #0B0C10;
   --color-ring: #7C5CFF;
   
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', var(--font-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', var(--font-mono), monospace;
 }
 
 :root {
@@ -50,7 +51,7 @@
 html, body {
   background-color: #06070A !important;
   color: #F5F7FA !important;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
