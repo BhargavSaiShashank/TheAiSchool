@@ -21,6 +21,7 @@ import {
   Upload,
   ArrowRight,
   Database,
+  Loader2,
 } from "lucide-react";
 
 // Mock Lists
@@ -56,6 +57,15 @@ export default function ContactsPage() {
   const [showAddExistingModal, setShowAddExistingModal] = useState(false);
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   const [submittingExisting, setSubmittingExisting] = useState(false);
+
+  // Bulk Actions & Timeline States
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  const [selectedDetailContact, setSelectedDetailContact] = useState<any>(null);
+  const [contactTimeline, setContactTimeline] = useState<any[]>([]);
+  const [loadingTimeline, setLoadingTimeline] = useState(false);
+  const [bulkTargetListId, setBulkTargetListId] = useState<string>("none");
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+
 
   const handleAddExistingToActiveList = async () => {
     if (selectedContactIds.length === 0) {
@@ -165,6 +175,82 @@ export default function ContactsPage() {
       setAddingContact(false);
     }
   };
+
+  const handleBulkAction = async (action: "add" | "remove" | "delete") => {
+    if (selectedRowIds.length === 0) {
+      toast.error("Please select at least one contact first.");
+      return;
+    }
+    
+    if (action === "add" && bulkTargetListId === "none") {
+      toast.error("Please select a target list to assign contacts to.");
+      return;
+    }
+
+    setBulkProcessing(true);
+    try {
+      const res = await fetch("/api/lists/members/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contactIds: selectedRowIds,
+          listId: action === "remove" ? selectedListFilter : bulkTargetListId,
+          action,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success(`Successfully processed bulk action: ${action.toUpperCase()} for ${selectedRowIds.length} contact(s).`);
+        setSelectedRowIds([]);
+        setBulkTargetListId("none");
+
+        // Refresh lists and contacts
+        const resContacts = await fetch("/api/contacts");
+        if (resContacts.ok) {
+          const dataContacts = await resContacts.json();
+          if (dataContacts && Array.isArray(dataContacts)) {
+            setContacts(dataContacts);
+          }
+        }
+
+        const resLists = await fetch("/api/lists");
+        if (resLists.ok) {
+          const dataLists = await resLists.json();
+          if (dataLists && Array.isArray(dataLists)) {
+            setLists(dataLists);
+          }
+        }
+      } else {
+        const data = await res.json();
+        toast.error(`Bulk operation failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      console.error("Bulk operation error:", err);
+      toast.error(`Network error: ${err.message}`);
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const fetchContactTimeline = async (contact: any) => {
+    setSelectedDetailContact(contact);
+    setLoadingTimeline(true);
+    setContactTimeline([]);
+    try {
+      const res = await fetch(`/api/contacts/timeline?contactId=${contact.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setContactTimeline(data || []);
+      } else {
+        toast.error("Failed to load contact event history.");
+      }
+    } catch (err) {
+      console.error("Error loading timeline:", err);
+    } finally {
+      setLoadingTimeline(false);
+    }
+  };
+
 
   // Fetch live lists and contacts from Supabase via Next.js API Routes on mount
   useEffect(() => {
@@ -726,6 +812,20 @@ export default function ContactsPage() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-border text-zinc-500 font-mono text-[11px] uppercase bg-secondary/10">
+                      <th className="py-3 px-5 font-semibold w-12 text-center">
+                        <input
+                          type="checkbox"
+                          checked={filteredContacts.length > 0 && selectedRowIds.length === filteredContacts.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedRowIds(filteredContacts.map((c) => c.id));
+                            } else {
+                              setSelectedRowIds([]);
+                            }
+                          }}
+                          className="w-4 h-4 accent-[#7C5CFF] rounded cursor-pointer"
+                        />
+                      </th>
                       <th className="py-3 px-5 font-semibold">Contact Email</th>
                       <th className="py-3 px-5 font-semibold">First Name</th>
                       <th className="py-3 px-5 font-semibold">Last Name</th>
@@ -735,11 +835,30 @@ export default function ContactsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredContacts.map((contact) => (
-                      <tr key={contact.id} className="border-b border-border/50 hover:bg-secondary/40 transition">
-                        <td className="py-3.5 px-5 font-bold text-zinc-100 font-mono text-[13px]">
-                          {contact.email}
-                        </td>
+                    {filteredContacts.map((contact) => {
+                      const isSelected = selectedRowIds.includes(contact.id);
+                      return (
+                        <tr key={contact.id} className={`border-b border-border/50 transition ${isSelected ? "bg-[#7C5CFF]/[0.02]" : "hover:bg-secondary/40"}`}>
+                          <td className="py-3.5 px-5 text-center w-12">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedRowIds([...selectedRowIds, contact.id]);
+                                } else {
+                                  setSelectedRowIds(selectedRowIds.filter((id) => id !== contact.id));
+                                }
+                              }}
+                              className="w-4 h-4 accent-[#7C5CFF] rounded cursor-pointer"
+                            />
+                          </td>
+                          <td 
+                            onClick={() => fetchContactTimeline(contact)}
+                            className="py-3.5 px-5 font-bold text-zinc-100 font-mono text-[13px] hover:text-[#9E86FF] cursor-pointer transition underline decoration-[#7C5CFF]/30 underline-offset-4"
+                          >
+                            {contact.email}
+                          </td>
                         <td className="py-3.5 px-5 text-[13px] text-zinc-300">{contact.firstName}</td>
                         <td className="py-3.5 px-5 text-[13px] text-zinc-300">{contact.lastName}</td>
                         <td className="py-3.5 px-5 text-[13px] text-foreground font-semibold">{contact.company}</td>
@@ -757,11 +876,12 @@ export default function ContactsPage() {
                             {contact.status}
                           </span>
                         </td>
-                      </tr>
-                    ))}
+                        </tr>
+                      );
+                    })}
                     {filteredContacts.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="text-center py-12 text-zinc-500 font-mono">
+                        <td colSpan={7} className="text-center py-12 text-zinc-500 font-mono">
                           No matching contacts discovered.
                         </td>
                       </tr>
@@ -770,6 +890,227 @@ export default function ContactsPage() {
                 </table>
               </div>
             </div>
+
+            {/* FLOATING BOTTOM BULK ACTIONS PANEL */}
+            <AnimatePresence>
+              {selectedRowIds.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-2xl bg-[#0d0e12] border border-[#7C5CFF]/30 hover:border-[#7C5CFF]/50 shadow-[0_10px_35px_-5px_rgba(124,92,255,0.2),inset_0_1px_0_rgba(255,255,255,0.05)] rounded-2xl px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-lg select-none"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded-full bg-[#7C5CFF]/15 border border-[#7C5CFF]/35 flex items-center justify-center text-[10px] font-mono font-bold text-[#A890FF]">
+                      {selectedRowIds.length}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">Contacts Selected</p>
+                      <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Perform bulk mutations across mailing lists</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                    {/* List assign action */}
+                    <div className="flex items-center gap-1.5 bg-zinc-950/80 border border-zinc-850 p-1 rounded-xl text-xs">
+                      <select
+                        value={bulkTargetListId}
+                        onChange={(e) => setBulkTargetListId(e.target.value)}
+                        className="px-2.5 py-1 rounded bg-transparent text-zinc-300 font-medium font-mono focus:outline-none focus:border-zinc-700"
+                      >
+                        <option value="none">Assign to List...</option>
+                        {lists.map((l) => (
+                          <option key={l.id} value={l.id}>{l.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleBulkAction("add")}
+                        disabled={bulkProcessing || bulkTargetListId === "none"}
+                        className="px-2.5 py-1 rounded bg-white text-black font-semibold text-[11px] hover:bg-zinc-200 disabled:opacity-50 transition cursor-pointer"
+                      >
+                        Apply
+                      </button>
+                    </div>
+
+                    {/* Remove from active list action */}
+                    {selectedListFilter !== "all" && (
+                      <button
+                        onClick={() => handleBulkAction("remove")}
+                        disabled={bulkProcessing}
+                        className="px-3 py-1.5 rounded-xl border border-amber-900/40 bg-amber-950/10 text-amber-400 font-bold hover:bg-amber-950/20 text-[11px] transition cursor-pointer"
+                      >
+                        Remove from List
+                      </button>
+                    )}
+
+                    {/* Bulk Delete action */}
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete these ${selectedRowIds.length} selected contacts permanently?`)) {
+                          handleBulkAction("delete");
+                        }
+                      }}
+                      disabled={bulkProcessing}
+                      className="px-3 py-1.5 rounded-xl border border-red-950/40 bg-red-950/10 hover:bg-red-950/20 text-red-400 font-bold text-[11px] transition cursor-pointer"
+                    >
+                      Delete
+                    </button>
+
+                    <button
+                      onClick={() => setSelectedRowIds([])}
+                      className="text-zinc-500 hover:text-zinc-300 text-xs font-semibold px-2 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* SLIDE-OVER CONTACT DETAIL TIMELINE DRAWER */}
+            <AnimatePresence>
+              {selectedDetailContact && (
+                <div className="fixed inset-0 z-50 flex justify-end">
+                  {/* Backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setSelectedDetailContact(null)}
+                    className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+                  />
+
+                  {/* Slider Container */}
+                  <motion.div
+                    initial={{ x: "100%" }}
+                    animate={{ x: 0 }}
+                    exit={{ x: "100%" }}
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                    className="relative w-full max-w-md h-full bg-[#050608] border-l border-zinc-900 shadow-2xl p-6 flex flex-col z-10 select-none overflow-hidden"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-zinc-900 pb-5">
+                      <div>
+                        <h3 className="text-sm font-bold text-white tracking-tight">Subscriber Profile</h3>
+                        <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Chronological engagement & audit timeline</p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedDetailContact(null)}
+                        className="px-2.5 py-1.5 rounded border border-zinc-850 hover:bg-zinc-900 text-zinc-400 text-xs font-semibold transition cursor-pointer"
+                      >
+                        Close
+                      </button>
+                    </div>
+
+                    {/* Profile Metadata */}
+                    <div className="py-6 space-y-4 border-b border-zinc-900 text-xs shrink-0">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Email Address</span>
+                        <p className="text-sm font-bold text-white font-mono">{selectedDetailContact.email}</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Subscriber Name</span>
+                          <p className="text-xs text-zinc-300 font-semibold">
+                            {selectedDetailContact.firstName || selectedDetailContact.lastName 
+                              ? `${selectedDetailContact.firstName || ""} ${selectedDetailContact.lastName || ""}` 
+                              : "Unnamed Subscriber"}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Location (City)</span>
+                          <p className="text-xs text-zinc-300 font-mono">{selectedDetailContact.city || "—"}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Company</span>
+                          <p className="text-xs text-white font-bold">{selectedDetailContact.company || "—"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Audience Status</span>
+                          <div>
+                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
+                              selectedDetailContact.status === "active"
+                                ? "bg-emerald-950/20 text-emerald-400 border border-emerald-900/30"
+                                : selectedDetailContact.status === "unsubscribed"
+                                ? "bg-amber-950/20 text-amber-400 border border-amber-900/30"
+                                : "bg-red-950/20 text-red-400 border border-red-900/30"
+                            }`}>
+                              {selectedDetailContact.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chronological Event Timeline */}
+                    <div className="flex-1 overflow-y-auto pt-6 flex flex-col min-h-0">
+                      <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider mb-4 block shrink-0">Engagement History Stream</span>
+                      
+                      <div className="flex-1 pr-1">
+                        {loadingTimeline ? (
+                          <div className="flex flex-col items-center justify-center h-48 space-y-2 text-zinc-500">
+                            <Loader2 className="w-5 h-5 animate-spin text-[#7C5CFF]" />
+                            <span className="text-[10px] font-mono">Fetching database records...</span>
+                          </div>
+                        ) : contactTimeline.length === 0 ? (
+                          <div className="h-48 border border-dashed border-zinc-900 rounded-xl flex flex-col items-center justify-center text-center p-4 text-zinc-600 space-y-1">
+                            <AlertCircle className="w-5 h-5 text-zinc-700" />
+                            <p className="text-[10px] font-bold font-mono uppercase">No Events Recorded</p>
+                            <p className="text-[9px] text-zinc-600 max-w-xs leading-relaxed">
+                              This contact has not interacted with any sent campaigns yet.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="relative pl-4 border-l border-zinc-900 space-y-6 text-xs ml-2 py-2">
+                            {contactTimeline.map((ev, index) => {
+                              const iconColor = 
+                                ev.event_type === "opened" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" :
+                                ev.event_type === "clicked" ? "bg-[#7C5CFF] shadow-[0_0_8px_rgba(124,92,255,0.5)]" :
+                                ev.event_type === "unsubscribed" ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" :
+                                "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]";
+
+                              return (
+                                <div key={ev.id} className="relative group">
+                                  {/* Bullet point */}
+                                  <div className={`absolute -left-[20.5px] top-1 w-2.5 h-2.5 rounded-full ${iconColor} border-2 border-black z-10`} />
+
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between gap-4">
+                                      <span className="font-bold text-zinc-300 capitalize font-mono text-[11px]">{ev.event_type}</span>
+                                      <span className="text-[10px] text-zinc-600 font-mono font-medium">
+                                        {new Date(ev.occurred_at).toLocaleDateString()} {new Date(ev.occurred_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                      </span>
+                                    </div>
+                                    <p className="text-[11px] text-zinc-500">
+                                      Campaign: <span className="text-zinc-400 font-semibold">{ev.campaign?.name || "General Email Link"}</span>
+                                    </p>
+                                    {ev.metadata && JSON.parse(ev.metadata).url && (
+                                      <p className="text-[10px] text-zinc-600 font-mono truncate max-w-[320px]">
+                                        URL: {JSON.parse(ev.metadata).url}
+                                      </p>
+                                    )}
+                                    {ev.user_agent && (
+                                      <p className="text-[9px] text-zinc-700 font-mono truncate max-w-[320px]">
+                                        Client: {ev.user_agent}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
 
