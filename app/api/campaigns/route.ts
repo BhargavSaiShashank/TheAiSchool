@@ -107,7 +107,9 @@ export async function POST(req: Request) {
         contact_id: contact.id,
         status: contact.status === "bounced" ? "bounced" : "delivered",
       }));
-      await prisma.campaignSend.createMany({ data: sendData });
+      if (sendData.length > 0) {
+        await prisma.campaignSend.createMany({ data: sendData });
+      }
 
       // Build all events in memory first, then batch insert
       const eventData: {
@@ -154,7 +156,9 @@ export async function POST(req: Request) {
       }
 
       // Single batched insert for all events
-      await prisma.emailEvent.createMany({ data: eventData });
+      if (eventData.length > 0) {
+        await prisma.emailEvent.createMany({ data: eventData });
+      }
 
       openRateStr = sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
       clickRateStr = sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
