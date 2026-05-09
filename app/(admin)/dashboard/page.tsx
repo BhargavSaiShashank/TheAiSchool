@@ -301,7 +301,7 @@ export default function DashboardPage() {
             whileHover={{ scale: 1.015, y: -2 }}
             whileTap={{ scale: 0.985 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="bg-zinc-950/20 backdrop-blur-md border border-white/[0.03] rounded-lg cursor-pointer shadow-[inset_0_1px_1px_rgba(255,255,255,0.01),0_8px_30px_rgba(0,0,0,0.5)] hover:border-[#7C5CFF]/30 hover:shadow-[0_12px_40px_rgba(124,92,255,0.03)] overflow-hidden"
+            className="premium-slab cursor-pointer overflow-hidden"
           >
             <CardSpotlight>
               <div className="p-4 flex flex-col justify-between h-full w-full">

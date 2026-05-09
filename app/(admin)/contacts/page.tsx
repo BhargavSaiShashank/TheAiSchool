@@ -632,7 +632,7 @@ export default function ContactsPage() {
               {lists.map((list) => (
                 <div
                   key={list.id}
-                  className="p-5 bg-card border border-border rounded-md hover:border-zinc-700 transition duration-300 flex flex-col justify-between group min-h-[180px]"
+                  className="p-5 premium-slab rounded-md flex flex-col justify-between group min-h-[180px]"
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-4">
