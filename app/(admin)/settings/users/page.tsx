@@ -95,9 +95,9 @@ export default function TeammatesPage() {
         <div>
           <h2 className="text-sm font-bold text-foreground tracking-tight flex items-center gap-2">
             <Users className="w-[18px] h-[18px] text-zinc-400" />
-            <span>Teammates Directory</span>
+            <span>Roles & Teammates Directory</span>
           </h2>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Manage permission roles and invite teammates to PulseSend</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Manage and assign permission roles, and invite teammates to PulseSend</p>
         </div>
         <button
           onClick={() => setShowInviteModal(true)}
