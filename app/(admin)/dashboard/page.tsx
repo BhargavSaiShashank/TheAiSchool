@@ -29,6 +29,7 @@ import {
   Tooltip,
 } from "recharts";
 import CardSpotlight from "@/components/CardSpotlight";
+import DeliveryPipelineHUD from "@/components/DeliveryPipelineHUD";
 
 export default function DashboardPage() {
   const { user } = useStore();
@@ -287,6 +288,8 @@ export default function DashboardPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <DeliveryPipelineHUD />
 
       {/* ─── 2. KPI METRICS GRID (6 cards) ─────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
