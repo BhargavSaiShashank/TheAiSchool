@@ -16,23 +16,29 @@ export async function GET() {
     });
 
     const formattedCampaigns = campaigns.map((camp) => {
-      const sentCount = camp.sends.length;
-      const openCount = camp.email_events.filter((e) => e.event_type === "opened").length;
-      const clickCount = camp.email_events.filter((e) => e.event_type === "clicked").length;
+      const sentCount = camp.sends ? camp.sends.length : 0;
+      const openCount = camp.email_events ? camp.email_events.filter((e) => e?.event_type === "opened").length : 0;
+      const clickCount = camp.email_events ? camp.email_events.filter((e) => e?.event_type === "clicked").length : 0;
 
       const openRateStr = sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
       const clickRateStr = sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
 
       let sendDateStr = "—";
-      if (camp.status === "sent") {
-        sendDateStr = formatDistanceToNow(camp.created_at, { addSuffix: true });
+      if (camp.status === "sent" && camp.created_at) {
+        try {
+          sendDateStr = formatDistanceToNow(new Date(camp.created_at), { addSuffix: true });
+        } catch (err) {
+          sendDateStr = "Recent";
+        }
       }
+
+      const statusStr = camp.status ? (camp.status.charAt(0).toUpperCase() + camp.status.slice(1)) : "Draft";
 
       return {
         id: camp.id,
-        name: camp.name,
-        subject: camp.subject,
-        status: camp.status.charAt(0).toUpperCase() + camp.status.slice(1), // capitalize
+        name: camp.name || "Untitled Campaign",
+        subject: camp.subject || "No Subject",
+        status: statusStr,
         sendDate: sendDateStr,
         recipients: sentCount,
         openRate: openRateStr,
