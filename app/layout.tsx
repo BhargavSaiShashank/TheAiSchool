@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({
@@ -24,12 +25,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} h-full antialiased dark`} suppressHydrationWarning>
-      <body className="h-full overflow-hidden flex flex-col bg-background text-foreground selection:bg-zinc-800 selection:text-white" suppressHydrationWarning>
-        <div className="flex-1 flex flex-col h-full relative overflow-hidden gradient-bg">
-          {children}
-        </div>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`${sans.variable} ${mono.variable} h-full antialiased dark`} suppressHydrationWarning>
+        <body className="h-full overflow-hidden flex flex-col bg-background text-foreground selection:bg-zinc-800 selection:text-white" suppressHydrationWarning>
+          <div className="flex-1 flex flex-col h-full relative overflow-hidden gradient-bg">
+            {children}
+          </div>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
