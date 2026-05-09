@@ -35,20 +35,22 @@ export async function GET(req: NextRequest) {
 
     // If user record completely doesn't exist yet
     if (!dbUser) {
-      let defaultOrg = await prisma.organization.findFirst();
-      if (!defaultOrg) {
-        defaultOrg = await prisma.organization.create({
-          data: { name: "Default Org" },
-        });
-      }
+      // Create a brand new, isolated workspace just for this new registrant
+      const newOrg = await prisma.organization.create({
+        data: { 
+          name: `${email.split('@')[0]}'s Workspace`,
+          from_email: email,
+          // aws_region remains null to trigger onboarding UI automatically!
+        },
+      });
 
       dbUser = await prisma.user.create({
         data: {
           id: userId,
           email: email,
           password_hash: "CLERK_MANAGED_AUTH",
-          role: "CAMPAIGN_MANAGER",
-          org_id: defaultOrg.id,
+          role: "SUPER_ADMIN", // Creator of the workspace is the root owner
+          org_id: newOrg.id,
         },
         include: { organization: true },
       });
@@ -59,7 +61,8 @@ export async function GET(req: NextRequest) {
       email: dbUser.email,
       role: dbUser.role,
       org_id: dbUser.org_id,
-      org_name: dbUser.organization?.name || "Default Org",
+      org_name: dbUser.organization?.name || "Workspace",
+      aws_region: dbUser.organization?.aws_region || null,
     });
   } catch (error: any) {
     console.error("Error in /api/auth/me:", error);

@@ -1,90 +1,85 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuth } from "@clerk/nextjs/server";
 
-export async function GET(req: Request) {
+/**
+ * Retrieves the active organization details for the authenticated user.
+ */
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const orgId = searchParams.get("orgId");
-
-    let org = null;
-    if (orgId && orgId !== "undefined") {
-      org = await prisma.organization.findUnique({
-        where: { id: orgId },
-      });
+    const { userId } = getAuth(req);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!org) {
-      org = await prisma.organization.findFirst();
+    // 1. Identify user profile to secure their specific org_id
+    const userProfile = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { organization: true }
+    });
+
+    if (!userProfile || !userProfile.organization) {
+      return NextResponse.json({ error: "No active workspace context found" }, { status: 404 });
     }
 
-    if (!org) {
-      org = await prisma.organization.create({
-        data: {
-          name: "The AI School",
-          from_email: "hello@pulsesend.com",
-          aws_region: "us-east-1",
-          ses_config_set: "pulsesend-events",
-        },
-      });
-    }
+    const org = userProfile.organization;
 
     return NextResponse.json({
+      id: org.id,
       name: org.name,
       fromEmail: org.from_email || "",
-      region: org.aws_region || "us-east-1",
+      region: org.aws_region || "",
       configSet: org.ses_config_set || "",
     });
   } catch (error: any) {
     console.error("GET /api/org error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
-export async function POST(req: Request) {
+/**
+ * Updates the organization profile strictly for the user's owned workspace.
+ */
+export async function POST(req: NextRequest) {
   try {
+    const { userId } = getAuth(req);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
-    const { name, fromEmail, region, configSet, orgId } = body;
+    const { name, fromEmail, region, configSet } = body;
 
-    let org = null;
-    if (orgId && orgId !== "undefined") {
-      org = await prisma.organization.findUnique({
-        where: { id: orgId },
-      });
+    // 1. Fetch current user context securely
+    const userProfile = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!userProfile) {
+      return NextResponse.json({ error: "User account mapping not found" }, { status: 404 });
     }
 
-    if (!org) {
-      org = await prisma.organization.findFirst();
-    }
-
-    if (!org) {
-      org = await prisma.organization.create({
-        data: {
-          name: name || "The AI School",
-          from_email: fromEmail || "",
-          aws_region: region || "us-east-1",
-          ses_config_set: configSet || "",
-        },
-      });
-    } else {
-      org = await prisma.organization.update({
-        where: { id: org.id },
-        data: {
-          name: name ?? org.name,
-          from_email: fromEmail ?? org.from_email,
-          aws_region: region ?? org.aws_region,
-          ses_config_set: configSet ?? org.ses_config_set,
-        },
-      });
-    }
+    // 2. Atomically update user's explicit organization
+    const updatedOrg = await prisma.organization.update({
+      where: { id: userProfile.org_id },
+      data: {
+        name: name?.trim() || undefined,
+        from_email: fromEmail?.trim() || undefined,
+        aws_region: region || undefined,
+        ses_config_set: configSet || undefined,
+      },
+    });
 
     return NextResponse.json({
-      name: org.name,
-      fromEmail: org.from_email || "",
-      region: org.aws_region || "us-east-1",
-      configSet: org.ses_config_set || "",
+      success: true,
+      id: updatedOrg.id,
+      name: updatedOrg.name,
+      fromEmail: updatedOrg.from_email || "",
+      region: updatedOrg.aws_region || "",
+      configSet: updatedOrg.ses_config_set || "",
     });
   } catch (error: any) {
     console.error("POST /api/org error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to save profile updates" }, { status: 500 });
   }
 }

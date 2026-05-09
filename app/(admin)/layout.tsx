@@ -10,6 +10,7 @@ import Preloader from "@/components/Preloader";
 import CommandPalette from "@/components/CommandPalette";
 import ToastContainer from "@/components/ToastContainer";
 import WarpGridCanvas from "@/components/WarpGridCanvas";
+import OnboardingWizard from "@/components/OnboardingWizard";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -207,6 +208,31 @@ export default function AdminLayout({
           </div>
         </main>
       </div>
+
+      {/* --- FIRST-TIME ONBOARDING INTERCEPTOR --- */}
+      <AnimatePresence>
+        {(!user?.aws_region || user.aws_region === "") && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999]"
+          >
+            <OnboardingWizard
+              currentEmail={user.email}
+              currentOrgName={user.org_name}
+              onComplete={(updatedName, updatedRegion) => {
+                // Instantly update client state to unlock the dashboard reactively!
+                login({
+                  ...user,
+                  org_name: updatedName,
+                  aws_region: updatedRegion
+                });
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

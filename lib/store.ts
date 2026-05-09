@@ -7,6 +7,7 @@ export interface UserSession {
   role: "SUPER_ADMIN" | "CAMPAIGN_MANAGER" | "VIEWER";
   org_id: string;
   org_name: string;
+  aws_region?: string | null;
 }
 
 interface PulseSendState {
