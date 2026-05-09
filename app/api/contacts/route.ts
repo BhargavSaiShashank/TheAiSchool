@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const orgId = searchParams.get("orgId") || req.headers.get("x-org-id");
+
+    let targetOrgId: string | undefined = orgId || undefined;
+    if (!targetOrgId) {
+      const org = await prisma.organization.findFirst();
+      targetOrgId = org?.id || undefined;
+    }
+
     const contacts = await prisma.contact.findMany({
+      where: {
+        org_id: targetOrgId,
+      },
       include: {
         lists: true,
       },
@@ -51,10 +63,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email address is required" }, { status: 400 });
     }
 
-    // Get specific or default organization
+    // Resolve organization context from request body, headers, or query parameters
+    const { searchParams } = new URL(req.url);
+    const resolvedOrgId = orgId || req.headers.get("x-org-id") || searchParams.get("orgId");
+
     let org = null;
-    if (orgId) {
-      org = await prisma.organization.findUnique({ where: { id: orgId } });
+    if (resolvedOrgId) {
+      org = await prisma.organization.findUnique({ where: { id: resolvedOrgId } });
     }
     if (!org) {
       org = await prisma.organization.findFirst();

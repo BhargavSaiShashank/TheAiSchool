@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Preloader from "@/components/Preloader";
 import { toast } from "@/lib/toast";
+import { useStore } from "@/lib/store";
 import {
   Users,
   Plus,
@@ -31,6 +32,7 @@ const initialLists: any[] = [];
 const initialContacts: any[] = [];
 
 export default function ContactsPage() {
+  const { user } = useStore();
   const [activeTab, setActiveTab] = useState<"lists" | "contacts" | "segments" | "import">("lists");
   const [isLoading, setIsLoading] = useState(true);
   
@@ -260,7 +262,9 @@ export default function ContactsPage() {
 
     async function fetchLiveData() {
       try {
-        const resLists = await fetch("/api/lists");
+        const resLists = await fetch("/api/lists", {
+          headers: { "x-org-id": user?.org_id || "" },
+        });
         if (resLists.ok) {
           const dataLists = await resLists.json();
           if (dataLists && Array.isArray(dataLists)) {
@@ -268,7 +272,9 @@ export default function ContactsPage() {
           }
         }
         
-        const resContacts = await fetch("/api/contacts");
+        const resContacts = await fetch("/api/contacts", {
+          headers: { "x-org-id": user?.org_id || "" },
+        });
         if (resContacts.ok) {
           const dataContacts = await resContacts.json();
           if (dataContacts && Array.isArray(dataContacts)) {

@@ -3,9 +3,21 @@ import { formatDistanceToNow } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { pushToCampaignQueue } from "@/lib/sqs";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const orgId = searchParams.get("orgId") || req.headers.get("x-org-id");
+
+    let targetOrgId: string | undefined = orgId || undefined;
+    if (!targetOrgId) {
+      const org = await prisma.organization.findFirst();
+      targetOrgId = org?.id || undefined;
+    }
+
     const campaigns = await prisma.campaign.findMany({
+      where: {
+        org_id: targetOrgId,
+      },
       include: {
         sends: true,
         email_events: true,

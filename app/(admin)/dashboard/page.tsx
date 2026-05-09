@@ -68,7 +68,11 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const res = await fetch("/api/dashboard");
+        const res = await fetch("/api/dashboard", {
+          headers: {
+            "x-org-id": user?.org_id || "",
+          },
+        });
         if (res.ok) {
           const data = await res.json();
           if (data) {

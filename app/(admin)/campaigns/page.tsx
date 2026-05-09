@@ -96,7 +96,9 @@ export default function CampaignsPage() {
 
     async function fetchLiveCampaigns() {
       try {
-        const res = await fetch("/api/campaigns");
+        const res = await fetch("/api/campaigns", {
+          headers: { "x-org-id": user?.org_id || "" },
+        });
         if (res.ok) {
           const data = await res.json();
           if (data && Array.isArray(data)) {
@@ -115,7 +117,9 @@ export default function CampaignsPage() {
 
     async function fetchMailingLists() {
       try {
-        const res = await fetch("/api/lists");
+        const res = await fetch("/api/lists", {
+          headers: { "x-org-id": user?.org_id || "" },
+        });
         if (res.ok) {
           const data = await res.json();
           if (data && Array.isArray(data)) {
