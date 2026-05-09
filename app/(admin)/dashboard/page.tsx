@@ -289,7 +289,7 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      <DeliveryPipelineHUD />
+      <DeliveryPipelineHUD liveStats={liveStats} />
 
       {/* ─── 2. KPI METRICS GRID (6 cards) ─────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">

@@ -11,7 +11,7 @@ interface Particle {
   segment: number; // 0, 1, 2
 }
 
-export default function DeliveryPipelineHUD() {
+export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -185,7 +185,7 @@ export default function DeliveryPipelineHUD() {
               <Users className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
             </div>
             <span className="text-[10px] font-bold text-zinc-400 mt-2 font-mono uppercase group-hover:text-white transition">Audience</span>
-            <span className="text-[11px] font-bold text-zinc-600 font-mono mt-0.5">24,500</span>
+            <span className="text-[11px] font-bold text-zinc-600 font-mono mt-0.5">{liveStats?.totalAudience || "0"}</span>
           </div>
 
           {/* Node 2: Campaign Engine */}
@@ -200,7 +200,7 @@ export default function DeliveryPipelineHUD() {
               <Cpu className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
             </div>
             <span className="text-[10px] font-bold text-zinc-400 mt-2 font-mono uppercase group-hover:text-white transition">Engine</span>
-            <span className="text-[11px] font-bold text-[#7C5CFF] font-mono mt-0.5">Active</span>
+            <span className="text-[11px] font-bold text-[#7C5CFF] font-mono mt-0.5">{liveStats?.totalDispatched && liveStats.totalDispatched !== "0" ? "Active" : "Inactive"}</span>
           </div>
 
           {/* Node 3: AWS SES SMTP */}
@@ -230,7 +230,7 @@ export default function DeliveryPipelineHUD() {
               <Mail className="w-4 h-4 text-emerald-400 group-hover:text-white transition" />
             </div>
             <span className="text-[10px] font-bold text-zinc-400 mt-2 font-mono uppercase group-hover:text-white transition">Delivered</span>
-            <span className="text-[11px] font-bold text-emerald-400 font-mono mt-0.5">99.8%</span>
+            <span className="text-[11px] font-bold text-emerald-400 font-mono mt-0.5">{liveStats?.totalDispatched && liveStats.totalDispatched !== "0" && liveStats.deliverability !== "—" ? liveStats.deliverability : "0.0%"}</span>
           </div>
         </div>
       </div>
