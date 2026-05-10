@@ -8,11 +8,27 @@ import { prisma } from "@/lib/prisma";
  * Throws an error if unauthorized to automatically trigger handler catch blocks.
  */
 export async function getSecureOrgId(req: NextRequest): Promise<string> {
-  const { userId } = getAuth(req);
+  // 1. Extract the complete dynamic identity packet
+  const { userId, orgId } = getAuth(req);
   if (!userId) {
     throw new Error("UNAUTHORIZED: No valid session detected");
   }
 
+  // --- 🚀 2. DYNAMIC MULTI-TENANT RESOLUTION 🚀 ---
+  if (orgId) {
+    // The active user is viewing from inside a corporate context!
+    const liveOrg = await prisma.organization.findUnique({
+      where: { clerk_org_id: orgId },
+      select: { id: true }
+    });
+
+    if (liveOrg) {
+      return liveOrg.id;
+    }
+    // Fall-through if not yet created by /me gateway (self-heal potential)
+  }
+
+  // --- 🏠 3. SOLO MODE / FALLBACK RESOLUTION ---
   // We prioritize mapping by the central clerk user identifier to prevent ID-spoofing attempts.
   const activeUser = await prisma.user.findUnique({
     where: { id: userId },

@@ -7,29 +7,37 @@ import { getAuth } from "@clerk/nextjs/server";
  */
 export async function GET(req: NextRequest) {
   try {
-    const { userId } = getAuth(req);
+    const { userId, orgId } = getAuth(req);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 1. Identify user profile to secure their specific org_id
-    const userProfile = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { organization: true }
-    });
+    let activeOrg;
 
-    if (!userProfile || !userProfile.organization) {
+    if (orgId) {
+      // Target dynamically active corporate workspace
+      activeOrg = await prisma.organization.findUnique({
+        where: { clerk_org_id: orgId }
+      });
+    } else {
+      // Fallback: user personal workspace
+      const userProfile = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { organization: true }
+      });
+      activeOrg = userProfile?.organization;
+    }
+
+    if (!activeOrg) {
       return NextResponse.json({ error: "No active workspace context found" }, { status: 404 });
     }
 
-    const org = userProfile.organization;
-
     return NextResponse.json({
-      id: org.id,
-      name: org.name,
-      fromEmail: org.from_email || "",
-      region: org.aws_region || "",
-      configSet: org.ses_config_set || "",
+      id: activeOrg.id,
+      name: activeOrg.name,
+      fromEmail: activeOrg.from_email || "",
+      region: activeOrg.aws_region || "",
+      configSet: activeOrg.ses_config_set || "",
     });
   } catch (error: any) {
     console.error("GET /api/org error:", error);
@@ -37,12 +45,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/**
- * Updates the organization profile strictly for the user's owned workspace.
- */
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = getAuth(req);
+    const { userId, orgId } = getAuth(req);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -50,18 +55,38 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name, fromEmail, region, configSet } = body;
 
-    // 1. Fetch current user context securely
-    const userProfile = await prisma.user.findUnique({
-      where: { id: userId }
-    });
+    let targetOrgId: string;
 
-    if (!userProfile) {
-      return NextResponse.json({ error: "User account mapping not found" }, { status: 404 });
+    if (orgId) {
+      // 1. DYNAMIC TARGETING: Secure the organization mapped to current Clerk context!
+      const liveOrg = await prisma.organization.findUnique({
+        where: { clerk_org_id: orgId }
+      });
+      
+      if (!liveOrg) {
+        // Micro-heal: If not mirrored yet, generate on update attempt
+        const spawnedOrg = await prisma.organization.create({
+          data: { clerk_org_id: orgId, name: name || "Enterprise Workspace", from_email: fromEmail }
+        });
+        targetOrgId = spawnedOrg.id;
+      } else {
+        targetOrgId = liveOrg.id;
+      }
+    } else {
+      // 2. SOLO MODE TARGETING: Secure the personal anchor workspace
+      const userProfile = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+      
+      if (!userProfile) {
+        return NextResponse.json({ error: "User identity mismatch" }, { status: 404 });
+      }
+      targetOrgId = userProfile.org_id;
     }
 
-    // 2. Atomically update user's explicit organization
+    // 3. AUTHORITATIVE UPDATE: Securely apply AWS payload to EXACT target container!
     const updatedOrg = await prisma.organization.update({
-      where: { id: userProfile.org_id },
+      where: { id: targetOrgId },
       data: {
         name: name?.trim() || undefined,
         from_email: fromEmail?.trim() || undefined,
