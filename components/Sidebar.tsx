@@ -57,7 +57,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
     <motion.aside
       animate={{ width: sidebarCollapsed ? 56 : 240 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-col h-screen border-r border-border bg-background text-muted-foreground select-none relative z-20 shrink-0 shadow-sm"
+      className="flex flex-col h-full border-r border-border bg-background text-muted-foreground select-none relative z-20 shrink-0 shadow-sm"
     >
       {/* Brand Header */}
       <div className="h-[52px] flex items-center justify-between px-4 border-b border-border shrink-0">

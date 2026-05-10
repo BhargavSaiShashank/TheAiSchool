@@ -200,7 +200,7 @@ export default function AdminLayout({
       <ToastContainer />
 
       {/* Desktop Static Sidebar (Hidden on Mobile) */}
-      <div className="hidden md:flex shrink-0">
+      <div className="hidden md:flex shrink-0 h-screen">
         {hasHydrated ? (
           <Sidebar />
         ) : (
