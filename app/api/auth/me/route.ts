@@ -66,6 +66,11 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("Error in /api/auth/me:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    // Diagnostic exposure to accelerate hotfix
+    return NextResponse.json({ 
+      error: error.message, 
+      code: error.code,
+      meta: error.meta 
+    }, { status: 500 });
   }
 }
