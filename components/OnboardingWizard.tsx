@@ -15,14 +15,13 @@ export default function OnboardingWizard({
   currentOrgName,
   onComplete,
 }: OnboardingWizardProps) {
-  const [orgName, setOrgName] = useState(currentOrgName || "");
   const [senderEmail, setSenderEmail] = useState(currentEmail || "");
   const [awsRegion, setAwsRegion] = useState("us-east-1");
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orgName.trim() || !senderEmail.trim()) return;
+    if (!senderEmail.trim()) return;
 
     setIsSaving(true);
     try {
@@ -30,7 +29,7 @@ export default function OnboardingWizard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: orgName,
+          name: currentOrgName, // Preserve the name from Clerk seamlessly without asking again
           fromEmail: senderEmail,
           region: awsRegion,
         }),
@@ -40,7 +39,7 @@ export default function OnboardingWizard({
         // Artificial success delay for visual gratification
         setTimeout(() => {
           setIsSaving(false);
-          onComplete(orgName, awsRegion);
+          onComplete(currentOrgName, awsRegion);
         }, 1000);
       } else {
         setIsSaving(false);
@@ -82,20 +81,6 @@ export default function OnboardingWizard({
 
           {/* Form Section */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-2 text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                <Building className="w-3.5 h-3.5 text-[#7C5CFF]" />
-                Organization Name
-              </label>
-              <input
-                type="text"
-                required
-                value={orgName}
-                onChange={(e) => setOrgName(e.target.value)}
-                placeholder="E.g. The AI School"
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-[#7C5CFF]/50 focus:border-[#7C5CFF] transition-all duration-200"
-              />
-            </div>
 
             <div className="space-y-1.5">
               <label className="flex items-center gap-2 text-xs font-bold text-zinc-300 uppercase tracking-wider">
