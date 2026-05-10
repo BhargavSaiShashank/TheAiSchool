@@ -1,10 +1,7 @@
 import { ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
 import { sqsClient } from "../lib/sqs";
 import { processCampaignDispatch } from "../lib/dispatcher";
-import * as dotenv from "dotenv";
-
-// Load env variables for pure Node context
-dotenv.config();
+// Load env variables automatically in Node 20+ using --env-file=.env flag or via production environment injects.
 
 const QUEUE_URL = process.env.AWS_SQS_QUEUE_URL;
 

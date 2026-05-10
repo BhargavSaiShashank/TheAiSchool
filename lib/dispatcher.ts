@@ -18,7 +18,6 @@ export async function processCampaignDispatch(campaignId: string, config: Dispat
   try {
     const campaign = await prisma.campaign.findUnique({
       where: { id: campaignId },
-      include: { org: true }
     });
 
     if (!campaign) throw new Error("Campaign not found");
