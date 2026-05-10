@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { after } from "next/server"; 
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
@@ -18,25 +19,30 @@ export async function GET(req: Request) {
         const userAgent = req.headers.get("user-agent") || undefined;
         const ip = req.headers.get("x-forwarded-for") || undefined;
 
-        // Log the "clicked" tracking event inside database EmailEvent table
-        await prisma.emailEvent.create({
-          data: {
-            contact_id: contactId,
-            campaign_id: campaignId,
-            event_type: "clicked",
-            user_agent: userAgent,
-            ip: ip,
-            metadata: JSON.stringify({ url: originalUrl }),
-          },
+        // 🔥 OPTIMIZED: Perform DB log AFTER the redirect has been processed for user speed!
+        after(async () => {
+          try {
+            await prisma.emailEvent.create({
+              data: {
+                contact_id: contactId,
+                campaign_id: campaignId,
+                event_type: "clicked",
+                user_agent: userAgent,
+                ip: ip,
+                metadata: JSON.stringify({ url: originalUrl }),
+              },
+            });
+          } catch (bgErr) {
+            console.error("Background click event log failed:", bgErr);
+          }
         });
       }
     }
 
-    // Perform high-speed HTTP 302 redirect to original destination
+    // Perform high-speed HTTP 302 redirect IMMEDIATELY without waiting for DB insert!
     return NextResponse.redirect(new URL(originalUrl), 302);
   } catch (err: any) {
     console.error("Tracking click error:", err);
-    // Even if tracking fails, safely fallback redirect the recipient to the intended link
     try {
       const { searchParams } = new URL(req.url);
       const fallbackUrl = searchParams.get("url");
