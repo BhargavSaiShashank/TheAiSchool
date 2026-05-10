@@ -281,6 +281,14 @@ export default function ContactsPage() {
             setContacts(dataContacts);
           }
         }
+
+        const resSegments = await fetch("/api/segments");
+        if (resSegments.ok) {
+          const dataSegments = await resSegments.json();
+          if (Array.isArray(dataSegments)) {
+            setSavedSegments(dataSegments);
+          }
+        }
       } catch (err) {
         console.error("Failed to fetch live data from Supabase, using preloaded fallback sandbox data instead.", err);
       } finally {
@@ -303,17 +311,31 @@ export default function ContactsPage() {
   const [liveSegmentCount, setLiveSegmentCount] = useState(0);
   const [savedSegments, setSavedSegments] = useState<any[]>([]);
 
-  const handleSaveSegment = () => {
-    const name = prompt("Enter a name for this segment:", "Active Subscribers");
+  const handleSaveSegment = async () => {
+    const name = prompt("Enter a unique name for this dynamic segment:", "Target City Cluster");
     if (!name || !name.trim()) return;
 
-    const newSegment = {
-      id: `s-${Date.now()}`,
-      name: name.trim(),
-      count: liveSegmentCount,
-    };
-    setSavedSegments([...savedSegments, newSegment]);
-    toast.success(`Segment "${name}" saved successfully!`);
+    try {
+      const res = await fetch("/api/segments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          rules: rules
+        }),
+      });
+
+      if (res.ok) {
+        const created = await res.json();
+        setSavedSegments([created, ...savedSegments]);
+        toast.success(`Archival Complete: Segment "${name}" finalized.`);
+      } else {
+        toast.error("Transmission Failure: Could not secure segment to cloud.");
+      }
+    } catch (err) {
+      console.error("Segment saving error:", err);
+      toast.error("Network gridlock executing segment archival.");
+    }
   };
 
   // CSV Import Wizard State
@@ -565,16 +587,7 @@ export default function ContactsPage() {
     <div className="space-y-5 select-none">
       {/* Navigation Tabs - Enhanced with scrolling capability for mobile viewports */}
       <div className="flex overflow-x-auto scrollbar-hide snap-x border-b border-border pb-px">
-        {(["lists", "contacts", "segments", "import"] as const)
-          .filter(tab => {
-            // Safe explicit check: Hide secure tabs unless explicitly authorized
-            if (user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role)) {
-               return true;
-            }
-            // Fallback for unauthenticated, Viewer, or hydrating states
-            return tab === "lists" || tab === "contacts";
-          })
-          .map((tab) => (
+        {(["lists", "contacts", "segments", "import"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}

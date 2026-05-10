@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import Preloader from "@/components/Preloader";
 import { toast } from "@/lib/toast";
 import { useStore } from "@/lib/store";
@@ -27,6 +28,7 @@ import {
   Loader2,
   Sparkles,
   RotateCcw,
+  Activity,
 } from "lucide-react";
 
 // Mock Campaign List
@@ -405,13 +407,22 @@ export default function CampaignsPage() {
                                   <Copy className="w-3.5 h-3.5" />
                                 </button>
                                 {camp.status === "Sent" && (
-                                  <button
-                                    onClick={() => handleResendToNonOpeners(camp.name)}
-                                    className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
-                                    title="Re-send to non-openers"
-                                  >
-                                    <RotateCcw className="w-3.5 h-3.5" />
-                                  </button>
+                                  <>
+                                    <Link
+                                      href={`/campaigns/${camp.id}/report`}
+                                      className="text-emerald-400 hover:text-emerald-300 transition p-1.5 rounded hover:bg-emerald-400/10"
+                                      title="View Analytics Report"
+                                    >
+                                      <Activity className="w-3.5 h-3.5" />
+                                    </Link>
+                                    <button
+                                      onClick={() => handleResendToNonOpeners(camp.name)}
+                                      className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
+                                      title="Re-send to non-openers"
+                                    >
+                                      <RotateCcw className="w-3.5 h-3.5" />
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             )}
