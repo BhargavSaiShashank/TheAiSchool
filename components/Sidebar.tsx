@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useOrganization } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -28,6 +28,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, sidebarCollapsed, toggleSidebar, logout, theme } = useStore();
+  const { organization } = useOrganization();
 
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
@@ -207,7 +208,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             {!sidebarCollapsed && (
               <div className="overflow-hidden">
                 <p className="text-xs font-bold text-foreground truncate leading-none mb-1">
-                  {user?.org_name || "PulseSend Inc."}
+                  {organization?.name || user?.org_name || "PulseSend Inc."}
                 </p>
                 <p className="text-[10px] text-muted-foreground truncate lowercase font-mono font-semibold">
                   {user?.role.replace("_", " ") || "Super Admin"}
