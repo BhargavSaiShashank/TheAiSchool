@@ -14,7 +14,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PulseSend — Modern AI-Powered Email Platform",
+  title: "PulseSend — Modern High-Performance Email Platform",
   description: "Create, schedule, and track beautiful email campaigns at scale with AWS SES integration, responsive drag-and-drop templates, and real-time deep analytics.",
   keywords: ["email", "campaign", "newsletter", "marketing", "aws ses", "framer-motion", "next.js"],
 };
