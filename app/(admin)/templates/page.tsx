@@ -589,8 +589,7 @@ export default function TemplatesPage() {
                 id="editor-container" 
                 className="w-full h-full min-h-[200px]" 
                 style={{
-                  zoom: "0.80", // Aggressive user expansion
-                  WebkitZoom: "0.80", // Aggressive user expansion fallback
+                  zoom: "0.80", // React handles prefixes automatically!
                 }}
               />
               <style jsx>{`
