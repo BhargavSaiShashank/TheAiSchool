@@ -563,13 +563,13 @@ export default function ContactsPage() {
 
   return (
     <div className="space-y-5 select-none">
-      {/* Navigation Tabs */}
-      <div className="flex border-b border-border pb-px">
+      {/* Navigation Tabs - Enhanced with scrolling capability for mobile viewports */}
+      <div className="flex overflow-x-auto scrollbar-hide snap-x border-b border-border pb-px">
         {(["lists", "contacts", "segments", "import"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2.5 font-semibold text-[13px] tracking-wide border-b-2 transition relative cursor-pointer ${
+            className={`flex-shrink-0 snap-start px-5 py-2.5 font-semibold text-[13px] whitespace-nowrap tracking-wide border-b-2 transition relative cursor-pointer ${
               activeTab === tab
                 ? "text-foreground border-primary font-bold"
                 : "text-muted-foreground border-transparent hover:text-foreground"
@@ -593,7 +593,7 @@ export default function ContactsPage() {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-[15px] font-bold text-foreground tracking-tight">Contact Directories</h2>
                 <p className="text-[12px] text-muted-foreground mt-0.5">Manage and organize your distinct mailing lists</p>
@@ -608,7 +608,8 @@ export default function ContactsPage() {
             </div>
 
             {/* Stats summary strip above cards — totals derived from the same lists data the cards use */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Stats summary strip above cards — Dynamically stacks on mobile, grids on tablet */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 glass-hud rounded-lg flex items-center gap-3">
                 <Users className="w-5 h-5 text-[#7C5CFF] shrink-0" />
                 <div>
@@ -776,8 +777,8 @@ export default function ContactsPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
-                <SlidersHorizontal className="w-4 h-4 text-zinc-500" />
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto shrink-0">
+                <SlidersHorizontal className="hidden xs:block w-4 h-4 text-zinc-500" />
                 <select
                   value={selectedListFilter}
                   onChange={(e) => setSelectedListFilter(e.target.value)}
@@ -1152,10 +1153,10 @@ export default function ContactsPage() {
                 </div>
               </div>
 
-              {/* Rules Stack */}
+              {/* Rules Stack - Stacks vertically on mobile, rows on desktop */}
               <div className="space-y-3">
                 {rules.map((rule, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 rounded bg-zinc-900/60 border border-zinc-850">
+                  <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 rounded bg-zinc-900/60 border border-zinc-850">
                     <select
                       value={rule.field}
                       onChange={(e) => {
@@ -1178,31 +1179,33 @@ export default function ContactsPage() {
                         newRules[idx].operator = e.target.value;
                         setRules(newRules);
                       }}
-                      className="px-2.5 py-1.5 rounded bg-zinc-950 border border-zinc-800 text-xs text-zinc-400 font-mono"
+                      className="px-2.5 py-1.5 rounded bg-zinc-950 border border-zinc-800 text-xs text-zinc-400 font-mono w-full sm:w-auto"
                     >
                       <option value="equals">equals</option>
                       <option value="contains">contains</option>
                       <option value="not_equals">not equals</option>
                     </select>
 
-                    <input
-                      type="text"
-                      value={rule.value}
-                      onChange={(e) => {
-                        const newRules = [...rules];
-                        newRules[idx].value = e.target.value;
-                        setRules(newRules);
-                      }}
-                      placeholder="e.g. Hyderabad"
-                      className="flex-1 px-3 py-1.5 rounded bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-700 focus:outline-none"
-                    />
+                    <div className="flex items-center gap-2 w-full">
+                      <input
+                        type="text"
+                        value={rule.value}
+                        onChange={(e) => {
+                          const newRules = [...rules];
+                          newRules[idx].value = e.target.value;
+                          setRules(newRules);
+                        }}
+                        placeholder="e.g. Hyderabad"
+                        className="flex-1 px-3 py-1.5 rounded bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-700 focus:outline-none w-full min-w-0"
+                      />
 
-                    <button
-                      onClick={() => setRules(rules.filter((_, i) => i !== idx))}
-                      className="p-1.5 hover:bg-zinc-800 text-zinc-500 hover:text-red-400 rounded transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                      <button
+                        onClick={() => setRules(rules.filter((_, i) => i !== idx))}
+                        className="p-2 hover:bg-zinc-800 text-zinc-500 hover:text-red-400 rounded transition border border-zinc-850 sm:border-none"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1216,10 +1219,10 @@ export default function ContactsPage() {
                   <span>Add Filter Rule</span>
                 </button>
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                   <div className="text-right">
-                    <p className="text-[9px] font-semibold text-zinc-500 font-mono uppercase tracking-wider">Estimated Audience</p>
-                    <p className="text-xs font-bold font-mono text-white mt-0.5">{liveSegmentCount} contacts</p>
+                    <p className="text-[9px] font-semibold text-zinc-500 font-mono uppercase tracking-wider">Audience</p>
+                    <p className="text-xs font-bold font-mono text-white mt-0.5">{liveSegmentCount}</p>
                   </div>
                   <button
                     onClick={handleSaveSegment}
@@ -1276,21 +1279,21 @@ export default function ContactsPage() {
             exit={{ opacity: 0, y: -10 }}
             className="p-8 bg-zinc-950 border border-zinc-900 rounded-lg glass space-y-8"
           >
-            {/* Import Header Wizard indicator */}
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-5">
+            {/* Import Header Wizard indicator - Dynamically wraps for small screens */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-900 pb-5 gap-4">
               <div>
                 <h3 className="text-sm font-bold text-white tracking-tight">CSV Contact Importer</h3>
                 <p className="text-[10px] text-zinc-500 mt-0.5">Bulk-insert subscriber directories in seconds</p>
               </div>
 
-              <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-zinc-500">
-                <span className={importStep === 1 ? "text-white" : ""}>1. Upload</span>
+              <div className="flex flex-wrap items-center gap-2 xs:gap-3 text-[10px] font-mono font-bold text-zinc-500">
+                <span className={importStep === 1 ? "text-white" : ""}>1.<span className="hidden xs:inline"> Upload</span></span>
                 <span>/</span>
-                <span className={importStep === 2 ? "text-white" : ""}>2. Mapping</span>
+                <span className={importStep === 2 ? "text-white" : ""}>2.<span className="hidden xs:inline"> Mapping</span></span>
                 <span>/</span>
-                <span className={importStep === 3 ? "text-white" : ""}>3. Progress</span>
+                <span className={importStep === 3 ? "text-white" : ""}>3.<span className="hidden xs:inline"> Progress</span></span>
                 <span>/</span>
-                <span className={importStep === 4 ? "text-white" : ""}>4. Complete</span>
+                <span className={importStep === 4 ? "text-white" : ""}>4.<span className="hidden xs:inline"> Complete</span></span>
               </div>
             </div>
 

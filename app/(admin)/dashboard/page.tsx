@@ -142,8 +142,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 select-none">
 
-      {/* ─── 1. Welcome + AI Insight Strip ──────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 pb-1">
+      {/* ─── 1. Welcome + AI Insight Strip - Stacks dynamically to stop overlap ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-1">
         <div>
           <p className="text-[11px] font-bold text-muted-foreground font-mono uppercase tracking-widest mb-1">
             Operational Overview — AWS eu-north-1
@@ -313,8 +313,8 @@ export default function DashboardPage() {
 
       <DeliveryPipelineHUD liveStats={liveStats} />
 
-      {/* ─── 2. KPI METRICS GRID (6 cards) ─────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      {/* ─── 2. KPI METRICS GRID (6 cards) - Stacks vertically on compact phones ───── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         {stats.map((stat, i) => {
           const glowClass = stat.accent.includes("emerald") 
             ? "neon-glow-emerald" 
@@ -390,7 +390,7 @@ export default function DashboardPage() {
 
         {/* Sending Trends */}
         <div className="lg:col-span-2 p-5 glass-hud rounded-lg">
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-4">
             <div>
               <h3 className="text-[13px] font-bold text-foreground tracking-tight">
                 Sending Performance
@@ -500,7 +500,7 @@ export default function DashboardPage() {
 
       {/* ─── 5. CAMPAIGNS TABLE ─────────────────────────────────────────────────── */}
       <div className="p-5 glass-hud rounded-lg">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
           <div>
             <h3 className="text-[13px] font-bold text-foreground tracking-tight">Top Campaigns</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Best performing pipelines by engagement rate</p>
@@ -517,7 +517,8 @@ export default function DashboardPage() {
             No campaigns dispatched yet.
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="border-b border-border">
                 {["Campaign", "Audience", "Open Rate", "Click Rate", "Risk", "Status"].map((h) => (
@@ -564,7 +565,8 @@ export default function DashboardPage() {
               ))}
             </tbody>
           </table>
-        )}
+        </div>
+      )}
       </div>
 
       {/* ─── 6. AI COPILOT ──────────────────────────────────────────────────────── */}
@@ -582,7 +584,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="flex gap-2 max-w-2xl relative z-10 mb-4">
+        <div className="flex flex-col sm:flex-row gap-2 max-w-2xl relative z-10 mb-4">
           <input
             type="text"
             placeholder="Enter topic (e.g. Next.js workshop, Python bootcamp...)"

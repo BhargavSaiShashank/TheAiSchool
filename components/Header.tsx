@@ -1,11 +1,11 @@
 "use client";
 
 import { useStore } from "@/lib/store";
-import { Search, Bell, Plus, Sun, Moon } from "lucide-react";
+import { Search, Bell, Plus, Sun, Moon, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export default function Header() {
+export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname();
   const { user, theme, toggleTheme } = useStore();
 
@@ -32,15 +32,24 @@ export default function Header() {
   };
 
   return (
-    <header className="h-[52px] flex items-center justify-between px-6 border-b border-border bg-background select-none sticky top-0 z-50 shrink-0">
-      {/* Title & Path */}
-      <div className="flex flex-col">
-        <p className="text-[11px] font-semibold text-zinc-500 font-mono tracking-wider uppercase mb-0.5">
-          {getBreadcrumbs()}
-        </p>
-        <h1 className="text-[17px] font-bold text-foreground tracking-tight leading-none">
-          {getPageTitle()}
-        </h1>
+    <header className="h-[52px] flex items-center justify-between px-4 md:px-6 border-b border-border bg-background select-none sticky top-0 z-50 shrink-0">
+      {/* Left Section: Hamburger + Title */}
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onMenuClick}
+          className="md:hidden p-1.5 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+        
+        <div className="flex flex-col">
+          <p className="hidden xs:block text-[11px] font-semibold text-zinc-500 font-mono tracking-wider uppercase mb-0.5">
+            {getBreadcrumbs()}
+          </p>
+          <h1 className="text-[15px] md:text-[17px] font-bold text-foreground tracking-tight leading-none">
+            {getPageTitle()}
+          </h1>
+        </div>
       </div>
 
       {/* Utilities / Actions */}
@@ -66,9 +75,9 @@ export default function Header() {
         {user?.role !== "VIEWER" && !pathname.includes("/campaigns") && (
           <div className="flex items-center gap-2">
             <Link href="/campaigns?new=true">
-              <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-primary text-white hover:bg-primary/95 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5">
-                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>New Campaign</span>
+              <button className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded bg-primary text-white hover:bg-primary/95 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5">
+                <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5 stroke-[2.5]" />
+                <span className="hidden xs:inline">New Campaign</span>
               </button>
             </Link>
           </div>

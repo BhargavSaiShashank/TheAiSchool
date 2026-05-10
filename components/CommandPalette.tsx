@@ -205,8 +205,8 @@ export default function CommandPalette() {
 
   return (
     <>
-      {/* Floating Status Bar / Keyboard shortcut helper at screen footer */}
-      <div className="fixed bottom-4 right-4 z-40 bg-zinc-950/80 backdrop-blur-md border border-white/[0.04] rounded-md px-3 py-1.5 flex items-center gap-2 text-[10px] font-mono text-zinc-500 font-semibold uppercase pointer-events-auto select-none shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+      {/* Floating Status Bar / Keyboard shortcut helper at screen footer - Hidden on Mobile */}
+      <div className="fixed bottom-4 right-4 z-40 bg-zinc-950/80 backdrop-blur-md border border-white/[0.04] rounded-md px-3 py-1.5 hidden md:flex items-center gap-2 text-[10px] font-mono text-zinc-500 font-semibold uppercase pointer-events-auto select-none shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
         <span className="flex items-center gap-1">
           <Terminal className="w-3 h-3 text-[#7C5CFF]" />
           <span>Press</span>

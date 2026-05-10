@@ -151,14 +151,38 @@ export default function TemplatesPage() {
           try {
             container.innerHTML = ""; // Clear any stale or duplicate iframes before fresh init!
 
+            const isMobileView = window.innerWidth < 768;
+
             // @ts-ignore
             window.unlayer.init({
               id: "editor-container",
               displayMode: "email",
+              defaultDevice: isMobileView ? 'mobile' : 'desktop', // Forces engine to fit mobile width natively
+              features: {
+                preview: false, // Kills the internal fixed-width simulator toolbar that causes clipping
+              },
               appearance: {
                 theme: "dark",
+                panels: {
+                  tools: {
+                    dock: 'right',
+                    collapsible: true,
+                  }
+                }
               }
             });
+
+            // Immediately check viewport and instruct Unlayer to minimize the sidebar on compact screens
+            if (window.innerWidth < 768) {
+              // Give native editor a fractional moment to render before executing collapse command
+              setTimeout(() => {
+                // @ts-ignore
+                if (window.unlayer && typeof window.unlayer.collapseSidebar === 'function') {
+                  // @ts-ignore
+                  window.unlayer.collapseSidebar();
+                }
+              }, 500);
+            }
 
             // Register secure AWS S3 image upload callback
             // @ts-ignore
@@ -355,14 +379,14 @@ export default function TemplatesPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 max-w-full">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 max-w-full flex-nowrap snap-x scrollbar-hide">
                 {categories.map((cat) => {
                   const isActive = selectedCategory === cat;
                   return (
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`relative px-3 py-1.5 rounded text-[10px] font-semibold font-mono tracking-wider uppercase border transition cursor-pointer ${
+                      className={`relative px-3 py-1.5 rounded text-[10px] font-semibold font-mono tracking-wider uppercase border transition cursor-pointer flex-shrink-0 snap-start ${
                         isActive
                           ? "text-white border-transparent"
                           : "text-muted-foreground border-border hover:text-foreground"
@@ -480,10 +504,10 @@ export default function TemplatesPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col h-[calc(100vh-140px)] space-y-4"
+            className="flex flex-col h-[460px] md:h-[calc(100vh-140px)] space-y-4"
           >
-            {/* Editor Control Header */}
-            <div className="flex items-center justify-between shrink-0 border-b border-white/[0.04] pb-4">
+            {/* Editor Control Header - Stackable logic for complex desktop control array */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between shrink-0 border-b border-white/[0.04] pb-4 gap-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setView("library")}
@@ -522,19 +546,19 @@ export default function TemplatesPage() {
                 </div>
               </div>
 
-              {/* Toolbar Controls */}
-              <div className="flex items-center gap-4">
+              {/* Toolbar Controls - Dynamic wrapping enabled for cellular widths */}
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 
-                {/* Zoom Control */}
-                <div className="flex items-center gap-2 bg-zinc-900 border border-white/[0.04] px-2 py-1 rounded text-[10px] font-mono text-zinc-400 font-semibold">
+                {/* Zoom Control - Automatically concealed on compact mobile for space */}
+                <div className="hidden md:flex items-center gap-2 bg-zinc-900 border border-white/[0.04] px-2 py-1 rounded text-[10px] font-mono text-zinc-400 font-semibold">
                   <span className="uppercase">Zoom:</span>
                   <button onClick={() => setZoomScale(Math.max(50, zoomScale - 10))} className="hover:text-white">-</button>
                   <span>{zoomScale}%</span>
                   <button onClick={() => setZoomScale(Math.min(120, zoomScale + 10))} className="hover:text-white">+</button>
                 </div>
 
-                {/* Device Selector */}
-                <div className="flex p-0.5 bg-zinc-900 border border-white/[0.04] rounded">
+                {/* Device Selector - Also concealed on compact mobile for space */}
+                <div className="hidden sm:flex p-0.5 bg-zinc-900 border border-white/[0.04] rounded">
                   <button
                     onClick={() => setPreviewMode("desktop")}
                     className={`p-1.5 rounded cursor-pointer transition ${previewMode === "desktop" ? "bg-zinc-850 text-[#7C5CFF]" : "text-zinc-500"}`}
@@ -551,17 +575,33 @@ export default function TemplatesPage() {
 
                 <button
                   onClick={handleSaveTemplate}
-                  className="flex items-center gap-1 px-4 py-2 rounded bg-white text-black hover:bg-zinc-200 text-xs font-bold shadow transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-5 py-2.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-bold shadow transition cursor-pointer w-full sm:w-auto justify-center"
                 >
-                  <Save className="w-3.5 h-3.5" />
+                  <Save className="w-4 h-4" />
                   <span>Save Template</span>
                 </button>
               </div>
             </div>
 
-            {/* Expanded Unlayer Drag-and-Drop Workspace */}
+            {/* Deeply Compressed Embedded Workspace Container - Replaced transform with native zoom to kill ghost space */}
             <div className="flex-1 rounded-lg border border-white/[0.04] overflow-hidden bg-zinc-950/40 relative">
-              <div id="editor-container" className="w-full h-full min-h-[500px]" style={{ height: "calc(100vh - 240px)" }} />
+              <div 
+                id="editor-container" 
+                className="w-full h-full min-h-[200px]" 
+                style={{
+                  zoom: "0.80", // Aggressive user expansion
+                  WebkitZoom: "0.80", // Aggressive user expansion fallback
+                }}
+              />
+              <style jsx>{`
+                @media (min-width: 768px) {
+                  #editor-container {
+                    zoom: 1 !important;
+                    WebkitZoom: 1 !important;
+                    min-height: 500px !important;
+                  }
+                }
+              `}</style>
             </div>
           </motion.div>
         )}

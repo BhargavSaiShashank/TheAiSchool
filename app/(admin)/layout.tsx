@@ -24,6 +24,12 @@ export default function AdminLayout({
   const { user, login, theme } = useStore();
   const { user: clerkUser, isLoaded } = useUser();
   const [mounted, setMounted] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Automatically close drawer on route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -193,17 +199,47 @@ export default function AdminLayout({
       <CommandPalette />
       <ToastContainer />
 
-      {/* Sidebar (left) */}
-      <Sidebar />
+      {/* Desktop Static Sidebar (Hidden on Mobile) */}
+      <div className="hidden md:flex">
+        <Sidebar />
+      </div>
+
+      {/* --- MOBILE RESPONSIVE DRAWER OVERLAY --- */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-[100] bg-black/60 md:hidden backdrop-blur-sm"
+            />
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              className="fixed top-0 left-0 bottom-0 z-[101] w-[260px] bg-background md:hidden border-r border-border shadow-2xl"
+            >
+              <div className="h-full w-full flex flex-col bg-background" style={{ width: '260px' }}>
+                <Sidebar onClose={() => setIsMobileMenuOpen(false)} />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Main Panel (right) */}
-      <div className="flex-1 flex flex-col min-w-0 relative z-10">
+      <div className="flex-1 flex flex-col min-w-0 relative z-10 h-screen overflow-hidden">
         {/* Header */}
-        <Header />
+        <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
 
         {/* Content area */}
-        <main className="flex-1 overflow-y-auto px-6 py-6 relative">
-          <div className="max-w-[1400px] mx-auto w-full flex flex-col gap-6 min-h-[calc(100vh-52px-48px)]">
+        <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 md:py-6 relative">
+          <div className="max-w-[1400px] mx-auto w-full flex flex-col gap-4 md:gap-6 min-h-[calc(100vh-52px-48px)]">
             {children}
           </div>
         </main>

@@ -21,9 +21,10 @@ import {
   Sliders,
   Sparkles,
   Command,
+  X,
 } from "lucide-react";
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, sidebarCollapsed, toggleSidebar, logout, theme } = useStore();
@@ -78,8 +79,15 @@ export default function Sidebar() {
           </AnimatePresence>
         </Link>
         
-        {/* Collapse Button */}
-        {!sidebarCollapsed && (
+        {/* Collapse Button or Close Button */}
+        {onClose ? (
+          <button
+            onClick={onClose}
+            className="md:hidden p-1 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        ) : !sidebarCollapsed && (
           <button
             onClick={toggleSidebar}
             className="p-1 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer"
@@ -108,6 +116,7 @@ export default function Sidebar() {
                     if (pathname !== item.href && typeof window !== "undefined") {
                       window.dispatchEvent(new Event("pulsesend:loading"));
                     }
+                    onClose?.();
                   }}
                 >
                   <div
