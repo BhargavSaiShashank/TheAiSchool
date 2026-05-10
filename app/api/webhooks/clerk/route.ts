@@ -48,63 +48,60 @@ export async function POST(req: Request) {
     if (eventType === "user.created" || eventType === "user.updated") {
       const data = evt.data as any;
       const primaryEmail = data.email_addresses?.[0]?.email_address || "";
-      const firstName = data.first_name || "";
-      const lastName = data.last_name || "";
 
-      // Ensure a default organization exists
-      let defaultOrg = await prisma.organization.findFirst();
-      if (!defaultOrg) {
-        defaultOrg = await prisma.organization.create({
+      const existingUser = await prisma.user.findUnique({
+        where: { id: id as string }
+      });
+
+      if (!existingUser && eventType === "user.created") {
+        // Spawn an isolated Solo Workspace to act as the user's home base
+        const personalWorkspace = await prisma.organization.create({
           data: {
-            name: "Default Org",
-          },
+            name: "Personal Workspace",
+            from_email: primaryEmail
+          }
+        });
+
+        // Create the user, defaulting to SUPER_ADMIN, and bind to their new workspace
+        await prisma.user.create({
+          data: {
+            id: id as string,
+            email: primaryEmail,
+            password_hash: "CLERK_MANAGED_AUTH",
+            role: "SUPER_ADMIN",
+            org_id: personalWorkspace.id,
+          }
+        });
+      } else if (existingUser) {
+        // Standard update
+        await prisma.user.update({
+          where: { id: id as string },
+          data: { email: primaryEmail }
         });
       }
-
-      await prisma.user.upsert({
-        where: { id: id as string },
-        update: {
-          email: primaryEmail,
-        },
-        create: {
-          id: id as string,
-          email: primaryEmail,
-          password_hash: "CLERK_MANAGED_AUTH",
-          role: "CAMPAIGN_MANAGER",
-          org_id: defaultOrg.id,
-        },
-      });
     }
 
     if (eventType === "organization.created") {
       const data = evt.data as any;
-      const name = data.name || "My Organization";
+      const clerkOrgId = id as string;
+      const name = data.name || "Enterprise Workspace";
 
+      // Securely map to clerk_org_id, allowing Prisma to auto-generate the secure UUID `id`
       await prisma.organization.upsert({
-        where: { id: id as string },
-        update: {
-          name,
-        },
+        where: { clerk_org_id: clerkOrgId },
+        update: { name },
         create: {
-          id: id as string,
+          clerk_org_id: clerkOrgId,
           name,
         },
       });
     }
 
-    if (eventType === "organizationMembership.created") {
-      const data = evt.data as any;
-      const orgId = data.organization?.id;
-      const userId = data.public_user_data?.user_id;
-
-      if (orgId && userId) {
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            org_id: orgId,
-          },
-        });
-      }
+    if (eventType === "organizationMembership.created" || eventType === "organizationMembership.deleted") {
+      // 🛡️ INTENTIONALLY OMITTED: We DO NOT overwrite the User's `org_id` home base.
+      // The application relies on `getSecureOrgId()` to dynamically extract the active workspace 
+      // directly from the live Clerk session token to prevent cross-tenant corruption.
+      console.log(`Clerk Membership event intercepted and ignored for structural integrity.`);
     }
 
     return NextResponse.json({ success: true });
