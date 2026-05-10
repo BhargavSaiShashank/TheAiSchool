@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useStore } from "@/lib/store";
 import CardSpotlight from "@/components/CardSpotlight";
 import {
   FileCode,
@@ -43,10 +45,20 @@ interface CanvasBlock {
 }
 
 export default function TemplatesPage() {
+  const { user } = useStore();
+  const router = useRouter();
+  
   const [view, setView] = useState<"library" | "editor">("library");
   const [templates, setTemplates] = useState<any[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Hard gate for manual URL bypass
+  useEffect(() => {
+    if (user && user.role === "VIEWER") {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
   
   // Library filters
   const [searchQuery, setSearchQuery] = useState("");

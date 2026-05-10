@@ -565,7 +565,14 @@ export default function ContactsPage() {
     <div className="space-y-5 select-none">
       {/* Navigation Tabs - Enhanced with scrolling capability for mobile viewports */}
       <div className="flex overflow-x-auto scrollbar-hide snap-x border-b border-border pb-px">
-        {(["lists", "contacts", "segments", "import"] as const).map((tab) => (
+        {(["lists", "contacts", "segments", "import"] as const)
+          .filter(tab => {
+            if (user?.role === "VIEWER") {
+              return tab === "lists" || tab === "contacts";
+            }
+            return true;
+          })
+          .map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -598,13 +605,15 @@ export default function ContactsPage() {
                 <h2 className="text-[15px] font-bold text-foreground tracking-tight">Contact Directories</h2>
                 <p className="text-[12px] text-muted-foreground mt-0.5">Manage and organize your distinct mailing lists</p>
               </div>
-              <button
-                onClick={() => setShowNewListModal(true)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary text-white hover:bg-primary/90 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Create List</span>
-              </button>
+              {user?.role !== "VIEWER" && (
+                <button
+                  onClick={() => setShowNewListModal(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary text-white hover:bg-primary/90 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Create List</span>
+                </button>
+              )}
             </div>
 
             {/* Stats summary strip above cards — totals derived from the same lists data the cards use */}
@@ -749,16 +758,18 @@ export default function ContactsPage() {
                   <h4 className="text-xs font-bold text-zinc-300 font-mono">Managing Audience List: <span className="text-[#7C5CFF]">{lists.find(l => l.id === selectedListFilter)?.name}</span></h4>
                   <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Subscribe other existing contacts in your directory directly to this mailing list.</p>
                 </div>
-                <button
-                  onClick={() => {
-                    setSelectedContactIds([]);
-                    setShowAddExistingModal(true);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[#7C5CFF] border border-[#7C5CFF]/30 text-[11px] font-bold transition cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Existing Contacts</span>
-                </button>
+                {user?.role !== "VIEWER" && (
+                  <button
+                    onClick={() => {
+                      setSelectedContactIds([]);
+                      setShowAddExistingModal(true);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[#7C5CFF] border border-[#7C5CFF]/30 text-[11px] font-bold transition cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Existing Contacts</span>
+                  </button>
+                )}
               </div>
             )}
 
@@ -802,14 +813,16 @@ export default function ContactsPage() {
                   <option value="complained">Complained</option>
                 </select>
 
-                <button
-                  type="button"
-                  onClick={() => setShowNewContactModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-primary text-white hover:bg-primary/90 text-xs font-bold shadow-sm border border-white/5 transition cursor-pointer shrink-0"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Contact</span>
-                </button>
+                {user?.role !== "VIEWER" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowNewContactModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-primary text-white hover:bg-primary/90 text-xs font-bold shadow-sm border border-white/5 transition cursor-pointer shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Contact</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -900,7 +913,7 @@ export default function ContactsPage() {
 
             {/* FLOATING BOTTOM BULK ACTIONS PANEL */}
             <AnimatePresence>
-              {selectedRowIds.length > 0 && (
+              {selectedRowIds.length > 0 && user?.role !== "VIEWER" && (
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}

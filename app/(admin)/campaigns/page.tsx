@@ -303,21 +303,23 @@ export default function CampaignsPage() {
                 <h2 className="text-[15px] font-bold text-foreground tracking-tight">Campaign Dispatches</h2>
                 <p className="text-[12px] text-muted-foreground mt-0.5">Manage, track and duplicate your email campaigns</p>
               </div>
-              <button
-                onClick={() => {
-                  setCampaignName("");
-                  setSubject("");
-                  setPreviewText("");
-                  setSelectedLists([]);
-                  setSelectedTemplateId("");
-                  setActiveStep(1);
-                  setView("wizard");
-                }}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary text-white hover:bg-primary/90 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>New Campaign</span>
-              </button>
+              {user?.role !== "VIEWER" && (
+                <button
+                  onClick={() => {
+                    setCampaignName("");
+                    setSubject("");
+                    setPreviewText("");
+                    setSelectedLists([]);
+                    setSelectedTemplateId("");
+                    setActiveStep(1);
+                    setView("wizard");
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary text-white hover:bg-primary/90 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>New Campaign</span>
+                </button>
+              )}
             </div>
 
             {/* Campaign Table */}
@@ -377,40 +379,42 @@ export default function CampaignsPage() {
                             {camp.clickRate}
                           </td>
                           <td className="py-4 px-5 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {camp.status !== "Sent" && (
+                            {user?.role !== "VIEWER" && (
+                              <div className="flex items-center justify-end gap-2">
+                                {camp.status !== "Sent" && (
+                                  <button
+                                    onClick={() => {
+                                      setEditingCampaignId(camp.id);
+                                      setCampaignName(camp.name);
+                                      setSubject(camp.subject);
+                                      setPreviewText("");
+                                      setActiveStep(1);
+                                      setView("wizard");
+                                    }}
+                                    className="text-[#7C5CFF] hover:text-[#7C5CFF]/80 transition p-1.5 rounded hover:bg-[#7C5CFF]/10"
+                                    title="Edit & Send Draft"
+                                  >
+                                    <Send className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                                 <button
-                                  onClick={() => {
-                                    setEditingCampaignId(camp.id);
-                                    setCampaignName(camp.name);
-                                    setSubject(camp.subject);
-                                    setPreviewText("");
-                                    setActiveStep(1);
-                                    setView("wizard");
-                                  }}
-                                  className="text-[#7C5CFF] hover:text-[#7C5CFF]/80 transition p-1.5 rounded hover:bg-[#7C5CFF]/10"
-                                  title="Edit & Send Draft"
-                                >
-                                  <Send className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleDuplicate(camp)}
-                                className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
-                                title="Duplicate Campaign"
-                              >
-                                <Copy className="w-3.5 h-3.5" />
-                              </button>
-                              {camp.status === "Sent" && (
-                                <button
-                                  onClick={() => handleResendToNonOpeners(camp.name)}
+                                  onClick={() => handleDuplicate(camp)}
                                   className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
-                                  title="Re-send to non-openers"
+                                  title="Duplicate Campaign"
                                 >
-                                  <RotateCcw className="w-3.5 h-3.5" />
+                                  <Copy className="w-3.5 h-3.5" />
                                 </button>
-                              )}
-                            </div>
+                                {camp.status === "Sent" && (
+                                  <button
+                                    onClick={() => handleResendToNonOpeners(camp.name)}
+                                    className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
+                                    title="Re-send to non-openers"
+                                  >
+                                    <RotateCcw className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))
