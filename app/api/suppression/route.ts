@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
-import { getSecureOrgId } from "@/lib/auth-utils";
+import { getSecureOrgId, enforceRole } from "@/lib/auth-utils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    await enforceRole(req, ["SUPER_ADMIN"]);
     const orgId = await getSecureOrgId(req);
     const { email, reason, log } = await req.json();
 
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    await enforceRole(req, ["SUPER_ADMIN"]);
     const orgId = await getSecureOrgId(req);
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

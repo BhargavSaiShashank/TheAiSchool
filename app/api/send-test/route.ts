@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { enforceRole } from "@/lib/auth-utils";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
     const body = await req.json();
     const { to, subject, html } = body;
 

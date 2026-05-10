@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSecureOrgId } from "@/lib/auth-utils";
+import { getSecureOrgId, enforceRole } from "@/lib/auth-utils";
 
 export async function POST(req: NextRequest) {
   try {
+    await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
     const orgId = await getSecureOrgId(req);
     const { contacts, listId } = await req.json();
 

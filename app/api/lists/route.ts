@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSecureOrgId } from "@/lib/auth-utils";
+import { getSecureOrgId, enforceRole } from "@/lib/auth-utils";
 
 /**
  * Fetches only the segmentation lists created by the authenticated workspace.
@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
+    await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
     const orgId = await getSecureOrgId(req);
     const body = await req.json();
     const { name, description } = body;

@@ -301,6 +301,7 @@ export async function POST(req: any) {
 
 export async function PUT(req: any) {
   try {
+    await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
     const orgId = await getSecureOrgId(req);
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
