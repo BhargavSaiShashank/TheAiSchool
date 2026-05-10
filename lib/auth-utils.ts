@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
  */
 export async function getSecureOrgId(req: NextRequest): Promise<string> {
   // 1. Extract the complete dynamic identity packet
-  const { userId, orgId } = getAuth(req);
+  const { userId, orgId } = await auth();
   if (!userId) {
     throw new Error("UNAUTHORIZED: No valid session detected");
   }
@@ -48,7 +48,7 @@ export async function getSecureOrgId(req: NextRequest): Promise<string> {
  * Throws an error if the user lacks sufficient clearance.
  */
 export async function enforceRole(req: NextRequest, allowedRoles: string[]): Promise<void> {
-  const { userId, orgId, orgRole } = getAuth(req);
+  const { userId, orgId, orgRole } = await auth();
   
   if (!userId) {
     throw new Error("UNAUTHORIZED: No valid session detected");

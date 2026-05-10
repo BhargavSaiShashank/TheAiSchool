@@ -6,11 +6,14 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/clerk(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, request) => {
+const clerk = clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
 });
+
+export const proxy = clerk;
+export default clerk;
 
 export const config = {
   matcher: [

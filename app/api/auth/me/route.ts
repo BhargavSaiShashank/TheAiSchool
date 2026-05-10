@@ -1,11 +1,11 @@
-import { getAuth, currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
     // 1. Extract Dynamic Clerk Context (Now utilizing multi-tenant tokens!)
-    const { userId, orgId, orgRole } = getAuth(req);
+    const { userId, orgId, orgRole } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
