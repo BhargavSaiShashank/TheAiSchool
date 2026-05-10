@@ -567,10 +567,12 @@ export default function ContactsPage() {
       <div className="flex overflow-x-auto scrollbar-hide snap-x border-b border-border pb-px">
         {(["lists", "contacts", "segments", "import"] as const)
           .filter(tab => {
-            if (user?.role === "VIEWER") {
-              return tab === "lists" || tab === "contacts";
+            // Safe explicit check: Hide secure tabs unless explicitly authorized
+            if (user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role)) {
+               return true;
             }
-            return true;
+            // Fallback for unauthenticated, Viewer, or hydrating states
+            return tab === "lists" || tab === "contacts";
           })
           .map((tab) => (
           <button
@@ -605,7 +607,7 @@ export default function ContactsPage() {
                 <h2 className="text-[15px] font-bold text-foreground tracking-tight">Contact Directories</h2>
                 <p className="text-[12px] text-muted-foreground mt-0.5">Manage and organize your distinct mailing lists</p>
               </div>
-              {user?.role !== "VIEWER" && (
+              {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
                 <button
                   onClick={() => setShowNewListModal(true)}
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary text-white hover:bg-primary/90 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
@@ -758,7 +760,7 @@ export default function ContactsPage() {
                   <h4 className="text-xs font-bold text-zinc-300 font-mono">Managing Audience List: <span className="text-[#7C5CFF]">{lists.find(l => l.id === selectedListFilter)?.name}</span></h4>
                   <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Subscribe other existing contacts in your directory directly to this mailing list.</p>
                 </div>
-                {user?.role !== "VIEWER" && (
+                {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
                   <button
                     onClick={() => {
                       setSelectedContactIds([]);
@@ -813,7 +815,7 @@ export default function ContactsPage() {
                   <option value="complained">Complained</option>
                 </select>
 
-                {user?.role !== "VIEWER" && (
+                {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
                   <button
                     type="button"
                     onClick={() => setShowNewContactModal(true)}
@@ -913,7 +915,7 @@ export default function ContactsPage() {
 
             {/* FLOATING BOTTOM BULK ACTIONS PANEL */}
             <AnimatePresence>
-              {selectedRowIds.length > 0 && user?.role !== "VIEWER" && (
+              {selectedRowIds.length > 0 && user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}

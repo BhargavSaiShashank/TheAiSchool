@@ -303,7 +303,7 @@ export default function CampaignsPage() {
                 <h2 className="text-[15px] font-bold text-foreground tracking-tight">Campaign Dispatches</h2>
                 <p className="text-[12px] text-muted-foreground mt-0.5">Manage, track and duplicate your email campaigns</p>
               </div>
-              {user?.role !== "VIEWER" && (
+              {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
                 <button
                   onClick={() => {
                     setCampaignName("");
@@ -379,7 +379,7 @@ export default function CampaignsPage() {
                             {camp.clickRate}
                           </td>
                           <td className="py-4 px-5 text-right">
-                            {user?.role !== "VIEWER" && (
+                            {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
                               <div className="flex items-center justify-end gap-2">
                                 {camp.status !== "Sent" && (
                                   <button
