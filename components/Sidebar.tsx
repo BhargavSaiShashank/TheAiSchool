@@ -39,8 +39,8 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
 
   const settingsItems = [
     { name: "My Profile", href: "/settings/profile", icon: Sliders, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
-    { name: "AWS & Email Setup", href: "/settings/org", icon: Building, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER"] },
-    { name: "Suppression List", href: "/settings/suppression", icon: ShieldAlert, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER"] },
+    { name: "AWS & Email Setup", href: "/settings/org", icon: Building, roles: ["SUPER_ADMIN"] },
+    { name: "Suppression List", href: "/settings/suppression", icon: ShieldAlert, roles: ["SUPER_ADMIN"] },
   ];
 
   const handleLogout = () => {

@@ -3,7 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { pushToCampaignQueue } from "@/lib/sqs";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import { getSecureOrgId } from "@/lib/auth-utils";
+import { getSecureOrgId, enforceRole } from "@/lib/auth-utils";
 
 export async function GET(req: any) {
   try {
@@ -63,6 +63,9 @@ export async function GET(req: any) {
 
 export async function POST(req: any) {
   try {
+    // --- 🛡️ RBAC ENFORCEMENT: ONLY ADMINS & MANAGERS CAN CREATE CAMPAIGNS ---
+    await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
+    
     const orgId = await getSecureOrgId(req);
     const body = await req.json();
     const { name, subject, previewText, fromName, fromEmail, status, templateId } = body;

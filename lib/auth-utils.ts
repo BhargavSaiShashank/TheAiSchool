@@ -41,3 +41,43 @@ export async function getSecureOrgId(req: NextRequest): Promise<string> {
 
   return activeUser.org_id;
 }
+
+/**
+ * Iron-clad role enforcement barrier.
+ * Verifies the user's active role within the current context against the allowed list.
+ * Throws an error if the user lacks sufficient clearance.
+ */
+export async function enforceRole(req: NextRequest, allowedRoles: string[]): Promise<void> {
+  const { userId, orgId, orgRole } = getAuth(req);
+  
+  if (!userId) {
+    throw new Error("UNAUTHORIZED: No valid session detected");
+  }
+
+  let activeRole = "VIEWER";
+
+  if (orgId) {
+    // 1. DYNAMIC CLERK ROLE PARSING
+    if (orgRole) {
+      if (orgRole === 'org:admin' || orgRole.includes('admin')) {
+        activeRole = "SUPER_ADMIN";
+      } else if (orgRole.includes('member')) {
+        activeRole = "CAMPAIGN_MANAGER";
+      }
+    }
+  } else {
+    // 2. SOLO MODE FALLBACK (Check DB directly)
+    const activeUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+    });
+    
+    if (activeUser?.role) {
+      activeRole = activeUser.role;
+    }
+  }
+
+  if (!allowedRoles.includes(activeRole)) {
+    throw new Error(`FORBIDDEN: Requires one of [${allowedRoles.join(", ")}]. Current role: ${activeRole}`);
+  }
+}

@@ -273,8 +273,8 @@ export default function AdminLayout({
 
       {/* --- FIRST-TIME ONBOARDING INTERCEPTOR --- */}
       <AnimatePresence>
-        {/* Added strict null-check to user object to prevent false-firing during guest initialization */}
-        {hasHydrated && user && (!user?.aws_region || user.aws_region === "") && (
+        {/* Added strict null-check to user object and enforced SUPER_ADMIN role boundary to prevent viewers/managers from seeing technical prompts */}
+        {hasHydrated && user && user.role === "SUPER_ADMIN" && (!user?.aws_region || user.aws_region === "") && (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 

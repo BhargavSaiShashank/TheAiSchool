@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuth } from "@clerk/nextjs/server";
+import { enforceRole } from "@/lib/auth-utils";
 
 /**
  * Retrieves the active organization details for the authenticated user.
@@ -12,8 +13,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let activeOrg;
+    // --- 🛡️ RBAC ENFORCEMENT: ONLY SUPER ADMINS CAN ACCESS AWS SETTINGS ---
+    await enforceRole(req, ["SUPER_ADMIN"]);
 
+    let activeOrg;
     if (orgId) {
       // Target dynamically active corporate workspace
       activeOrg = await prisma.organization.findUnique({
@@ -40,6 +43,9 @@ export async function GET(req: NextRequest) {
       configSet: activeOrg.ses_config_set || "",
     });
   } catch (error: any) {
+    if (error.message.startsWith("FORBIDDEN")) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     console.error("GET /api/org error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -51,6 +57,9 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // --- 🛡️ RBAC ENFORCEMENT: ONLY SUPER ADMINS CAN MODIFY AWS SETTINGS ---
+    await enforceRole(req, ["SUPER_ADMIN"]);
 
     const body = await req.json();
     const { name, fromEmail, region, configSet } = body;
