@@ -4,6 +4,8 @@ import { useStore } from "@/lib/store";
 import { Search, Bell, Plus, Sun, Moon, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { OrganizationSwitcher } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname();
@@ -49,6 +51,25 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <h1 className="text-[15px] md:text-[17px] font-bold text-foreground tracking-tight leading-none">
             {getPageTitle()}
           </h1>
+        </div>
+
+        {/* Elegant Vertical Separator */}
+        <div className="hidden sm:block h-6 w-px bg-border mx-1" />
+
+        {/* 🚀 ACTIVE CLERK ORGANIZATION SWITCHER 🚀 */}
+        <div className="flex items-center">
+          <OrganizationSwitcher
+            appearance={{
+              baseTheme: theme === "light" ? undefined : dark,
+              elements: {
+                organizationSwitcherTrigger: "hover:bg-secondary transition-all px-2 py-1.5 rounded border border-transparent hover:border-border h-9",
+                organizationPreviewTextContainer: "font-semibold text-sm",
+              }
+            }}
+            hidePersonal={false} // Explicitly permit solo personal usage per Rule #1!
+            afterCreateOrganizationUrl="/dashboard"
+            afterSelectOrganizationUrl="/dashboard"
+          />
         </div>
       </div>
 

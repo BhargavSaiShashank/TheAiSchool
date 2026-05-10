@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useOrganization } from "@clerk/nextjs";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import Preloader from "@/components/Preloader";
@@ -23,6 +23,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const { user, login, theme } = useStore();
   const { user: clerkUser, isLoaded } = useUser();
+  const { organization, isLoaded: isOrgLoaded } = useOrganization();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -52,9 +53,9 @@ export default function AdminLayout({
     };
   }, []);
 
-  // Real-time Clerk session synchronization into Zustand store
+  // Real-time Clerk session + Organization context synchronization!
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !isOrgLoaded) return;
 
     if (!clerkUser) {
       useStore.getState().logout();
@@ -62,22 +63,42 @@ export default function AdminLayout({
       return;
     }
 
-    // Sync database organization details into Zustand store
-    if (!user || user.id !== clerkUser.id || user.email === "synced@clerk.user") {
-      const syncSession = async () => {
-        try {
-          const res = await fetch("/api/auth/me");
-          if (res.ok) {
-            const dbUser = await res.json();
-            login(dbUser);
+    // CALCULATE ACTIVE TARGET ORG ID (Handles null properly for solo mode)
+    const currentClerkOrgId = organization?.id || "SOLO_MODE";
+    const activeCachedOrg = user?.org_id || "NONE";
+
+    // CRITICAL TRIGGER: If IDs don't match OR we don't have cached state, command immediate sync!
+    const needsSync = 
+      !user || 
+      user.id !== clerkUser.id || 
+      (organization?.id && user?.aws_region === undefined); // Triggers refresh on new orgs to check region status
+
+    // However, to be absolutely bulletproof on Rule #2, we also enforce forced syncing on ANY org object fluctuation
+    const syncSession = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const dbUser = await res.json();
+          
+          // Compare active organization IDs. If changed, this forces a hard-reload re-sync effectively purging old state!
+          if (user && user.org_id && dbUser.org_id !== user.org_id) {
+             console.log("🚨 ORGANIZATION SWAP DETECTED! COMMANDING PURGE & RELOAD...");
+             // Directly inject the new profile and command the next.js router to hard refresh
+             login(dbUser);
+             router.refresh();
+             return;
           }
-        } catch (error) {
-          console.error("Failed to sync Clerk session with DB:", error);
+
+          login(dbUser);
         }
-      };
-      syncSession();
-    }
-  }, [clerkUser, isLoaded, user, login, router]);
+      } catch (error) {
+        console.error("Failed to sync Clerk session with DB:", error);
+      }
+    };
+
+    syncSession();
+    
+  }, [clerkUser, isLoaded, organization?.id, isOrgLoaded]); // LISTEN TO ORGANIZATION ID SHIFTS DIRECTLY!
 
   useEffect(() => {
     if (!hasHydrated || !isLoaded) return;

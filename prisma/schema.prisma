@@ -9,6 +9,7 @@ datasource db {
 
 model Organization {
   id             String            @id @default(uuid())
+  clerk_org_id   String?           @unique
   name           String
   logo_url       String?
   from_email     String?
