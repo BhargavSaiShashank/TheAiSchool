@@ -200,8 +200,13 @@ export default function AdminLayout({
       <ToastContainer />
 
       {/* Desktop Static Sidebar (Hidden on Mobile) */}
-      <div className="hidden md:flex">
-        <Sidebar />
+      <div className="hidden md:flex shrink-0">
+        {hasHydrated ? (
+          <Sidebar />
+        ) : (
+          /* Stable Static Spacer to prevent content shifting during microsecond hydration */
+          <div className="w-[240px] h-screen bg-background border-r border-border shrink-0" />
+        )}
       </div>
 
       {/* --- MOBILE RESPONSIVE DRAWER OVERLAY --- */}
@@ -247,7 +252,8 @@ export default function AdminLayout({
 
       {/* --- FIRST-TIME ONBOARDING INTERCEPTOR --- */}
       <AnimatePresence>
-        {(!user?.aws_region || user.aws_region === "") && (
+        {/* Added strict null-check to user object to prevent false-firing during guest initialization */}
+        {hasHydrated && user && (!user?.aws_region || user.aws_region === "") && (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
