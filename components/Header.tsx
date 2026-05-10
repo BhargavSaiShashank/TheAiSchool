@@ -1,15 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useStore } from "@/lib/store";
-import { Search, Bell, Plus, Sun, Moon, Menu } from "lucide-react";
+import { Search, Bell, Plus, Sun, Moon, Menu, CheckCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { OrganizationSwitcher } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname();
   const { user, theme, toggleTheme } = useStore();
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const getPageTitle = () => {
     if (pathname.startsWith("/dashboard")) return "Dashboard";
@@ -116,11 +119,64 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           )}
         </button>
 
-        {/* Alerts Dot */}
-        <button className="relative p-1.5 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-        </button>
+        {/* Alerts Popover Container */}
+        <div className="relative">
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className={`relative p-1.5 rounded border transition cursor-pointer ${showNotifications ? "bg-secondary border-[#7C5CFF] text-foreground" : "hover:bg-secondary border-border text-muted-foreground hover:text-foreground"}`}
+          >
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+          </button>
+
+          <AnimatePresence>
+            {showNotifications && (
+              <>
+                {/* Backdrop to close */}
+                <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)} />
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  className="absolute right-0 mt-2 w-72 bg-[#0d0e12] border border-zinc-800 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] rounded-xl overflow-hidden z-20 select-none"
+                >
+                  <div className="p-3 border-b border-zinc-800 bg-zinc-900/30 flex items-center justify-between">
+                    <h3 className="text-[12px] font-bold text-white">System Notifications</h3>
+                    <span className="text-[9px] font-mono font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase">2 Active</span>
+                  </div>
+                  
+                  <div className="max-h-64 overflow-y-auto py-1">
+                    <div className="p-3 border-b border-zinc-900/50 hover:bg-zinc-900/40 transition cursor-pointer group">
+                      <div className="flex items-start gap-2.5">
+                        <div className="p-1.5 rounded bg-emerald-950/30 text-emerald-400 border border-emerald-900/30 shrink-0">
+                          <CheckCircle className="w-3 h-3" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-bold text-zinc-100 group-hover:text-white transition">Identity fully synchronized</p>
+                          <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">Clerk authentication and local persistence active.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 hover:bg-zinc-900/40 transition cursor-pointer group">
+                      <div className="flex items-start gap-2.5">
+                        <div className="p-1.5 rounded bg-[#7C5CFF]/10 text-[#7C5CFF] border border-[#7C5CFF]/20 shrink-0">
+                          <Sparkles className="w-3 h-3" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-bold text-zinc-100 group-hover:text-white transition">Welcome to PulseSend</p>
+                          <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">Your high-velocity SES dispatch platform is live.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </header>
   );
