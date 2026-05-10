@@ -72,7 +72,7 @@ export default function OrgSettingsPage() {
         <div>
           <h3 className="text-sm font-bold text-foreground tracking-tight flex items-center gap-2">
             <Building className="w-[18px] h-[18px] text-muted-foreground" />
-            <span>Organisation Setup Parameters</span>
+            <span>AWS & Email Parameters</span>
           </h3>
           <p className="text-[10px] text-muted-foreground mt-0.5">Manage details and AWS SES integrations for {user?.org_name}</p>
         </div>

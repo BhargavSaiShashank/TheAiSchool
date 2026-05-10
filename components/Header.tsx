@@ -17,8 +17,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     if (pathname.startsWith("/templates")) return "Email Templates";
     if (pathname.startsWith("/campaigns")) return "Campaign Dispatches";
     if (pathname.startsWith("/analytics")) return "Analytics Hub";
-    if (pathname.startsWith("/settings/org")) return "Organisation Settings";
-    if (pathname.startsWith("/settings/users")) return "Teammates Directory";
+    if (pathname.startsWith("/settings/org")) return "AWS & Email Setup";
     if (pathname.startsWith("/settings/suppression")) return "Suppression Logs";
     return "PulseSend Platform";
   };
