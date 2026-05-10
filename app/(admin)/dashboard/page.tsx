@@ -244,7 +244,7 @@ export default function DashboardPage() {
 
       {/* ─── ONBOARDING PRODUCT TOUR (One-Time Setup Checklist) ────────── */}
       <AnimatePresence mode="wait">
-        {!onboardingDismissed && (
+        {!onboardingDismissed && user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -570,7 +570,8 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── 6. AI COPILOT ──────────────────────────────────────────────────────── */}
-      <div className="p-5 glass-hud rounded-lg relative overflow-hidden">
+      {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
+        <div className="p-5 glass-hud rounded-lg relative overflow-hidden">
         {/* Ambient indicator */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-[#7C5CFF]/10 rounded-full filter blur-[40px] pointer-events-none" />
 
@@ -635,7 +636,8 @@ export default function DashboardPage() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+        </div>
+      )}
 
     </div>
   );

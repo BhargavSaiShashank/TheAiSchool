@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Users, Mail, Cpu, Send, Sparkles, Activity } from "lucide-react";
+import { useStore } from "@/lib/store";
 
 interface Particle {
   progress: number;
@@ -12,6 +13,7 @@ interface Particle {
 }
 
 export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) {
+  const { user } = useStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -145,18 +147,20 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
           </h3>
           <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Real-time telemetry and dispatch network velocity</p>
         </div>
-        <button
-          onClick={handleSimulate}
-          disabled={isSimulating}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold font-mono rounded border transition duration-300 ${
-            isSimulating
-              ? "bg-emerald-950/20 text-emerald-400 border-emerald-900/30 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
-              : "bg-[#7C5CFF] hover:bg-[#7C5CFF]/90 text-white border-transparent cursor-pointer"
-          }`}
-        >
-          <Sparkles className={`w-3.5 h-3.5 ${isSimulating ? "animate-spin" : ""}`} />
-          {isSimulating ? "DISPATCH ACTIVE" : "SIMULATE DISPATCH"}
-        </button>
+        {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
+          <button
+            onClick={handleSimulate}
+            disabled={isSimulating}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold font-mono rounded border transition duration-300 ${
+              isSimulating
+                ? "bg-emerald-950/20 text-emerald-400 border-emerald-900/30 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
+                : "bg-[#7C5CFF] hover:bg-[#7C5CFF]/90 text-white border-transparent cursor-pointer"
+            }`}
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isSimulating ? "animate-spin" : ""}`} />
+            {isSimulating ? "DISPATCH ACTIVE" : "SIMULATE DISPATCH"}
+          </button>
+        )}
       </div>
 
       {/* Main HUD container */}
