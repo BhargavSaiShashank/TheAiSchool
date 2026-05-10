@@ -117,10 +117,15 @@ export async function GET(req: NextRequest) {
 
   } catch (error: any) {
     console.error("Fatal crash inside /api/auth/me gateway:", error);
+    
+    // MAXIMUM DIAGNOSTIC ESCALATION: Leave absolutely no metadata hidden.
     return NextResponse.json({ 
-      error: error.message, 
-      code: error.code,
-      meta: error.meta 
+      error: error.message || "Unknown Error Encountered", 
+      code: error.code || "NO_ERROR_CODE",
+      meta: error.meta || {},
+      stack: error.stack?.substring(0, 1000) || "No Stack Trace Available",
+      name: error.name || "GenericError",
+      rawString: String(error)
     }, { status: 500 });
   }
 }

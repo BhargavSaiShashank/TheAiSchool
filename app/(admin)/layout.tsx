@@ -90,6 +90,11 @@ export default function AdminLayout({
           }
 
           login(dbUser);
+        } else {
+          // EXTREME DIAGNOSTICS INJECTED: Surfacing internal hidden 500 error body to browser console!
+          const errorBody = await res.json().catch(() => ({ parseError: "Body was not valid JSON" }));
+          console.error("🔴 [CRITICAL DIAGNOSTICS] /api/auth/me returned non-OK status:", res.status);
+          console.error("🔴 FULL ERROR DUMP FROM SERVER:", JSON.stringify(errorBody, null, 2));
         }
       } catch (error) {
         console.error("Failed to sync Clerk session with DB:", error);
