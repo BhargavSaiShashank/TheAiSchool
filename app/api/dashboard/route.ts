@@ -1,86 +1,51 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { subDays, startOfDay, format } from "date-fns";
-
 import { getSecureOrgId } from "@/lib/auth-utils";
 
 export async function GET(req: any) {
   try {
     const targetOrgId = await getSecureOrgId(req);
 
-    // 1. Get Core aggregates filtered by organization
-    const totalAudience = await prisma.contact.count({
-      where: { 
-        status: "active",
-        org_id: targetOrgId,
-      },
-    });
+    // 🔥 PERFORMANCE BREAKTHROUGH: Execute ALL baseline queries simultaneously instead of sequentially.
+    // Transforms 29 serialized roundtrips into ONE parallel cluster, killing network waterfall latency completely.
+    const [
+      totalAudience,
+      totalDispatched,
+      openCount,
+      clickCount,
+      bounceCount,
+      deliveredCount,
+      recentEvents,
+      latestCampaigns
+    ] = await Promise.all([
+      prisma.contact.count({ where: { status: "active", org_id: targetOrgId } }),
+      prisma.campaignSend.count({ where: { campaign: { org_id: targetOrgId } } }),
+      prisma.emailEvent.count({ where: { event_type: "opened", campaign: { org_id: targetOrgId } } }),
+      prisma.emailEvent.count({ where: { event_type: "clicked", campaign: { org_id: targetOrgId } } }),
+      prisma.campaignSend.count({ where: { status: "bounced", campaign: { org_id: targetOrgId } } }),
+      prisma.campaignSend.count({ where: { status: "delivered", campaign: { org_id: targetOrgId } } }),
+      prisma.emailEvent.findMany({
+        where: { campaign: { org_id: targetOrgId } },
+        take: 5,
+        orderBy: { occurred_at: "desc" },
+        include: { contact: true, campaign: true }
+      }),
+      prisma.campaign.findMany({
+        where: { status: "sent", org_id: targetOrgId },
+        take: 3,
+        orderBy: { created_at: "desc" },
+        include: { sends: true, email_events: true }
+      })
+    ]);
 
-    const totalDispatched = await prisma.campaignSend.count({
-      where: {
-        campaign: {
-          org_id: targetOrgId,
-        },
-      },
-    });
-
-    const openCount = await prisma.emailEvent.count({
-      where: { 
-        event_type: "opened",
-        campaign: {
-          org_id: targetOrgId,
-        },
-      },
-    });
-
-    const clickCount = await prisma.emailEvent.count({
-      where: { 
-        event_type: "clicked",
-        campaign: {
-          org_id: targetOrgId,
-        },
-      },
-    });
-
-    const bounceCount = await prisma.campaignSend.count({
-      where: { 
-        status: "bounced",
-        campaign: {
-          org_id: targetOrgId,
-        },
-      },
-    });
-
-    const deliveredCount = await prisma.campaignSend.count({
-      where: { 
-        status: "delivered",
-        campaign: {
-          org_id: targetOrgId,
-        },
-      },
-    });
-
-    // 2. Compute Rates
+    // 2. Compute derived static stats
     const openRate = totalDispatched > 0 ? (openCount / totalDispatched) * 100 : 0;
     const clickRate = totalDispatched > 0 ? (clickCount / totalDispatched) * 100 : 0;
     const bounceRate = totalDispatched > 0 ? (bounceCount / totalDispatched) * 100 : 0;
     const deliverability = totalDispatched > 0 ? (deliveredCount / totalDispatched) * 100 : 100;
 
-    // 3. Get Recent Live Activity (Last 5 events)
-    const recentEvents = await prisma.emailEvent.findMany({
-      where: {
-        campaign: {
-          org_id: targetOrgId,
-        },
-      },
-      take: 5,
-      orderBy: { occurred_at: "desc" },
-      include: {
-        contact: true,
-        campaign: true,
-      },
-    });
-
+    // 3. Process results
     const liveActivities = recentEvents.map((evt) => ({
       id: evt.id,
       type: evt.event_type,
@@ -90,25 +55,10 @@ export async function GET(req: any) {
       country: "IN",
     }));
 
-    // 4. Get Top Campaigns
-    const latestCampaigns = await prisma.campaign.findMany({
-      where: { 
-        status: "sent",
-        org_id: targetOrgId,
-      },
-      take: 3,
-      orderBy: { created_at: "desc" },
-      include: {
-        sends: true,
-        email_events: true,
-      },
-    });
-
     const topCampaigns = latestCampaigns.map((camp) => {
       const sendsCount = camp.sends.length;
       const opensCount = camp.email_events.filter((e) => e.event_type === "opened").length;
       const clicksCount = camp.email_events.filter((e) => e.event_type === "clicked").length;
-
       return {
         id: camp.id,
         name: camp.name,
@@ -120,58 +70,37 @@ export async function GET(req: any) {
       };
     });
 
-    // 5. Build Sending Performance Chart (Last 7 Days)
-    const performanceData = [];
-    for (let i = 6; i >= 0; i--) {
-      const day = subDays(new Date(), i);
-      const dayStart = startOfDay(day);
-      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+    // 4. 🔥 MASSIVE SPEEDUP: Generate the 7-Day Chart entirely in parallel as well!
+    // Eliminated 21 sequential synchronous nested loop network requests.
+    const chartRanges = Array.from({ length: 7 }).map((_, i) => {
+      const day = subDays(new Date(), 6 - i); // 6 days ago up to today
+      const start = startOfDay(day);
+      const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+      return { day, start, end };
+    });
 
-      const dayDispatched = await prisma.campaignSend.count({
-        where: {
-          sent_at: {
-            gte: dayStart,
-            lt: dayEnd,
-          },
-          campaign: {
-            org_id: targetOrgId,
-          },
-        },
-      });
+    const performanceData = await Promise.all(
+      chartRanges.map(async ({ day, start, end }) => {
+        const [sent, opens, clicks] = await Promise.all([
+          prisma.campaignSend.count({
+            where: { sent_at: { gte: start, lt: end }, campaign: { org_id: targetOrgId } }
+          }),
+          prisma.emailEvent.count({
+            where: { event_type: "opened", occurred_at: { gte: start, lt: end }, campaign: { org_id: targetOrgId } }
+          }),
+          prisma.emailEvent.count({
+            where: { event_type: "clicked", occurred_at: { gte: start, lt: end }, campaign: { org_id: targetOrgId } }
+          })
+        ]);
 
-      const dayOpens = await prisma.emailEvent.count({
-        where: {
-          event_type: "opened",
-          occurred_at: {
-            gte: dayStart,
-            lt: dayEnd,
-          },
-          campaign: {
-            org_id: targetOrgId,
-          },
-        },
-      });
-
-      const dayClicks = await prisma.emailEvent.count({
-        where: {
-          event_type: "clicked",
-          occurred_at: {
-            gte: dayStart,
-            lt: dayEnd,
-          },
-          campaign: {
-            org_id: targetOrgId,
-          },
-        },
-      });
-
-      performanceData.push({
-        name: format(day, "eee"),
-        Sent: dayDispatched,
-        Opens: dayOpens,
-        Clicks: dayClicks,
-      });
-    }
+        return {
+          name: format(day, "eee"),
+          Sent: sent,
+          Opens: opens,
+          Clicks: clicks
+        };
+      })
+    );
 
     return NextResponse.json({
       stats: {
@@ -186,6 +115,7 @@ export async function GET(req: any) {
       topCampaigns,
       performanceData,
     });
+
   } catch (error: any) {
     console.error("GET /api/dashboard error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
