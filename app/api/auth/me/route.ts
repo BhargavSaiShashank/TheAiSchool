@@ -73,14 +73,14 @@ export async function GET(req: NextRequest) {
 
     // --- 🚀 PHASE 2: ATOMIC MULTI-TENANT SHADOW SYNC 🚀 ---
     let activeOrg;
-    let activeRole = dbUser.role;
+    // Safety Core: If org context exists, drop baseline to minimum clearance (VIEWER) instantly to prevent privilege leaks!
+    let activeRole = orgId ? "VIEWER" : dbUser.role; 
 
     if (orgId) {
       // USER IS INSIDE AN ACTIVE CLERK ORGANIZATION!
-      // Use UPSERT (atomic update/insert select) to eradicate creation races absolutely!
       activeOrg = await prisma.organization.upsert({
         where: { clerk_org_id: orgId },
-        update: {}, // Atomically acts as passive select if already present
+        update: {}, 
         create: {
           clerk_org_id: orgId,
           name: "New Enterprise Workspace", 
@@ -88,14 +88,15 @@ export async function GET(req: NextRequest) {
         }
       });
 
-      // Map the dynamic Clerk Org Role into internal RBAC spec
+      // Map the dynamic Clerk Org Role into internal RBAC spec with absolute defensive strictness
       if (orgRole) {
-        if (orgRole === 'org:admin' || orgRole.includes('admin')) {
+        const roleLower = orgRole.toLowerCase();
+        if (roleLower === 'org:admin' || roleLower.includes('admin')) {
           activeRole = "SUPER_ADMIN";
-        } else if (orgRole.includes('member')) {
+        } else if (roleLower === 'org:member' || roleLower.includes('member') || roleLower.includes('manager')) {
           activeRole = "CAMPAIGN_MANAGER";
         } else {
-          activeRole = "VIEWER";
+          activeRole = "VIEWER"; // Secure fallback for unexpected/custom Clerk roles
         }
       }
     } else {
