@@ -74,7 +74,7 @@ export async function GET(req: any) {
     // Obliterates 21 separate individual counts by offloading to the Postgres Engine itself.
     const sevenDaysAgo = subDays(new Date(), 7);
 
-    const [rawSendAgg, rawEventAgg]: [any[], any[]] = await Promise.all([
+    const [rawSendAgg, rawEventAgg] = await Promise.all([
       prisma.$queryRaw`
         SELECT 
           DATE_TRUNC('day', cs."sent_at") as "day",
@@ -94,7 +94,7 @@ export async function GET(req: any) {
         WHERE c."org_id" = ${targetOrgId} AND ee."occurred_at" >= ${sevenDaysAgo}
         GROUP BY 1, 2
       `
-    ]);
+    ]) as [any[], any[]];
 
     // 5. Map the raw database result arrays to lookup tables for instant dictionary performance
     const sentMap: Record<string, number> = {};
