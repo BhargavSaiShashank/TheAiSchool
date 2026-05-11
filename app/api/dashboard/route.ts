@@ -70,37 +70,58 @@ export async function GET(req: any) {
       };
     });
 
-    // 4. 🔥 MASSIVE SPEEDUP: Generate the 7-Day Chart entirely in parallel as well!
-    // Eliminated 21 sequential synchronous nested loop network requests.
-    const chartRanges = Array.from({ length: 7 }).map((_, i) => {
-      const day = subDays(new Date(), 6 - i); // 6 days ago up to today
-      const start = startOfDay(day);
-      const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
-      return { day, start, end };
+    // 4. 🔥 QUANTUM LEAP: High-Performance Aggregate Raw Query Architecture!
+    // Obliterates 21 separate individual counts by offloading to the Postgres Engine itself.
+    const sevenDaysAgo = subDays(new Date(), 7);
+
+    const [rawSendAgg, rawEventAgg]: [any[], any[]] = await Promise.all([
+      prisma.$queryRaw`
+        SELECT 
+          DATE_TRUNC('day', cs."sent_at") as "day",
+          COUNT(*)::int as "val"
+        FROM "CampaignSend" cs
+        JOIN "Campaign" c ON cs."campaign_id" = c."id"
+        WHERE c."org_id" = ${targetOrgId} AND cs."sent_at" >= ${sevenDaysAgo}
+        GROUP BY 1
+      `,
+      prisma.$queryRaw`
+        SELECT 
+          DATE_TRUNC('day', ee."occurred_at") as "day",
+          ee."event_type" as "type",
+          COUNT(*)::int as "val"
+        FROM "EmailEvent" ee
+        JOIN "Campaign" c ON ee."campaign_id" = c."id"
+        WHERE c."org_id" = ${targetOrgId} AND ee."occurred_at" >= ${sevenDaysAgo}
+        GROUP BY 1, 2
+      `
+    ]);
+
+    // 5. Map the raw database result arrays to lookup tables for instant dictionary performance
+    const sentMap: Record<string, number> = {};
+    rawSendAgg.forEach((r: any) => {
+      const dateKey = format(new Date(r.day), "yyyy-MM-dd");
+      sentMap[dateKey] = r.val;
     });
 
-    const performanceData = await Promise.all(
-      chartRanges.map(async ({ day, start, end }) => {
-        const [sent, opens, clicks] = await Promise.all([
-          prisma.campaignSend.count({
-            where: { sent_at: { gte: start, lt: end }, campaign: { org_id: targetOrgId } }
-          }),
-          prisma.emailEvent.count({
-            where: { event_type: "opened", occurred_at: { gte: start, lt: end }, campaign: { org_id: targetOrgId } }
-          }),
-          prisma.emailEvent.count({
-            where: { event_type: "clicked", occurred_at: { gte: start, lt: end }, campaign: { org_id: targetOrgId } }
-          })
-        ]);
+    const opensMap: Record<string, number> = {};
+    const clicksMap: Record<string, number> = {};
+    rawEventAgg.forEach((r: any) => {
+      const dateKey = format(new Date(r.day), "yyyy-MM-dd");
+      if (r.type === "opened") opensMap[dateKey] = r.val;
+      if (r.type === "clicked") clicksMap[dateKey] = r.val;
+    });
 
-        return {
-          name: format(day, "eee"),
-          Sent: sent,
-          Opens: opens,
-          Clicks: clicks
-        };
-      })
-    );
+    // 6. Build Final Sequential 7-Day array, filling in ZEROES where days have no data automatically!
+    const performanceData = Array.from({ length: 7 }).map((_, i) => {
+      const date = subDays(new Date(), 6 - i);
+      const dateKey = format(date, "yyyy-MM-dd");
+      return {
+        name: format(date, "eee"),
+        Sent: sentMap[dateKey] || 0,
+        Opens: opensMap[dateKey] || 0,
+        Clicks: clicksMap[dateKey] || 0
+      };
+    });
 
     return NextResponse.json({
       stats: {
