@@ -25,6 +25,7 @@ export default function AdminLayout({
   const { user: clerkUser, isLoaded } = useUser();
   const { organization, isLoaded: isOrgLoaded } = useOrganization();
   const [mounted, setMounted] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Automatically close drawer on route changes
@@ -63,18 +64,16 @@ export default function AdminLayout({
       return;
     }
 
-    // CALCULATE ACTIVE TARGET ORG ID (Handles null properly for solo mode)
-    const currentClerkOrgId = organization?.id || "SOLO_MODE";
-    const activeCachedOrg = user?.org_id || "NONE";
-
-    // CRITICAL TRIGGER: If IDs don't match OR we don't have cached state, command immediate sync!
+    // CRITICAL TRIGGER: Enforce rigid cache validation BEFORE rendering to block visual artifacts.
     const needsSync = 
       !user || 
       user.id !== clerkUser.id || 
-      (organization?.id && user?.aws_region === undefined); // Triggers refresh on new orgs to check region status
+      (organization?.id && user?.aws_region === undefined); 
 
-    // However, to be absolutely bulletproof on Rule #2, we also enforce forced syncing on ANY org object fluctuation
     const syncSession = async () => {
+      // 🛡️ RAISE SHIELD: Blocks UI interaction and masks with Preloader until data is clean!
+      setIsSyncing(true); 
+      
       try {
         const res = await fetch("/api/auth/me");
         if (res.ok) {
@@ -83,24 +82,25 @@ export default function AdminLayout({
           // Compare active organization IDs. If changed, this forces a hard-reload re-sync effectively purging old state!
           if (user && user.org_id && dbUser.org_id !== user.org_id) {
              console.log("🚨 ORGANIZATION SWAP DETECTED! COMMANDING PURGE & RELOAD...");
-             // Directly inject the new profile and command the next.js router to hard refresh
              login(dbUser);
              router.refresh();
+             // Don't drop shield yet, router is refreshing.
              return;
           }
 
           login(dbUser);
         } else {
-          // EXTREME DIAGNOSTICS INJECTED: Surfacing internal hidden 500 error body to browser console!
-          const errorBody = await res.json().catch(() => ({ parseError: "Body was not valid JSON" }));
-          console.error("🔴 [CRITICAL DIAGNOSTICS] /api/auth/me returned non-OK status:", res.status);
-          console.error("🔴 FULL ERROR DUMP FROM SERVER:", JSON.stringify(errorBody, null, 2));
+          console.error("🔴 Critical identity resolution failed.");
         }
       } catch (error) {
         console.error("Failed to sync Clerk session with DB:", error);
+      } finally {
+        // LOWER SHIELD: Data has settled successfully.
+        setIsSyncing(false);
       }
     };
 
+    // Run the atomic sync logic on ANY fluctuation detected.
     syncSession();
     
   }, [clerkUser, isLoaded, organization?.id, isOrgLoaded]); // LISTEN TO ORGANIZATION ID SHIFTS DIRECTLY!
@@ -147,7 +147,7 @@ export default function AdminLayout({
     };
   }, [mounted]);
 
-  if (!mounted || !user || !clerkUser) {
+  if (!mounted || !user || !clerkUser || isSyncing) {
     return <Preloader />;
   }
 

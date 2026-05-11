@@ -30,21 +30,30 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // CRITICAL: Wait for hydration, basic Clerk load, and full organization list population!
-    if (!hasHydrated || !isLoaded || !isOrgListLoaded) return;
+    // 1. Preliminary Load Checks
+    if (!hasHydrated || !isLoaded) return;
+
+    // 2. Determine Request Persona
+    const urlString = typeof window !== "undefined" ? window.location.search : "";
+    const isClerkFlow = urlString.includes("__clerk_") || urlString.includes("invitation");
+
+    // 🛡️ PERF WIN: If normal navigation, BYPASS organization list wait period entirely!
+    if (!isClerkFlow && isSignedIn) {
+       router.push("/dashboard");
+       return;
+    }
+
+    // 3. Invitation Handling Path: Require full data availability.
+    if (isClerkFlow && isSignedIn && !isOrgListLoaded) return;
 
     if (isSignedIn) {
       // --- 🛡️ INVITATION HANDSHAKE DETECTOR ---
-      // If URL contains clerk handshake tokens, user just clicked an invite/verification link.
-      // In this specific edge-case, we must find the absolute newest organization membership and force it active!
-      const urlString = window.location.search;
-      const isClerkFlow = urlString.includes("__clerk_") || urlString.includes("invitation");
-
+      // User just accepted an invite. We must compute the absolute newest membership and enforce it!
       const executeRedirect = () => {
          router.push("/dashboard");
       };
 
-      if (isClerkFlow && setActive && userMemberships.data && userMemberships.data.length > 0) {
+      if (isClerkFlow && setActive && userMemberships?.data && userMemberships.data.length > 0) {
         // Sort memberships by creation date descending to find the absolute newest one (the one just accepted)
         const sortedMemberships = [...userMemberships.data].sort((a, b) => 
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -54,7 +63,11 @@ export default function Home() {
         
         // Only trigger setActive if the newest org is not ALREADY active!
         if (newestMembership.organization.id !== orgId) {
-          console.log("🚀 INVITATION DETECTED! Switching active workspace to:", newestMembership.organization.name);
+          console.log("🚀 INVITATION DETECTED! Purging stale cache and switching active workspace to:", newestMembership.organization.name);
+          
+          // 💣 PURGE STALE CACHE: Clears the old "Super Admin" identity so AdminLayout locks behind preloader!
+          useStore.getState().logout();
+
           setActive({ organization: newestMembership.organization.id })
             .then(executeRedirect)
             .catch((err) => {
