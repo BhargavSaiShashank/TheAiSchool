@@ -80,3 +80,53 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+/**
+ * Modifies configuration parameters of an existing structure.
+ */
+export async function PUT(req: NextRequest) {
+  try {
+    await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
+    const orgId = await getSecureOrgId(req);
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    const { name, description } = await req.json();
+
+    if (!id) return NextResponse.json({ error: "Target list identity missing" }, { status: 400 });
+
+    const updated = await prisma.contactList.updateMany({
+      where: { id, org_id: orgId },
+      data: { name, description }
+    });
+
+    return NextResponse.json({ success: true, updatedCount: updated.count });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+/**
+ * Executes irreversible permanent eradication of the directory tree and relational mapping.
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
+    const orgId = await getSecureOrgId(req);
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) return NextResponse.json({ error: "Deletion target not provided" }, { status: 400 });
+
+    // Cascade suppression: First purge memberships
+    await prisma.contactListMember.deleteMany({ where: { list_id: id } });
+    
+    // Finally kill the host definition
+    const deleted = await prisma.contactList.deleteMany({
+      where: { id, org_id: orgId }
+    });
+
+    return NextResponse.json({ success: true, deletedCount: deleted.count });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

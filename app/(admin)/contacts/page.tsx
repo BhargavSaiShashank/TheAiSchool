@@ -409,6 +409,44 @@ export default function ContactsPage() {
     setShowNewListModal(false);
   };
 
+  const handleDeleteList = async (id: string, name: string) => {
+    if (!window.confirm(`Irreversible Alert: Are you absolutely certain you wish to permanently delete the "${name}" list? All membership ties will be severed.`)) return;
+    
+    try {
+      const res = await fetch(`/api/lists?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setLists(lists.filter((l) => l.id !== id));
+        toast.success(`Directory Eradication Complete: Removed list "${name}"`);
+      } else {
+        toast.error("Action Aborted: Failed to purge selected segmentation tier.");
+      }
+    } catch (err) {
+      console.error("Delete List Failure:", err);
+    }
+  };
+
+  const handleRenameList = async (id: string, oldName: string, oldDesc: string) => {
+    const newName = prompt("Enter the updated label for this mailing list:", oldName);
+    if (!newName || newName.trim() === "") return;
+
+    try {
+      const res = await fetch(`/api/lists?id=${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim(), description: oldDesc })
+      });
+
+      if (res.ok) {
+        setLists(lists.map(l => l.id === id ? { ...l, name: newName.trim() } : l));
+        toast.success("Segment metadata redefined successfully.");
+      } else {
+        toast.error("Network block: Failed to rename requested directory.");
+      }
+    } catch (err) {
+      console.error("Rename List Failure:", err);
+    }
+  };
+
   // Live Count calculation in Segment Builder based on rules and active contacts
   useEffect(() => {
     if (contacts.length === 0) {
@@ -741,24 +779,45 @@ export default function ContactsPage() {
                   </div>
 
                   <div className="flex items-center justify-between mt-5 pt-3.5 border-t border-border/60">
-                    <div className="flex gap-1.5 flex-wrap">
-                      {(list.tags ?? []).map((tag: string) => (
-                        <span
-                          key={tag}
-                          className="text-[11px] bg-secondary text-muted-foreground border border-border px-2 py-0.5 rounded font-mono font-semibold"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                    <div className="flex gap-2 items-center">
+                      {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
+                        <>
+                          <button
+                            onClick={() => handleRenameList(list.id, list.name, list.description || "")}
+                            className="p-1 rounded text-muted-foreground hover:text-[#7C5CFF] hover:bg-[#7C5CFF]/10 transition cursor-pointer"
+                            title="Rename List"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteList(list.id, list.name)}
+                            className="p-1 rounded text-muted-foreground hover:text-red-400 hover:bg-red-950/20 transition cursor-pointer"
+                            title="Delete List"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <div className="h-3 w-[1px] bg-border/60 mx-0.5" />
+                        </>
+                      )}
+                      <div className="flex gap-1.5 flex-wrap">
+                        {(list.tags ?? []).slice(0, 1).map((tag: string) => (
+                          <span
+                            key={tag}
+                            className="text-[10px] bg-secondary text-muted-foreground border border-border px-2 py-0.5 rounded font-mono font-semibold"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                     <button
                       onClick={() => {
                         setSelectedListFilter(list.id);
                         setActiveTab("contacts");
                       }}
-                      className="text-[12px] text-muted-foreground hover:text-primary font-mono font-bold transition cursor-pointer"
+                      className="text-[12px] text-muted-foreground hover:text-primary font-mono font-bold transition cursor-pointer flex items-center gap-1"
                     >
-                      Manage →
+                      Manage <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
