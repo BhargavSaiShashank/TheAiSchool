@@ -321,6 +321,27 @@ export default function TemplatesPage() {
     setView("editor");
   };
 
+  const handleDeleteTemplate = async (templateId: string, templateName: string) => {
+    if (!window.confirm(`Are you absolutely sure you wish to permanently delete template "${templateName}"? This action is irreversible.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/templates?id=${templateId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        // Atomically slice the UI list state
+        setTemplates((prev) => prev.filter((t) => t.id !== templateId));
+      } else {
+        alert("Deletion failed. Ensure you possess high-level workspace clearance.");
+      }
+    } catch (err) {
+      console.error("Communication breakdown during deletion payload delivery:", err);
+    }
+  };
+
   // Inject Merge Tag Helper
   const injectMergeTag = (tag: string) => {
     if (selectedBlockIdx === null) return;
@@ -461,13 +482,25 @@ export default function TemplatesPage() {
                         </div>
 
                         <div className="flex items-center justify-between mt-6 pt-3 border-t border-border/50 text-xs">
-                          <button
-                            onClick={() => alert(`Duplicated template: ${template.name}`)}
-                            className="text-muted-foreground hover:text-foreground p-1 rounded"
-                            title="Duplicate Template"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => alert(`Duplicated template: ${template.name}`)}
+                              className="text-muted-foreground hover:text-foreground p-1 rounded transition"
+                              title="Duplicate Template"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
+
+                            {(user?.role === "SUPER_ADMIN" || user?.role === "CAMPAIGN_MANAGER") && (
+                              <button
+                                onClick={() => handleDeleteTemplate(template.id, template.name)}
+                                className="text-red-500/60 hover:text-red-500 p-1 rounded transition cursor-pointer"
+                                title="Delete Template"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                           <button
                             onClick={() => {
                               setSelectedTemplate(template);

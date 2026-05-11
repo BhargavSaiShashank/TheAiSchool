@@ -98,3 +98,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Write forbidden without credentialed sync" }, { status: 401 });
   }
 }
+
+/**
+ * Securely excises existing templates, anchored by both RBAC authority and structural tenancy limits.
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
+    const orgId = await getSecureOrgId(req);
+    
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Invalid identifier provided" }, { status: 400 });
+    }
+
+    // Critical Multi-tenant Security: Force org_id verification before excision.
+    const outcome = await prisma.template.deleteMany({
+      where: {
+        id: id,
+        org_id: orgId,
+      },
+    });
+
+    if (outcome.count === 0) {
+      return NextResponse.json({ error: "Resource not found or inaccessible" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, id });
+  } catch (error: any) {
+    console.error("DELETE /api/templates fault:", error.message);
+    return NextResponse.json({ error: "Purge rejected: Unauthorized context" }, { status: 401 });
+  }
+}
