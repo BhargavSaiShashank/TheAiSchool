@@ -9,7 +9,10 @@ export async function POST(req: NextRequest) {
     const { listId, contactIds } = body;
 
     if (!listId || !contactIds || !Array.isArray(contactIds)) {
-      return NextResponse.json({ error: "listId and contactIds array are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "listId and contactIds array are required" },
+        { status: 400 },
+      );
     }
 
     const data = contactIds.map((cid: string) => ({
@@ -25,7 +28,7 @@ export async function POST(req: NextRequest) {
             contact_id_list_id: {
               contact_id: item.contact_id,
               list_id: item.list_id,
-            }
+            },
           },
           update: {}, // Skip duplicates by doing nothing on update
           create: item,

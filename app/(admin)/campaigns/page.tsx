@@ -58,7 +58,9 @@ export default function CampaignsPage() {
   const [isSendingTest, setIsSendingTest] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
-  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(
+    null,
+  );
 
   // Campaigns State
   const [campaigns, setCampaigns] = useState(initialCampaigns);
@@ -72,13 +74,13 @@ export default function CampaignsPage() {
       setFromEmail(user.email || "hello@pulsesend.com");
     }
   }, [user]);
-  
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("new") === "true") {
         setView("wizard");
-        
+
         const sub = params.get("subject");
         if (sub) {
           setSubject(decodeURIComponent(sub));
@@ -110,7 +112,10 @@ export default function CampaignsPage() {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch live campaigns, using sandbox preloads.", err);
+        console.error(
+          "Failed to fetch live campaigns, using sandbox preloads.",
+          err,
+        );
       } finally {
         setIsLoading(false);
         if (typeof window !== "undefined") {
@@ -154,8 +159,6 @@ export default function CampaignsPage() {
     fetchDbTemplates();
   }, [view]);
 
-
-
   const handleSendTestEmail = async () => {
     if (!testEmailRecipient) {
       toast.error("Please enter a recipient email address first.");
@@ -173,7 +176,9 @@ export default function CampaignsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success(`Success! Test email dispatched to ${testEmailRecipient} via AWS SES!`);
+        toast.success(
+          `Success! Test email dispatched to ${testEmailRecipient} via AWS SES!`,
+        );
       } else {
         toast.error(`AWS SES Dispatch Failed: ${data.error}`);
       }
@@ -185,7 +190,9 @@ export default function CampaignsPage() {
   };
 
   // Queue simulation state
-  const [queueStatus, setQueueStatus] = useState<"sending" | "paused" | "completed">("sending");
+  const [queueStatus, setQueueStatus] = useState<
+    "sending" | "paused" | "completed"
+  >("sending");
   const [sentCount, setSentCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -215,7 +222,7 @@ export default function CampaignsPage() {
   }, [view, queueStatus, totalCount]);
 
   // Campaign duplication handler
-  const handleDuplicate = (camp: typeof initialCampaigns[0]) => {
+  const handleDuplicate = (camp: (typeof initialCampaigns)[0]) => {
     const duplicated = {
       ...camp,
       id: `ca-${Date.now()}`,
@@ -231,14 +238,18 @@ export default function CampaignsPage() {
 
   // Trigger Re-send to Non-Openers
   const handleResendToNonOpeners = (name: string) => {
-    toast.info(`Generating duplicate campaign targeted explicitly to contacts who did not open: "${name}"`);
+    toast.info(
+      `Generating duplicate campaign targeted explicitly to contacts who did not open: "${name}"`,
+    );
   };
 
   const handleSaveCampaign = async (status: "draft" | "sent") => {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const url = editingCampaignId ? `/api/campaigns?id=${editingCampaignId}` : "/api/campaigns";
+      const url = editingCampaignId
+        ? `/api/campaigns?id=${editingCampaignId}`
+        : "/api/campaigns";
       const method = editingCampaignId ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -257,7 +268,9 @@ export default function CampaignsPage() {
       if (res.ok) {
         const campResult = await res.json();
         if (editingCampaignId) {
-          setCampaigns(campaigns.map((c) => (c.id === editingCampaignId ? campResult : c)));
+          setCampaigns(
+            campaigns.map((c) => (c.id === editingCampaignId ? campResult : c)),
+          );
           toast.success(`Updated campaign draft: ${campResult.name}`);
         } else {
           setCampaigns([campResult, ...campaigns]);
@@ -265,7 +278,10 @@ export default function CampaignsPage() {
         }
       }
     } catch (err) {
-      console.error("Failed to save campaign to Supabase, running simulation local state.", err);
+      console.error(
+        "Failed to save campaign to Supabase, running simulation local state.",
+        err,
+      );
     } finally {
       setIsSaving(false);
       setEditingCampaignId(null);
@@ -274,7 +290,10 @@ export default function CampaignsPage() {
 
   // Calculate dynamic recipients count based on actual database lists selected
   const totalRecipientsCount = lists
-    .filter((list) => selectedLists.includes(list.id) && !excludedLists.includes(list.id))
+    .filter(
+      (list) =>
+        selectedLists.includes(list.id) && !excludedLists.includes(list.id),
+    )
     .reduce((sum, list) => sum + (list.count ?? 0), 0);
 
   // Launch Queue Sending Simulation with real database counts and debouncing
@@ -302,26 +321,31 @@ export default function CampaignsPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-[15px] font-bold text-foreground tracking-tight">Campaign Dispatches</h2>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Manage, track and duplicate your email campaigns</p>
+                <h2 className="text-[15px] font-bold text-foreground tracking-tight">
+                  Campaign Dispatches
+                </h2>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  Manage, track and duplicate your email campaigns
+                </p>
               </div>
-              {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
-                <button
-                  onClick={() => {
-                    setCampaignName("");
-                    setSubject("");
-                    setPreviewText("");
-                    setSelectedLists([]);
-                    setSelectedTemplateId("");
-                    setActiveStep(1);
-                    setView("wizard");
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary text-white hover:bg-primary/90 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>New Campaign</span>
-                </button>
-              )}
+              {user?.role &&
+                ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
+                  <button
+                    onClick={() => {
+                      setCampaignName("");
+                      setSubject("");
+                      setPreviewText("");
+                      setSelectedLists([]);
+                      setSelectedTemplateId("");
+                      setActiveStep(1);
+                      setView("wizard");
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary text-white hover:bg-primary/90 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>New Campaign</span>
+                  </button>
+                )}
             </div>
 
             {/* Campaign Table */}
@@ -330,12 +354,20 @@ export default function CampaignsPage() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-border text-zinc-500 font-mono text-[11px] uppercase bg-secondary/10">
-                      <th className="py-3.5 px-5 font-semibold">Campaign Details</th>
+                      <th className="py-3.5 px-5 font-semibold">
+                        Campaign Details
+                      </th>
                       <th className="py-3.5 px-5 font-semibold">Status</th>
                       <th className="py-3.5 px-5 font-semibold">Send Date</th>
-                      <th className="py-3.5 px-5 font-semibold text-right">Unique Opens</th>
-                      <th className="py-3.5 px-5 font-semibold text-right">Clicks</th>
-                      <th className="py-3.5 px-5 font-semibold text-right">Actions</th>
+                      <th className="py-3.5 px-5 font-semibold text-right">
+                        Unique Opens
+                      </th>
+                      <th className="py-3.5 px-5 font-semibold text-right">
+                        Clicks
+                      </th>
+                      <th className="py-3.5 px-5 font-semibold text-right">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -347,9 +379,12 @@ export default function CampaignsPage() {
                               <Mail className="w-6 h-6 stroke-[1.5]" />
                             </div>
                             <div>
-                              <p className="text-[13px] font-bold text-muted-foreground">No campaigns found</p>
+                              <p className="text-[13px] font-bold text-muted-foreground">
+                                No campaigns found
+                              </p>
                               <p className="text-[11px] text-muted-foreground/80 max-w-xs mx-auto mt-1 font-medium font-mono uppercase tracking-wider leading-relaxed">
-                                Create your first high-performance email campaign with the designer wizard.
+                                Create your first high-performance email
+                                campaign with the designer wizard.
                               </p>
                             </div>
                           </div>
@@ -357,17 +392,26 @@ export default function CampaignsPage() {
                       </tr>
                     ) : (
                       campaigns.map((camp) => (
-                        <tr key={camp.id} className="border-b border-border/50 hover:bg-secondary/40 transition">
+                        <tr
+                          key={camp.id}
+                          className="border-b border-border/50 hover:bg-secondary/40 transition"
+                        >
                           <td className="py-4 px-5">
-                            <p className="text-[13px] font-bold text-foreground truncate max-w-xs">{camp.name}</p>
-                            <p className="text-[11px] text-muted-foreground truncate mt-0.5 max-w-xs font-mono">{camp.subject}</p>
+                            <p className="text-[13px] font-bold text-foreground truncate max-w-xs">
+                              {camp.name}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate mt-0.5 max-w-xs font-mono">
+                              {camp.subject}
+                            </p>
                           </td>
                           <td className="py-4 px-5">
-                            <span className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded uppercase ${
-                              camp.status === "Sent"
-                                ? "bg-secondary text-muted-foreground border border-border"
-                                : "bg-blue-950/20 text-blue-400 border border-blue-900/30"
-                            }`}>
+                            <span
+                              className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded uppercase ${
+                                camp.status === "Sent"
+                                  ? "bg-secondary text-muted-foreground border border-border"
+                                  : "bg-blue-950/20 text-blue-400 border border-blue-900/30"
+                              }`}
+                            >
                               {camp.status}
                             </span>
                           </td>
@@ -381,51 +425,56 @@ export default function CampaignsPage() {
                             {camp.clickRate}
                           </td>
                           <td className="py-4 px-5 text-right">
-                            {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
-                              <div className="flex items-center justify-end gap-2">
-                                {camp.status !== "Sent" && (
-                                  <button
-                                    onClick={() => {
-                                      setEditingCampaignId(camp.id);
-                                      setCampaignName(camp.name);
-                                      setSubject(camp.subject);
-                                      setPreviewText("");
-                                      setActiveStep(1);
-                                      setView("wizard");
-                                    }}
-                                    className="text-[#7C5CFF] hover:text-[#7C5CFF]/80 transition p-1.5 rounded hover:bg-[#7C5CFF]/10"
-                                    title="Edit & Send Draft"
-                                  >
-                                    <Send className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => handleDuplicate(camp)}
-                                  className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
-                                  title="Duplicate Campaign"
-                                >
-                                  <Copy className="w-3.5 h-3.5" />
-                                </button>
-                                {camp.status === "Sent" && (
-                                  <>
-                                    <Link
-                                      href={`/campaigns/${camp.id}/report`}
-                                      className="text-emerald-400 hover:text-emerald-300 transition p-1.5 rounded hover:bg-emerald-400/10"
-                                      title="View Analytics Report"
-                                    >
-                                      <Activity className="w-3.5 h-3.5" />
-                                    </Link>
+                            {user?.role &&
+                              ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(
+                                user.role,
+                              ) && (
+                                <div className="flex items-center justify-end gap-2">
+                                  {camp.status !== "Sent" && (
                                     <button
-                                      onClick={() => handleResendToNonOpeners(camp.name)}
-                                      className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
-                                      title="Re-send to non-openers"
+                                      onClick={() => {
+                                        setEditingCampaignId(camp.id);
+                                        setCampaignName(camp.name);
+                                        setSubject(camp.subject);
+                                        setPreviewText("");
+                                        setActiveStep(1);
+                                        setView("wizard");
+                                      }}
+                                      className="text-[#7C5CFF] hover:text-[#7C5CFF]/80 transition p-1.5 rounded hover:bg-[#7C5CFF]/10"
+                                      title="Edit & Send Draft"
                                     >
-                                      <RotateCcw className="w-3.5 h-3.5" />
+                                      <Send className="w-3.5 h-3.5" />
                                     </button>
-                                  </>
-                                )}
-                              </div>
-                            )}
+                                  )}
+                                  <button
+                                    onClick={() => handleDuplicate(camp)}
+                                    className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
+                                    title="Duplicate Campaign"
+                                  >
+                                    <Copy className="w-3.5 h-3.5" />
+                                  </button>
+                                  {camp.status === "Sent" && (
+                                    <>
+                                      <Link
+                                        href={`/campaigns/${camp.id}/report`}
+                                        className="text-emerald-400 hover:text-emerald-300 transition p-1.5 rounded hover:bg-emerald-400/10"
+                                        title="View Analytics Report"
+                                      >
+                                        <Activity className="w-3.5 h-3.5" />
+                                      </Link>
+                                      <button
+                                        onClick={() =>
+                                          handleResendToNonOpeners(camp.name)
+                                        }
+                                        className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
+                                        title="Re-send to non-openers"
+                                      >
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              )}
                           </td>
                         </tr>
                       ))
@@ -449,18 +498,46 @@ export default function CampaignsPage() {
             {/* Step Indicators Header */}
             <div className="flex items-center justify-between border-b border-border/50 pb-5">
               <div>
-                <h3 className="text-[15px] font-bold text-foreground tracking-tight">Campaign Design Wizard</h3>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Build and schedule a high-performance email campaign</p>
+                <h3 className="text-[15px] font-bold text-foreground tracking-tight">
+                  Campaign Design Wizard
+                </h3>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  Build and schedule a high-performance email campaign
+                </p>
               </div>
 
               <div className="flex items-center gap-3.5 text-[12px] font-mono font-bold text-muted-foreground">
-                <span className={activeStep === 1 ? "text-foreground font-extrabold" : ""}>1. Details</span>
+                <span
+                  className={
+                    activeStep === 1 ? "text-foreground font-extrabold" : ""
+                  }
+                >
+                  1. Details
+                </span>
                 <span>/</span>
-                <span className={activeStep === 2 ? "text-foreground font-extrabold" : ""}>2. Audience</span>
+                <span
+                  className={
+                    activeStep === 2 ? "text-foreground font-extrabold" : ""
+                  }
+                >
+                  2. Audience
+                </span>
                 <span>/</span>
-                <span className={activeStep === 3 ? "text-foreground font-extrabold" : ""}>3. Design</span>
+                <span
+                  className={
+                    activeStep === 3 ? "text-foreground font-extrabold" : ""
+                  }
+                >
+                  3. Design
+                </span>
                 <span>/</span>
-                <span className={activeStep === 4 ? "text-foreground font-extrabold" : ""}>4. Review</span>
+                <span
+                  className={
+                    activeStep === 4 ? "text-foreground font-extrabold" : ""
+                  }
+                >
+                  4. Review
+                </span>
               </div>
             </div>
 
@@ -468,7 +545,9 @@ export default function CampaignsPage() {
             {activeStep === 1 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Campaign Name (Internal Only)</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Campaign Name (Internal Only)
+                  </label>
                   <input
                     type="text"
                     value={campaignName}
@@ -480,7 +559,9 @@ export default function CampaignsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Email Subject Line</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Email Subject Line
+                  </label>
                   <input
                     type="text"
                     value={subject}
@@ -492,7 +573,9 @@ export default function CampaignsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Preview Text</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Preview Text
+                  </label>
                   <input
                     type="text"
                     value={previewText}
@@ -503,7 +586,9 @@ export default function CampaignsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Sender Name</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Sender Name
+                  </label>
                   <input
                     type="text"
                     value={fromName}
@@ -515,7 +600,9 @@ export default function CampaignsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Sender Email Address</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Sender Email Address
+                  </label>
                   <input
                     type="email"
                     value={fromEmail}
@@ -533,26 +620,46 @@ export default function CampaignsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Inclusion mailing lists */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-foreground uppercase font-mono">Include Contact Lists</h4>
+                  <h4 className="text-xs font-bold text-foreground uppercase font-mono">
+                    Include Contact Lists
+                  </h4>
                   <div className="space-y-2">
                     {lists.length === 0 ? (
-                      <p className="text-xs text-muted-foreground font-mono italic">No mailing lists discovered. Please create a mailing list under Contacts first.</p>
+                      <p className="text-xs text-muted-foreground font-mono italic">
+                        No mailing lists discovered. Please create a mailing
+                        list under Contacts first.
+                      </p>
                     ) : (
                       lists.map((list) => {
                         const isChecked = selectedLists.includes(list.id);
                         return (
-                          <label key={list.id} className="flex items-center gap-3 p-3 rounded bg-secondary/40 border border-border cursor-pointer hover:border-primary/50 transition">
+                          <label
+                            key={list.id}
+                            className="flex items-center gap-3 p-3 rounded bg-secondary/40 border border-border cursor-pointer hover:border-primary/50 transition"
+                          >
                             <input
                               type="checkbox"
                               checked={isChecked}
                               onChange={(e) => {
-                                setSelectedLists(e.target.checked ? [...selectedLists, list.id] : selectedLists.filter(id => id !== list.id));
+                                setSelectedLists(
+                                  e.target.checked
+                                    ? [...selectedLists, list.id]
+                                    : selectedLists.filter(
+                                        (id) => id !== list.id,
+                                      ),
+                                );
                               }}
                               className="w-4 h-4 rounded border-border text-[#7C5CFF] bg-black focus:ring-0"
                             />
                             <div>
-                              <p className="text-xs font-bold text-foreground">{list.name}</p>
-                              <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{selectedLists.includes(list.id) ? `${list.count || 0} contacts active` : "Audience excluded"}</p>
+                              <p className="text-xs font-bold text-foreground">
+                                {list.name}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                                {selectedLists.includes(list.id)
+                                  ? `${list.count || 0} contacts active`
+                                  : "Audience excluded"}
+                              </p>
                             </div>
                           </label>
                         );
@@ -563,26 +670,45 @@ export default function CampaignsPage() {
 
                 {/* Exclusions */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-foreground uppercase font-mono">Exclude Contact Lists (Optional)</h4>
+                  <h4 className="text-xs font-bold text-foreground uppercase font-mono">
+                    Exclude Contact Lists (Optional)
+                  </h4>
                   <div className="space-y-2">
                     {lists.length === 0 ? (
-                      <p className="text-xs text-muted-foreground font-mono italic">No mailing lists discovered.</p>
+                      <p className="text-xs text-muted-foreground font-mono italic">
+                        No mailing lists discovered.
+                      </p>
                     ) : (
                       lists.map((list) => {
                         const isChecked = excludedLists.includes(list.id);
                         return (
-                          <label key={list.id} className="flex items-center gap-3 p-3 rounded bg-secondary/20 border border-border cursor-pointer hover:border-primary/50 transition">
+                          <label
+                            key={list.id}
+                            className="flex items-center gap-3 p-3 rounded bg-secondary/20 border border-border cursor-pointer hover:border-primary/50 transition"
+                          >
                             <input
                               type="checkbox"
                               checked={isChecked}
                               onChange={(e) => {
-                                setExcludedLists(e.target.checked ? [...excludedLists, list.id] : excludedLists.filter(id => id !== list.id));
+                                setExcludedLists(
+                                  e.target.checked
+                                    ? [...excludedLists, list.id]
+                                    : excludedLists.filter(
+                                        (id) => id !== list.id,
+                                      ),
+                                );
                               }}
                               className="w-4 h-4 rounded border-border text-red-500 bg-black focus:ring-0"
                             />
                             <div>
-                              <p className="text-xs font-bold text-foreground">{list.name}</p>
-                              <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{excludedLists.includes(list.id) ? "Suppress matching" : "Suppress excluded"}</p>
+                              <p className="text-xs font-bold text-foreground">
+                                {list.name}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                                {excludedLists.includes(list.id)
+                                  ? "Suppress matching"
+                                  : "Suppress excluded"}
+                              </p>
                             </div>
                           </label>
                         );
@@ -596,8 +722,13 @@ export default function CampaignsPage() {
                   <div className="flex items-center gap-2.5">
                     <Users className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-xs font-bold text-foreground">Deduplicated Recipients</p>
-                      <p className="text-[10px] text-muted-foreground font-mono mt-0.5">Auto-filtering duplicate, unsubscribed, and suppressed contacts</p>
+                      <p className="text-xs font-bold text-foreground">
+                        Deduplicated Recipients
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                        Auto-filtering duplicate, unsubscribed, and suppressed
+                        contacts
+                      </p>
                     </div>
                   </div>
                   <span className="text-sm font-extrabold font-mono text-foreground">
@@ -610,26 +741,49 @@ export default function CampaignsPage() {
             {/* STEP 3: DESIGN SELECTION */}
             {activeStep === 3 && (
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-foreground uppercase font-mono">Select Template Design</h4>
+                <h4 className="text-xs font-bold text-foreground uppercase font-mono">
+                  Select Template Design
+                </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {(dbTemplates.length > 0 ? dbTemplates : [
-                    { id: "t1", name: "Welcome Onboard", category: "starter block" },
-                    { id: "t2", name: "Monthly Tech Newsletter", category: "starter block" },
-                    { id: "t3", name: "Product Promotion Blast", category: "starter block" }
-                  ]).map((temp) => {
+                  {(dbTemplates.length > 0
+                    ? dbTemplates
+                    : [
+                        {
+                          id: "t1",
+                          name: "Welcome Onboard",
+                          category: "starter block",
+                        },
+                        {
+                          id: "t2",
+                          name: "Monthly Tech Newsletter",
+                          category: "starter block",
+                        },
+                        {
+                          id: "t3",
+                          name: "Product Promotion Blast",
+                          category: "starter block",
+                        },
+                      ]
+                  ).map((temp) => {
                     const isSelected = selectedTemplateId === temp.id;
                     return (
                       <div
                         key={temp.id}
                         onClick={() => setSelectedTemplateId(temp.id)}
                         className={`p-4 rounded-lg border bg-secondary/40 cursor-pointer transition flex items-center gap-3.5 group hover:border-primary/50 ${
-                          isSelected ? "border-[#7C5CFF] bg-[#7C5CFF]/10" : "border-border"
+                          isSelected
+                            ? "border-[#7C5CFF] bg-[#7C5CFF]/10"
+                            : "border-border"
                         }`}
                       >
                         <Layout className="w-5 h-5 text-[#7C5CFF]" />
                         <div>
-                          <p className="text-xs font-bold text-foreground truncate max-w-[150px]">{temp.name}</p>
-                          <p className="text-[9px] text-zinc-500 font-mono uppercase mt-0.5 font-bold">{temp.category || "Custom"}</p>
+                          <p className="text-xs font-bold text-foreground truncate max-w-[150px]">
+                            {temp.name}
+                          </p>
+                          <p className="text-[9px] text-zinc-500 font-mono uppercase mt-0.5 font-bold">
+                            {temp.category || "Custom"}
+                          </p>
                         </div>
                       </div>
                     );
@@ -643,37 +797,63 @@ export default function CampaignsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Configuration Summary */}
                 <div className="md:col-span-2 space-y-6">
-                  <h4 className="text-xs font-bold text-white uppercase font-mono border-b border-zinc-900 pb-2">Campaign Setup Review</h4>
-                  
+                  <h4 className="text-xs font-bold text-white uppercase font-mono border-b border-zinc-900 pb-2">
+                    Campaign Setup Review
+                  </h4>
+
                   <div className="grid grid-cols-2 gap-4 text-xs font-mono bg-zinc-900/30 p-4 rounded border border-zinc-900 leading-relaxed">
                     <div>
                       <span className="text-zinc-500">Campaign Name:</span>
-                      <p className="text-white font-bold mt-1 truncate">{campaignName || "May News"}</p>
+                      <p className="text-white font-bold mt-1 truncate">
+                        {campaignName || "May News"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-zinc-500">Subject Line:</span>
-                      <p className="text-white font-bold mt-1 truncate">{subject || "No Subject Specified"}</p>
+                      <p className="text-white font-bold mt-1 truncate">
+                        {subject || "No Subject Specified"}
+                      </p>
                     </div>
                     <div>
                       <span className="text-zinc-500">From Header:</span>
-                      <p className="text-white font-bold mt-1 truncate">{fromName} ({fromEmail})</p>
+                      <p className="text-white font-bold mt-1 truncate">
+                        {fromName} ({fromEmail})
+                      </p>
                     </div>
                     <div>
                       <span className="text-zinc-500">Estimated Size:</span>
-                      <p className="text-white font-bold mt-1">{totalRecipientsCount.toLocaleString()} recipients</p>
+                      <p className="text-white font-bold mt-1">
+                        {totalRecipientsCount.toLocaleString()} recipients
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-white uppercase font-mono">Choose dispatch option</h4>
+                    <h4 className="text-xs font-bold text-white uppercase font-mono">
+                      Choose dispatch option
+                    </h4>
                     <div className="flex gap-4">
                       <label className="flex items-center gap-2 px-4 py-2 rounded bg-zinc-900 border border-zinc-800 cursor-pointer hover:border-zinc-700">
-                        <input type="radio" checked={sendOption === "now"} onChange={() => setSendOption("now")} className="w-4 h-4 border-zinc-800 text-white bg-black" />
-                        <span className="text-xs font-semibold text-zinc-300">Send Campaign Now</span>
+                        <input
+                          type="radio"
+                          checked={sendOption === "now"}
+                          onChange={() => setSendOption("now")}
+                          className="w-4 h-4 border-zinc-800 text-white bg-black"
+                        />
+                        <span className="text-xs font-semibold text-zinc-300">
+                          Send Campaign Now
+                        </span>
                       </label>
                       <label className="flex items-center gap-2 px-4 py-2 rounded bg-zinc-900 border border-zinc-800 cursor-pointer hover:border-zinc-700">
-                        <input type="radio" checked={sendOption === "schedule"} onChange={() => setSendOption("schedule")} className="w-4 h-4 border-zinc-800 text-white bg-black" />
-                        <span className="text-xs font-semibold text-zinc-300">Schedule For Later</span>
+                        <input
+                          type="radio"
+                          checked={sendOption === "schedule"}
+                          onChange={() => setSendOption("schedule")}
+                          className="w-4 h-4 border-zinc-800 text-white bg-black"
+                        />
+                        <span className="text-xs font-semibold text-zinc-300">
+                          Schedule For Later
+                        </span>
                       </label>
                     </div>
 
@@ -681,15 +861,31 @@ export default function CampaignsPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded bg-zinc-900/40 border border-zinc-900 text-xs font-mono">
                         <div className="space-y-1">
                           <label className="text-zinc-500">Date</label>
-                          <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="w-full bg-zinc-950 p-2 rounded border border-zinc-800 text-zinc-300" />
+                          <input
+                            type="date"
+                            value={scheduleDate}
+                            onChange={(e) => setScheduleDate(e.target.value)}
+                            className="w-full bg-zinc-950 p-2 rounded border border-zinc-800 text-zinc-300"
+                          />
                         </div>
                         <div className="space-y-1">
                           <label className="text-zinc-500">Time</label>
-                          <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="w-full bg-zinc-950 p-2 rounded border border-zinc-800 text-zinc-300" />
+                          <input
+                            type="time"
+                            value={scheduleTime}
+                            onChange={(e) => setScheduleTime(e.target.value)}
+                            className="w-full bg-zinc-950 p-2 rounded border border-zinc-800 text-zinc-300"
+                          />
                         </div>
                         <div className="space-y-1">
                           <label className="text-zinc-500">Timezone</label>
-                          <select value={scheduleTimezone} onChange={(e) => setScheduleTimezone(e.target.value)} className="w-full bg-zinc-950 p-2.5 rounded border border-zinc-800 text-zinc-300">
+                          <select
+                            value={scheduleTimezone}
+                            onChange={(e) =>
+                              setScheduleTimezone(e.target.value)
+                            }
+                            className="w-full bg-zinc-950 p-2.5 rounded border border-zinc-800 text-zinc-300"
+                          >
                             <option value="UTC+5:30">Kolkata (UTC+5:30)</option>
                             <option value="UTC">London (UTC)</option>
                             <option value="EST">New York (EST)</option>
@@ -700,11 +896,15 @@ export default function CampaignsPage() {
                   </div>
                 </div>
 
-                 {/* Test Send Panel */}
+                {/* Test Send Panel */}
                 <div className="p-5 bg-zinc-900/30 border border-zinc-900 rounded-lg space-y-4">
-                  <h4 className="text-xs font-bold text-white uppercase font-mono">Test Dispatch</h4>
+                  <h4 className="text-xs font-bold text-white uppercase font-mono">
+                    Test Dispatch
+                  </h4>
                   <p className="text-[10px] text-zinc-500 leading-relaxed">
-                    Send a fully rendered preview campaign to up to 5 addresses before scheduling. These dispatches are excluded from analytics.
+                    Send a fully rendered preview campaign to up to 5 addresses
+                    before scheduling. These dispatches are excluded from
+                    analytics.
                   </p>
                   <input
                     type="text"
@@ -728,7 +928,9 @@ export default function CampaignsPage() {
             <div className="flex items-center justify-between pt-6 border-t border-zinc-900">
               <button
                 disabled={activeStep === 1}
-                onClick={() => setActiveStep((prev) => (prev > 1 ? (prev - 1) as any : 1))}
+                onClick={() =>
+                  setActiveStep((prev) => (prev > 1 ? ((prev - 1) as any) : 1))
+                }
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded border border-zinc-850 hover:bg-zinc-900 text-xs font-semibold text-zinc-400 hover:text-white transition cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -750,7 +952,11 @@ export default function CampaignsPage() {
                 {activeStep < 4 ? (
                   <button
                     type="button"
-                    onClick={() => setActiveStep((prev) => (prev < 4 ? (prev + 1) as any : 4))}
+                    onClick={() =>
+                      setActiveStep((prev) =>
+                        prev < 4 ? ((prev + 1) as any) : 4,
+                      )
+                    }
                     className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-semibold shadow transition cursor-pointer"
                   >
                     <span>Next</span>
@@ -764,7 +970,9 @@ export default function CampaignsPage() {
                     className="flex items-center gap-1.5 px-5 py-1.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-extrabold shadow transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>{isSaving ? "Launching..." : "Confirm & Send Now"}</span>
+                    <span>
+                      {isSaving ? "Launching..." : "Confirm & Send Now"}
+                    </span>
                   </button>
                 )}
               </div>
@@ -787,8 +995,13 @@ export default function CampaignsPage() {
                   <Loader2 className="w-8 h-8 animate-spin" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Campaign SQS Sending Active</h3>
-                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Simulating multi-threaded background worker at AWS sandbox limits</p>
+                  <h3 className="text-sm font-bold text-white">
+                    Campaign SQS Sending Active
+                  </h3>
+                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                    Simulating multi-threaded background worker at AWS sandbox
+                    limits
+                  </p>
                 </div>
               </div>
             )}
@@ -799,8 +1012,12 @@ export default function CampaignsPage() {
                   <Pause className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Campaign SQS Queue Paused</h3>
-                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Sending queue has been held manually</p>
+                  <h3 className="text-sm font-bold text-white">
+                    Campaign SQS Queue Paused
+                  </h3>
+                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                    Sending queue has been held manually
+                  </p>
                 </div>
               </div>
             )}
@@ -811,8 +1028,12 @@ export default function CampaignsPage() {
                   <CheckCircle className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Campaign Dispatch Complete</h3>
-                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">SQS queues are empty. All dispatches recorded in analytics</p>
+                  <h3 className="text-sm font-bold text-white">
+                    Campaign Dispatch Complete
+                  </h3>
+                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                    SQS queues are empty. All dispatches recorded in analytics
+                  </p>
                 </div>
               </div>
             )}
@@ -855,7 +1076,11 @@ export default function CampaignsPage() {
               {queueStatus !== "completed" ? (
                 <button
                   onClick={() => {
-                    if (confirm("Are you sure you want to cancel this scheduled campaign dispatch?")) {
+                    if (
+                      confirm(
+                        "Are you sure you want to cancel this scheduled campaign dispatch?",
+                      )
+                    ) {
                       setView("list");
                     }
                   }}

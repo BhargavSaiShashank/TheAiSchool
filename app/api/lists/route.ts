@@ -32,7 +32,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(formattedLists);
   } catch (error: any) {
     console.error("GET /api/lists fault:", error.message);
-    return NextResponse.json({ error: "Session failure: Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Session failure: Unauthorized" },
+      { status: 401 },
+    );
   }
 }
 
@@ -47,7 +50,10 @@ export async function POST(req: NextRequest) {
     const { name, description } = body;
 
     if (!name) {
-      return NextResponse.json({ error: "List descriptor label is mandatory" }, { status: 400 });
+      return NextResponse.json(
+        { error: "List descriptor label is mandatory" },
+        { status: 400 },
+      );
     }
 
     const newList = await prisma.contactList.create({
@@ -68,6 +74,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("POST /api/lists fault:", error.message);
-    return NextResponse.json({ error: "Action disallowed: Authentication required" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Action disallowed: Authentication required" },
+      { status: 401 },
+    );
   }
 }

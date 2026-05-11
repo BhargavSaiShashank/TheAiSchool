@@ -8,9 +8,15 @@ export async function POST(req: Request) {
 
     // 1. Auto-confirm AWS SNS Subscription requests
     if (body.Type === "SubscriptionConfirmation" && body.SubscribeURL) {
-      console.log("Received AWS SNS Webhook Subscription Confirmation Request. URL:", body.SubscribeURL);
-      await fetch(body.SubscribeURL); 
-      return NextResponse.json({ success: true, message: "Subscription confirmed" });
+      console.log(
+        "Received AWS SNS Webhook Subscription Confirmation Request. URL:",
+        body.SubscribeURL,
+      );
+      await fetch(body.SubscribeURL);
+      return NextResponse.json({
+        success: true,
+        message: "Subscription confirmed",
+      });
     }
 
     // 2. Handle SES Notifications
@@ -33,7 +39,7 @@ export async function POST(req: Request) {
               if (contact) {
                 if (notificationType === "Bounce") {
                   const bounceType = bounce?.bounceType || "Hard";
-                  
+
                   if (bounceType === "Permanent" || bounceType === "Hard") {
                     await prisma.contact.update({
                       where: { id: contact.id },
@@ -52,7 +58,7 @@ export async function POST(req: Request) {
                   }
                 } else if (notificationType === "Complaint") {
                   await prisma.contact.update({
-                            where: { id: contact.id },
+                    where: { id: contact.id },
                     data: { status: "complained" },
                   });
 

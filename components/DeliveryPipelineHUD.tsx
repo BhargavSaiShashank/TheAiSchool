@@ -12,7 +12,11 @@ interface Particle {
   segment: number; // 0, 1, 2
 }
 
-export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) {
+export default function DeliveryPipelineHUD({
+  liveStats,
+}: {
+  liveStats?: any;
+}) {
   const { user } = useStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
@@ -56,15 +60,22 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
 
     // Node locations on 1000x120 fixed coordinate canvas
     const nodes = [
-      { x: 100, y: 60 },  // Audience
-      { x: 380, y: 60 },  // Campaign Engine
-      { x: 660, y: 60 },  // AWS SES SMTP
-      { x: 900, y: 60 },  // Inbox Success
+      { x: 100, y: 60 }, // Audience
+      { x: 380, y: 60 }, // Campaign Engine
+      { x: 660, y: 60 }, // AWS SES SMTP
+      { x: 900, y: 60 }, // Inbox Success
     ];
 
-    const getBezierPoint = (p1: { x: number; y: number }, cp: { x: number; y: number }, p2: { x: number; y: number }, t: number) => {
-      const x = (1 - t) * (1 - t) * p1.x + 2 * (1 - t) * t * cp.x + t * t * p2.x;
-      const y = (1 - t) * (1 - t) * p1.y + 2 * (1 - t) * t * cp.y + t * t * p2.y;
+    const getBezierPoint = (
+      p1: { x: number; y: number },
+      cp: { x: number; y: number },
+      p2: { x: number; y: number },
+      t: number,
+    ) => {
+      const x =
+        (1 - t) * (1 - t) * p1.x + 2 * (1 - t) * t * cp.x + t * t * p2.x;
+      const y =
+        (1 - t) * (1 - t) * p1.y + 2 * (1 - t) * t * cp.y + t * t * p2.y;
       return { x, y };
     };
 
@@ -145,22 +156,27 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
             <Activity className="w-4 h-4 text-[#7C5CFF]" />
             Metabolic Delivery Pipeline HUD
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Real-time telemetry and dispatch network velocity</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">
+            Real-time telemetry and dispatch network velocity
+          </p>
         </div>
-        {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
-          <button
-            onClick={handleSimulate}
-            disabled={isSimulating}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold font-mono rounded border transition duration-300 ${
-              isSimulating
-                ? "bg-emerald-950/20 text-emerald-400 border-emerald-900/30 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
-                : "bg-[#7C5CFF] hover:bg-[#7C5CFF]/90 text-white border-transparent cursor-pointer"
-            }`}
-          >
-            <Sparkles className={`w-3.5 h-3.5 ${isSimulating ? "animate-spin" : ""}`} />
-            {isSimulating ? "DISPATCH ACTIVE" : "SIMULATE DISPATCH"}
-          </button>
-        )}
+        {user?.role &&
+          ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
+            <button
+              onClick={handleSimulate}
+              disabled={isSimulating}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold font-mono rounded border transition duration-300 ${
+                isSimulating
+                  ? "bg-emerald-950/20 text-emerald-400 border-emerald-900/30 shadow-[0_0_12px_rgba(16,185,129,0.1)]"
+                  : "bg-[#7C5CFF] hover:bg-[#7C5CFF]/90 text-white border-transparent cursor-pointer"
+              }`}
+            >
+              <Sparkles
+                className={`w-3.5 h-3.5 ${isSimulating ? "animate-spin" : ""}`}
+              />
+              {isSimulating ? "DISPATCH ACTIVE" : "SIMULATE DISPATCH"}
+            </button>
+          )}
       </div>
 
       {/* Main HUD container */}
@@ -181,13 +197,21 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
             onMouseLeave={() => setActiveNode(null)}
             className="flex flex-col items-center pointer-events-auto cursor-pointer group"
           >
-            <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
-              activeNode === 1 ? "bg-[#7C5CFF]/20 border-[#7C5CFF]" : "bg-card border-border"
-            }`}>
+            <div
+              className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
+                activeNode === 1
+                  ? "bg-[#7C5CFF]/20 border-[#7C5CFF]"
+                  : "bg-card border-border"
+              }`}
+            >
               <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground group-hover:text-primary transition" />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-primary transition">Audience</span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-foreground font-mono mt-0.5">{liveStats?.totalAudience || "0"}</span>
+            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-primary transition">
+              Audience
+            </span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-foreground font-mono mt-0.5">
+              {liveStats?.totalAudience || "0"}
+            </span>
           </div>
 
           {/* Node 2: Campaign Engine */}
@@ -196,13 +220,23 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
             onMouseLeave={() => setActiveNode(null)}
             className="flex flex-col items-center pointer-events-auto cursor-pointer group"
           >
-            <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
-              activeNode === 2 ? "bg-[#7C5CFF]/20 border-[#7C5CFF]" : "bg-card border-border"
-            }`}>
+            <div
+              className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
+                activeNode === 2
+                  ? "bg-[#7C5CFF]/20 border-[#7C5CFF]"
+                  : "bg-card border-border"
+              }`}
+            >
               <Cpu className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground group-hover:text-primary transition" />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-primary transition">Engine</span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-[#7C5CFF] font-mono mt-0.5">{liveStats?.totalDispatched && liveStats.totalDispatched !== "0" ? "Active" : "Inactive"}</span>
+            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-primary transition">
+              Engine
+            </span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-[#7C5CFF] font-mono mt-0.5">
+              {liveStats?.totalDispatched && liveStats.totalDispatched !== "0"
+                ? "Active"
+                : "Inactive"}
+            </span>
           </div>
 
           {/* Node 3: AWS SES SMTP */}
@@ -211,13 +245,21 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
             onMouseLeave={() => setActiveNode(null)}
             className="flex flex-col items-center pointer-events-auto cursor-pointer group"
           >
-            <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
-              activeNode === 3 ? "bg-[#7C5CFF]/20 border-[#7C5CFF]" : "bg-card border-border"
-            }`}>
+            <div
+              className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
+                activeNode === 3
+                  ? "bg-[#7C5CFF]/20 border-[#7C5CFF]"
+                  : "bg-card border-border"
+              }`}
+            >
               <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground group-hover:text-primary transition" />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-primary transition">SES</span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-foreground font-mono mt-0.5">32ms</span>
+            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-primary transition">
+              SES
+            </span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-foreground font-mono mt-0.5">
+              32ms
+            </span>
           </div>
 
           {/* Node 4: Inbox Success */}
@@ -226,13 +268,25 @@ export default function DeliveryPipelineHUD({ liveStats }: { liveStats?: any }) 
             onMouseLeave={() => setActiveNode(null)}
             className="flex flex-col items-center pointer-events-auto cursor-pointer group"
           >
-            <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
-              activeNode === 4 ? "bg-emerald-500/20 border-emerald-500" : "bg-card border-border"
-            }`}>
+            <div
+              className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition duration-300 relative ${
+                activeNode === 4
+                  ? "bg-emerald-500/20 border-emerald-500"
+                  : "bg-card border-border"
+              }`}
+            >
               <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 group-hover:text-emerald-400 transition" />
             </div>
-            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-emerald-500 transition">Inbox</span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-500 font-mono mt-0.5">{liveStats?.totalDispatched && liveStats.totalDispatched !== "0" && liveStats.deliverability !== "—" ? liveStats.deliverability : "0.0%"}</span>
+            <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground mt-2 font-mono uppercase group-hover:text-emerald-500 transition">
+              Inbox
+            </span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-500 font-mono mt-0.5">
+              {liveStats?.totalDispatched &&
+              liveStats.totalDispatched !== "0" &&
+              liveStats.deliverability !== "—"
+                ? liveStats.deliverability
+                : "0.0%"}
+            </span>
           </div>
         </div>
       </div>

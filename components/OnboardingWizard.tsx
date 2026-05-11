@@ -2,7 +2,15 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building, Mail, Globe, Sparkles, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import {
+  Building,
+  Mail,
+  Globe,
+  Sparkles,
+  CheckCircle2,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
 
 interface OnboardingWizardProps {
   currentEmail: string;
@@ -73,15 +81,17 @@ export default function OnboardingWizard({
             <div className="inline-flex items-center justify-center w-14 h-14 bg-[#7C5CFF]/10 border border-[#7C5CFF]/20 rounded-2xl mb-4">
               <Sparkles className="w-7 h-7 text-[#7C5CFF]" />
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Welcome to PulseSend</h1>
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              Welcome to PulseSend
+            </h1>
             <p className="text-zinc-400 text-sm mt-2">
-              Let's quickly configure your isolated workspace to unlock the platform.
+              Let's quickly configure your isolated workspace to unlock the
+              platform.
             </p>
           </div>
 
           {/* Form Section */}
           <form onSubmit={handleSubmit} className="space-y-5">
-
             <div className="space-y-1.5">
               <label className="flex items-center gap-2 text-xs font-bold text-zinc-300 uppercase tracking-wider">
                 <Mail className="w-3.5 h-3.5 text-[#7C5CFF]" />

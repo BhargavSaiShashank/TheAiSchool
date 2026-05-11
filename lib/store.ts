@@ -18,7 +18,7 @@ interface PulseSendState {
   ipAttempts: number;
   ipLockedUntil: string | null;
   theme: "dark" | "light";
-  
+
   // Actions
   login: (user: UserSession) => void;
   logout: () => void;
@@ -45,29 +45,37 @@ export const useStore = create<PulseSendState>()(
 
       login: (user) => set({ user }),
       logout: () => set({ user: null }),
-      toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      toggleSidebar: () =>
+        set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
       setActiveRoute: (route) => set({ activeRoute: route }),
       setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
-      toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
-      
-      incrementIpAttempts: () => set((state) => {
-        const attempts = state.ipAttempts + 1;
-        if (attempts >= 5) {
-          const lockTime = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-          return { ipAttempts: attempts, ipLockedUntil: lockTime };
-        }
-        return { ipAttempts: attempts };
-      }),
-      
-      lockIp: (minutes) => set({
-        ipLockedUntil: new Date(Date.now() + minutes * 60 * 1000).toISOString()
-      }),
-      
+      toggleTheme: () =>
+        set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
+
+      incrementIpAttempts: () =>
+        set((state) => {
+          const attempts = state.ipAttempts + 1;
+          if (attempts >= 5) {
+            const lockTime = new Date(
+              Date.now() + 15 * 60 * 1000,
+            ).toISOString();
+            return { ipAttempts: attempts, ipLockedUntil: lockTime };
+          }
+          return { ipAttempts: attempts };
+        }),
+
+      lockIp: (minutes) =>
+        set({
+          ipLockedUntil: new Date(
+            Date.now() + minutes * 60 * 1000,
+          ).toISOString(),
+        }),
+
       resetIpAttempts: () => set({ ipAttempts: 0, ipLockedUntil: null }),
     }),
     {
       name: "pulsesend-storage",
-    }
-  )
+    },
+  ),
 );

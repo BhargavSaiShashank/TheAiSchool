@@ -24,7 +24,9 @@ PulseSend is a comprehensive multi-tenant SaaS infrastructure specifically archi
 ## 🧩 Core Feature Blueprint (Zero Omission)
 
 ### 1️⃣ The Multi-Tenant Citadel (Identity & Isolation)
+
 PulseSend utilizes a fortress-tier RBAC system leveraging **Clerk.dev** at its foundation.
+
 - **Dynamic Org Switching:** Custom-engineered interception logic detects Clerk workspace drift and automatically executes hot-swaps, eliminating cache bleed.
 - **Granular RBAC Gates:** Strict physical partition boundaries enforce three user authorization tiers:
   - **👑 Super Admin:** Full configuration control, billing, and server orchestration.
@@ -32,17 +34,21 @@ PulseSend utilizes a fortress-tier RBAC system leveraging **Clerk.dev** at its f
   - **👁️ Viewer:** Read-only visualization metrics, shielding state mutation handlers.
 
 ### 2️⃣ The Creative Forge (Unlayer Studio)
+
 A full-blown, embedded drag-and-drop engine allowing users to iterate without code.
+
 - **Static Asset Handling:** Seamless base64 streaming or S3 persistent cloud mapping.
 - **Inline CSS Sterilization:** Automatic backend post-processing transforms nested components into compliant `inline-css` payloads universally accepted by Gmail, Outlook, and Apple Mail.
 - **Merge Tag Personalization:** Hot-swapping dynamic tokens like `{{first_name}}` or `{{custom.company}}` directly into final distribution strings.
 
 ### 3️⃣ Total List Dominion (Contact Intelligence)
+
 - **Mass Ingestion Engine:** High-throughput CSV parsing pipeline mapping arbitrary data frames onto rigid Postgres tuples.
 - **Static & Dynamic Segmentation:** Build custom cohorts using complex SQL rule sets (e.g., "Contacts added in last 30 days with zero opens").
 - **Auto-Suppression Grid:** Native lockouts immediately severing dispatch links to hard-bounces or user-instigated complaints.
 
 ### 4️⃣ The Automated Disseminator (AWS Logic)
+
 - **Asynchronous Queue Injection:** Sends are not executed directly—they are streamed into **AWS SQS** immediately, preventing Vercel lambda timeouts.
 - **Hybrid Scheduling Engine:** Chronological dispatch gating allowing execution minutes, hours, or days into the future.
 
@@ -61,7 +67,7 @@ graph LR
     classDef queue fill:#422006,stroke:#f59e0b,stroke-width:2px,color:#fef3c7
 
     USR((Operator Browser)):::user -->|HTTPS Request| VRC[🌐 Vercel Global CDN]:::frontend
-    
+
     subgraph Vercel Serverless Compute
       VRC --> API[⚙️ Next.js API Runtime]:::frontend
       API <--> CLK[🔐 Clerk Identity Provider]:::user
@@ -91,10 +97,10 @@ graph LR
 
 We solved persistent cloud latency by rebuilding legacy patterns from scratch:
 
-| Problem Vector | Applied Solution | Recorded Metric Shift |
-| :--- | :--- | :--- |
-| **Trans-Atlantic Drag** | Relocated Vercel compute edge to mirror Supabase region **(ap-south-1, Mumbai)** | `9,400ms` ➔ **`210ms`** |
-| **Recursive Fetch Loop** | Deployed atomic `useRef` persistence guards inhibiting infinite hydration chains. | `41 reqs` ➔ **`1 req`** |
+| Problem Vector              | Applied Solution                                                                    | Recorded Metric Shift    |
+| :-------------------------- | :---------------------------------------------------------------------------------- | :----------------------- |
+| **Trans-Atlantic Drag**     | Relocated Vercel compute edge to mirror Supabase region **(ap-south-1, Mumbai)**    | `9,400ms` ➔ **`210ms`**  |
+| **Recursive Fetch Loop**    | Deployed atomic `useRef` persistence guards inhibiting infinite hydration chains.   | `41 reqs` ➔ **`1 req`**  |
 | **Sequential DB Waterfall** | Refactored 20+ scalar loops into raw `DATE_TRUNC` vectorized parallel SQL clusters. | `13,500ms` ➔ **`380ms`** |
 
 ---
@@ -135,12 +141,14 @@ AWS_SQS_QUEUE_URL="https://sqs.ap-south-1.amazonaws.com/********/pulse-send-queu
 ## 🚀 Local Initialization Commands
 
 ### Step 1: Synchronize Environment
+
 ```bash
 git clone https://github.com/BhargavSaiShashank/TheAiSchool.git
 cd TheAiSchool
 ```
 
 ### Step 2: Replicate Schemas
+
 ```bash
 npm install
 npx prisma generate
@@ -148,6 +156,7 @@ npx prisma db push
 ```
 
 ### Step 3: Hot-Reload Injection
+
 ```bash
 npm run dev
 ```
@@ -157,7 +166,7 @@ npm run dev
 <div align="center">
 <br />
 
-*This software architecture fulfills 100% of the required functional mandates.*
+_This software architecture fulfills 100% of the required functional mandates._
 <br />
 **Engineered with absolute precision by Shashank Dommeti.**
 

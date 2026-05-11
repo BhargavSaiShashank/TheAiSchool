@@ -57,16 +57,26 @@ export default function ToastContainer() {
             className="p-3.5 bg-black/85 backdrop-blur-md border border-white/[0.08] rounded shadow-[0_12px_40px_rgba(0,0,0,0.6)] flex items-start gap-3 relative overflow-hidden group"
           >
             {/* Ambient Type Glow */}
-            <div className={`absolute top-0 bottom-0 left-0 w-[3px] ${
-              toast.type === "success" ? "bg-emerald-400 shadow-[0_0_8px_#34d399]" :
-              toast.type === "error" ? "bg-rose-500 shadow-[0_0_8px_#f43f5e]" :
-              "bg-[#7C5CFF] shadow-[0_0_8px_#7c5cff]"
-            }`} />
+            <div
+              className={`absolute top-0 bottom-0 left-0 w-[3px] ${
+                toast.type === "success"
+                  ? "bg-emerald-400 shadow-[0_0_8px_#34d399]"
+                  : toast.type === "error"
+                    ? "bg-rose-500 shadow-[0_0_8px_#f43f5e]"
+                    : "bg-[#7C5CFF] shadow-[0_0_8px_#7c5cff]"
+              }`}
+            />
 
             {/* Icon */}
-            {toast.type === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />}
-            {toast.type === "error" && <AlertTriangle className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />}
-            {toast.type === "info" && <Info className="w-4 h-4 text-[#7C5CFF] mt-0.5 shrink-0" />}
+            {toast.type === "success" && (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+            )}
+            {toast.type === "error" && (
+              <AlertTriangle className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />
+            )}
+            {toast.type === "info" && (
+              <Info className="w-4 h-4 text-[#7C5CFF] mt-0.5 shrink-0" />
+            )}
 
             {/* Message */}
             <p className="text-xs font-medium text-zinc-200 leading-normal flex-1 pr-4">

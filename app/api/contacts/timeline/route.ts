@@ -7,7 +7,10 @@ export async function GET(req: Request) {
     const contactId = searchParams.get("contactId");
 
     if (!contactId) {
-      return NextResponse.json({ error: "Missing contact identifier" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing contact identifier" },
+        { status: 400 },
+      );
     }
 
     // Query all email events for this contact, ordered chronologically

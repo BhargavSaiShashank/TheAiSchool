@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ShieldAlert,
-  Search,
-  Plus,
-  Trash2,
-  Zap,
-} from "lucide-react";
+import { ShieldAlert, Search, Plus, Trash2, Zap } from "lucide-react";
 
 export default function SuppressionPage() {
   const [suppressions, setSuppressions] = useState<any[]>([]);
@@ -46,7 +40,11 @@ export default function SuppressionPage() {
       const res = await fetch("/api/suppression", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: newEmail, reason: newReason, log: newNotes }),
+        body: JSON.stringify({
+          email: newEmail,
+          reason: newReason,
+          log: newNotes,
+        }),
       });
 
       if (res.ok) {
@@ -67,7 +65,11 @@ export default function SuppressionPage() {
 
   // Handler to delete suppression (remove block)
   const handleRemoveSuppression = async (id: string, email: string) => {
-    if (confirm(`Are you sure you want to remove ${email} from the suppression platform? They will receive future campaign dispatches.`)) {
+    if (
+      confirm(
+        `Are you sure you want to remove ${email} from the suppression platform? They will receive future campaign dispatches.`,
+      )
+    ) {
       try {
         const res = await fetch(`/api/suppression?id=${id}`, {
           method: "DELETE",
@@ -82,9 +84,10 @@ export default function SuppressionPage() {
     }
   };
 
-  const filteredSuppressions = suppressions.filter((s) =>
-    s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.reason.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredSuppressions = suppressions.filter(
+    (s) =>
+      s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.reason.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -103,7 +106,9 @@ export default function SuppressionPage() {
             Suppression Logs & Safeguard Center
           </h2>
           <p className="text-xs text-muted-foreground leading-relaxed max-w-xl">
-            PulseSend automatically excludes suppressed addresses from campaign queues to maintain a premium AWS sender reputation. Bounces and spam complaints are synchronized via AWS SQS webhooks.
+            PulseSend automatically excludes suppressed addresses from campaign
+            queues to maintain a premium AWS sender reputation. Bounces and spam
+            complaints are synchronized via AWS SQS webhooks.
           </p>
         </div>
         <button
@@ -137,47 +142,71 @@ export default function SuppressionPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border text-zinc-500 font-mono text-[10px] uppercase bg-secondary/10">
-                    <th className="py-3 px-5 font-semibold">Blocked Email Address</th>
+                    <th className="py-3 px-5 font-semibold">
+                      Blocked Email Address
+                    </th>
                     <th className="py-3 px-5 font-semibold">Reason</th>
                     <th className="py-3 px-5 font-semibold">Suppressed At</th>
-                    <th className="py-3 px-5 font-semibold text-right">Action</th>
+                    <th className="py-3 px-5 font-semibold text-right">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-muted-foreground font-mono tracking-widest text-[11px] uppercase">
+                      <td
+                        colSpan={4}
+                        className="py-8 text-center text-muted-foreground font-mono tracking-widest text-[11px] uppercase"
+                      >
                         Loading safeguard blocks...
                       </td>
                     </tr>
                   ) : filteredSuppressions.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-muted-foreground font-mono tracking-wider text-[11px] uppercase">
-                        No suppressed addresses logged inside campaign safeguard center.
+                      <td
+                        colSpan={4}
+                        className="py-8 text-center text-muted-foreground font-mono tracking-wider text-[11px] uppercase"
+                      >
+                        No suppressed addresses logged inside campaign safeguard
+                        center.
                       </td>
                     </tr>
                   ) : (
                     filteredSuppressions.map((item) => (
-                      <tr key={item.id} className="border-b border-border/50 hover:bg-secondary/40 transition group">
+                      <tr
+                        key={item.id}
+                        className="border-b border-border/50 hover:bg-secondary/40 transition group"
+                      >
                         <td className="py-3 px-5">
-                          <p className="font-bold text-foreground font-mono text-[11px]">{item.email}</p>
-                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate max-w-sm">{item.log}</p>
+                          <p className="font-bold text-foreground font-mono text-[11px]">
+                            {item.email}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate max-w-sm">
+                            {item.log}
+                          </p>
                         </td>
                         <td className="py-3 px-5">
-                          <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
-                            item.reason === "hard_bounce"
-                              ? "bg-red-500/10 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
-                              : item.reason === "spam_complaint"
-                              ? "bg-amber-500/10 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                              : "bg-secondary text-muted-foreground border border-border"
-                          }`}>
+                          <span
+                            className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
+                              item.reason === "hard_bounce"
+                                ? "bg-red-500/10 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
+                                : item.reason === "spam_complaint"
+                                  ? "bg-amber-500/10 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                                  : "bg-secondary text-muted-foreground border border-border"
+                            }`}
+                          >
                             {item.reason.replace("_", " ")}
                           </span>
                         </td>
-                        <td className="py-3 px-5 text-muted-foreground font-mono text-[11px]">{item.date}</td>
+                        <td className="py-3 px-5 text-muted-foreground font-mono text-[11px]">
+                          {item.date}
+                        </td>
                         <td className="py-3 px-5 text-right">
                           <button
-                            onClick={() => handleRemoveSuppression(item.id, item.email)}
+                            onClick={() =>
+                              handleRemoveSuppression(item.id, item.email)
+                            }
                             className="text-muted-foreground hover:text-foreground transition p-1.5"
                             title="Remove Suppression Block"
                           >
@@ -197,36 +226,54 @@ export default function SuppressionPage() {
         <div className="p-6 glass-hud rounded-lg space-y-6">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-amber-400" />
-            <h3 className="text-sm font-bold text-foreground tracking-tight">Soft Bounce Safeguard Escalations</h3>
+            <h3 className="text-sm font-bold text-foreground tracking-tight">
+              Soft Bounce Safeguard Escalations
+            </h3>
           </div>
 
           <div className="space-y-4 text-xs text-muted-foreground leading-relaxed">
             <p>
-              Maintaining an exceptional deliverability rate requires strict safeguards. PulseSend employs automated soft-bounce escalation policies:
+              Maintaining an exceptional deliverability rate requires strict
+              safeguards. PulseSend employs automated soft-bounce escalation
+              policies:
             </p>
-            
+
             <div className="space-y-3.5 font-mono text-[11px]">
               <div className="p-3.5 rounded border border-border bg-secondary/40 flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-muted-foreground">1</span>
+                <span className="w-5 h-5 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-muted-foreground">
+                  1
+                </span>
                 <div>
                   <p className="text-foreground font-bold">1st Soft Bounce</p>
-                  <p className="text-muted-foreground mt-0.5">Delivery failure registered. Queue trial flagged.</p>
+                  <p className="text-muted-foreground mt-0.5">
+                    Delivery failure registered. Queue trial flagged.
+                  </p>
                 </div>
               </div>
 
               <div className="p-3.5 rounded border border-border bg-secondary/40 flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-muted-foreground">2</span>
+                <span className="w-5 h-5 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-muted-foreground">
+                  2
+                </span>
                 <div>
                   <p className="text-foreground font-bold">2nd Soft Bounce</p>
-                  <p className="text-muted-foreground mt-0.5">Double failure recorded within 30 days. Priority downgraded.</p>
+                  <p className="text-muted-foreground mt-0.5">
+                    Double failure recorded within 30 days. Priority downgraded.
+                  </p>
                 </div>
               </div>
 
               <div className="p-3.5 rounded border border-border bg-secondary/40 flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-red-500/10 dark:bg-red-500/10 border border-red-500/20 flex items-center justify-center font-bold text-red-600 dark:text-red-400">3</span>
+                <span className="w-5 h-5 rounded-full bg-red-500/10 dark:bg-red-500/10 border border-red-500/20 flex items-center justify-center font-bold text-red-600 dark:text-red-400">
+                  3
+                </span>
                 <div>
-                  <p className="text-red-600 dark:text-red-400 font-bold">3rd Soft Bounce</p>
-                  <p className="text-muted-foreground mt-0.5">Escalated to Hard Bounce. Contact permanently suppressed.</p>
+                  <p className="text-red-600 dark:text-red-400 font-bold">
+                    3rd Soft Bounce
+                  </p>
+                  <p className="text-muted-foreground mt-0.5">
+                    Escalated to Hard Bounce. Contact permanently suppressed.
+                  </p>
                 </div>
               </div>
             </div>
@@ -245,13 +292,19 @@ export default function SuppressionPage() {
               className="w-full max-w-md glass-hud p-6 rounded-lg space-y-6"
             >
               <div>
-                <h3 className="text-sm font-bold text-foreground tracking-tight">Block Subscriber Email</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Manually suppress future campaign dispatches</p>
+                <h3 className="text-sm font-bold text-foreground tracking-tight">
+                  Block Subscriber Email
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Manually suppress future campaign dispatches
+                </p>
               </div>
 
               <form onSubmit={handleAddSuppression} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Email Address</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     value={newEmail}
@@ -263,7 +316,9 @@ export default function SuppressionPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Suppression Reason</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Suppression Reason
+                  </label>
                   <select
                     value={newReason}
                     onChange={(e) => setNewReason(e.target.value)}
@@ -271,12 +326,16 @@ export default function SuppressionPage() {
                   >
                     <option value="hard_bounce">Hard Bounce</option>
                     <option value="spam_complaint">Spam Complaint</option>
-                    <option value="manual_unsubscribe">Manual Unsubscribe</option>
+                    <option value="manual_unsubscribe">
+                      Manual Unsubscribe
+                    </option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Audit Log Note / Reason</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Audit Log Note / Reason
+                  </label>
                   <textarea
                     value={newNotes}
                     onChange={(e) => setNewNotes(e.target.value)}

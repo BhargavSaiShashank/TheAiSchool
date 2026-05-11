@@ -7,7 +7,10 @@ export async function POST(req: Request) {
     const { file, fileName, fileType } = formData;
 
     if (!file) {
-      return NextResponse.json({ error: "No file data provided" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No file data provided" },
+        { status: 400 },
+      );
     }
 
     // Unlayer or dropzone uploads sometimes send base64 data strings
@@ -17,7 +20,7 @@ export async function POST(req: Request) {
     const uploadedUrl = await uploadToS3(
       buffer,
       fileName || "upload.png",
-      fileType || "image/png"
+      fileType || "image/png",
     );
 
     return NextResponse.json({ url: uploadedUrl });

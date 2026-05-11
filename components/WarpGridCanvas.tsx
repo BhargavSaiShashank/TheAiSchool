@@ -74,7 +74,9 @@ export default function WarpGridCanvas() {
           vx: 0.15,
           vy: 0.1,
           radius: Math.min(width, height) * 0.45,
-          color: isLight ? "rgba(124, 92, 255, 0.03)" : "rgba(124, 92, 255, 0.08)",
+          color: isLight
+            ? "rgba(124, 92, 255, 0.03)"
+            : "rgba(124, 92, 255, 0.08)",
         },
         {
           x: width * 0.75,
@@ -82,7 +84,9 @@ export default function WarpGridCanvas() {
           vx: -0.1,
           vy: 0.15,
           radius: Math.min(width, height) * 0.5,
-          color: isLight ? "rgba(14, 165, 233, 0.025)" : "rgba(59, 130, 246, 0.07)",
+          color: isLight
+            ? "rgba(14, 165, 233, 0.025)"
+            : "rgba(59, 130, 246, 0.07)",
         },
         {
           x: width * 0.4,
@@ -90,7 +94,9 @@ export default function WarpGridCanvas() {
           vx: 0.08,
           vy: -0.12,
           radius: Math.min(width, height) * 0.4,
-          color: isLight ? "rgba(244, 63, 94, 0.02)" : "rgba(168, 85, 247, 0.06)",
+          color: isLight
+            ? "rgba(244, 63, 94, 0.02)"
+            : "rgba(168, 85, 247, 0.06)",
         },
         {
           x: width * 0.8,
@@ -98,7 +104,9 @@ export default function WarpGridCanvas() {
           vx: -0.12,
           vy: -0.08,
           radius: Math.min(width, height) * 0.45,
-          color: isLight ? "rgba(52, 211, 153, 0.02)" : "rgba(52, 211, 153, 0.05)",
+          color: isLight
+            ? "rgba(52, 211, 153, 0.02)"
+            : "rgba(52, 211, 153, 0.05)",
         },
       ];
     };
@@ -139,7 +147,7 @@ export default function WarpGridCanvas() {
           0,
           pod.x,
           pod.y,
-          pod.radius
+          pod.radius,
         );
         gradient.addColorStop(0, pod.color);
         gradient.addColorStop(0.5, pod.color.replace(/[\d.]+\)$/, "0.02)"));

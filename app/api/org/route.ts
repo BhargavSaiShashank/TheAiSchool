@@ -20,19 +20,22 @@ export async function GET(req: NextRequest) {
     if (orgId) {
       // Target dynamically active corporate workspace
       activeOrg = await prisma.organization.findUnique({
-        where: { clerk_org_id: orgId }
+        where: { clerk_org_id: orgId },
       });
     } else {
       // Fallback: user personal workspace
       const userProfile = await prisma.user.findUnique({
         where: { id: userId },
-        include: { organization: true }
+        include: { organization: true },
       });
       activeOrg = userProfile?.organization;
     }
 
     if (!activeOrg) {
-      return NextResponse.json({ error: "No active workspace context found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "No active workspace context found" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({
@@ -47,7 +50,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
     console.error("GET /api/org error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -69,13 +75,17 @@ export async function POST(req: NextRequest) {
     if (orgId) {
       // 1. DYNAMIC TARGETING: Secure the organization mapped to current Clerk context!
       const liveOrg = await prisma.organization.findUnique({
-        where: { clerk_org_id: orgId }
+        where: { clerk_org_id: orgId },
       });
-      
+
       if (!liveOrg) {
         // Micro-heal: If not mirrored yet, generate on update attempt
         const spawnedOrg = await prisma.organization.create({
-          data: { clerk_org_id: orgId, name: name || "Enterprise Workspace", from_email: fromEmail }
+          data: {
+            clerk_org_id: orgId,
+            name: name || "Enterprise Workspace",
+            from_email: fromEmail,
+          },
         });
         targetOrgId = spawnedOrg.id;
       } else {
@@ -84,11 +94,14 @@ export async function POST(req: NextRequest) {
     } else {
       // 2. SOLO MODE TARGETING: Secure the personal anchor workspace
       const userProfile = await prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
-      
+
       if (!userProfile) {
-        return NextResponse.json({ error: "User identity mismatch" }, { status: 404 });
+        return NextResponse.json(
+          { error: "User identity mismatch" },
+          { status: 404 },
+        );
       }
       targetOrgId = userProfile.org_id;
     }
@@ -114,6 +127,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("POST /api/org error:", error);
-    return NextResponse.json({ error: "Failed to save profile updates" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to save profile updates" },
+      { status: 500 },
+    );
   }
 }

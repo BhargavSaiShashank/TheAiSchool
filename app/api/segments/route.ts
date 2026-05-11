@@ -11,7 +11,10 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json(segments);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch segments" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch segments" },
+      { status: 500 },
+    );
   }
 }
 
@@ -22,7 +25,10 @@ export async function POST(req: NextRequest) {
     const { name, rules } = body;
 
     if (!name || !rules) {
-      return NextResponse.json({ error: "Missing Segment Name or Rule Definitions" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing Segment Name or Rule Definitions" },
+        { status: 400 },
+      );
     }
 
     const newSegment = await prisma.segment.create({
@@ -36,6 +42,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(newSegment);
   } catch (error: any) {
     console.error("[Segments API] Create error:", error);
-    return NextResponse.json({ error: "Failed to archive segment" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to archive segment" },
+      { status: 500 },
+    );
   }
 }

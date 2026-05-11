@@ -26,9 +26,24 @@ export default function SineWaveCanvas({ active }: { active: boolean }) {
 
     let phase = 0;
     const waves = [
-      { amplitude: 15, frequency: 0.02, speed: 0.12, color: "rgba(124, 92, 255, 0.45)" },
-      { amplitude: 10, frequency: 0.04, speed: -0.08, color: "rgba(96, 165, 250, 0.35)" },
-      { amplitude: 6, frequency: 0.06, speed: 0.16, color: "rgba(52, 211, 153, 0.25)" },
+      {
+        amplitude: 15,
+        frequency: 0.02,
+        speed: 0.12,
+        color: "rgba(124, 92, 255, 0.45)",
+      },
+      {
+        amplitude: 10,
+        frequency: 0.04,
+        speed: -0.08,
+        color: "rgba(96, 165, 250, 0.35)",
+      },
+      {
+        amplitude: 6,
+        frequency: 0.06,
+        speed: 0.16,
+        color: "rgba(52, 211, 153, 0.25)",
+      },
     ];
 
     const render = () => {
@@ -44,11 +59,13 @@ export default function SineWaveCanvas({ active }: { active: boolean }) {
         for (let x = 0; x < width; x += 2) {
           // Flatten wave towards the left and right edges for a professional bounded look
           const edgeDecay = Math.sin((x / width) * Math.PI);
-          const currentAmp = active 
-            ? wave.amplitude * edgeDecay 
+          const currentAmp = active
+            ? wave.amplitude * edgeDecay
             : 2 * edgeDecay; // subtle resting idle wave
 
-          const y = height / 2 + Math.sin(x * wave.frequency + phase * wave.speed) * currentAmp;
+          const y =
+            height / 2 +
+            Math.sin(x * wave.frequency + phase * wave.speed) * currentAmp;
 
           if (!started) {
             ctx.moveTo(x, y);

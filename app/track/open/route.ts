@@ -34,15 +34,16 @@ export async function GET(req: Request) {
     }
 
     // Return a 1x1 transparent GIF tracking pixel base64 buffer IMMEDIATELY
-    const trackingPixelBase64 = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    const trackingPixelBase64 =
+      "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     const pixelBuffer = Buffer.from(trackingPixelBase64, "base64");
 
     return new NextResponse(pixelBuffer, {
       headers: {
         "Content-Type": "image/gif",
         "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-        "Pragma": "no-cache",
-        "Expires": "0",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
   } catch (err: any) {

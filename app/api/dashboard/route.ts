@@ -17,33 +17,49 @@ export async function GET(req: any) {
       bounceCount,
       deliveredCount,
       recentEvents,
-      latestCampaigns
+      latestCampaigns,
     ] = await Promise.all([
-      prisma.contact.count({ where: { status: "active", org_id: targetOrgId } }),
-      prisma.campaignSend.count({ where: { campaign: { org_id: targetOrgId } } }),
-      prisma.emailEvent.count({ where: { event_type: "opened", campaign: { org_id: targetOrgId } } }),
-      prisma.emailEvent.count({ where: { event_type: "clicked", campaign: { org_id: targetOrgId } } }),
-      prisma.campaignSend.count({ where: { status: "bounced", campaign: { org_id: targetOrgId } } }),
-      prisma.campaignSend.count({ where: { status: "delivered", campaign: { org_id: targetOrgId } } }),
+      prisma.contact.count({
+        where: { status: "active", org_id: targetOrgId },
+      }),
+      prisma.campaignSend.count({
+        where: { campaign: { org_id: targetOrgId } },
+      }),
+      prisma.emailEvent.count({
+        where: { event_type: "opened", campaign: { org_id: targetOrgId } },
+      }),
+      prisma.emailEvent.count({
+        where: { event_type: "clicked", campaign: { org_id: targetOrgId } },
+      }),
+      prisma.campaignSend.count({
+        where: { status: "bounced", campaign: { org_id: targetOrgId } },
+      }),
+      prisma.campaignSend.count({
+        where: { status: "delivered", campaign: { org_id: targetOrgId } },
+      }),
       prisma.emailEvent.findMany({
         where: { campaign: { org_id: targetOrgId } },
         take: 5,
         orderBy: { occurred_at: "desc" },
-        include: { contact: true, campaign: true }
+        include: { contact: true, campaign: true },
       }),
       prisma.campaign.findMany({
         where: { status: "sent", org_id: targetOrgId },
         take: 3,
         orderBy: { created_at: "desc" },
-        include: { sends: true, email_events: true }
-      })
+        include: { sends: true, email_events: true },
+      }),
     ]);
 
     // 2. Compute derived static stats
-    const openRate = totalDispatched > 0 ? (openCount / totalDispatched) * 100 : 0;
-    const clickRate = totalDispatched > 0 ? (clickCount / totalDispatched) * 100 : 0;
-    const bounceRate = totalDispatched > 0 ? (bounceCount / totalDispatched) * 100 : 0;
-    const deliverability = totalDispatched > 0 ? (deliveredCount / totalDispatched) * 100 : 100;
+    const openRate =
+      totalDispatched > 0 ? (openCount / totalDispatched) * 100 : 0;
+    const clickRate =
+      totalDispatched > 0 ? (clickCount / totalDispatched) * 100 : 0;
+    const bounceRate =
+      totalDispatched > 0 ? (bounceCount / totalDispatched) * 100 : 0;
+    const deliverability =
+      totalDispatched > 0 ? (deliveredCount / totalDispatched) * 100 : 100;
 
     // 3. Process results
     const liveActivities = recentEvents.map((evt) => ({
@@ -57,14 +73,24 @@ export async function GET(req: any) {
 
     const topCampaigns = latestCampaigns.map((camp) => {
       const sendsCount = camp.sends.length;
-      const opensCount = camp.email_events.filter((e) => e.event_type === "opened").length;
-      const clicksCount = camp.email_events.filter((e) => e.event_type === "clicked").length;
+      const opensCount = camp.email_events.filter(
+        (e) => e.event_type === "opened",
+      ).length;
+      const clicksCount = camp.email_events.filter(
+        (e) => e.event_type === "clicked",
+      ).length;
       return {
         id: camp.id,
         name: camp.name,
         recipients: sendsCount,
-        openRate: sendsCount > 0 ? `${((opensCount / sendsCount) * 100).toFixed(1)}%` : "0.0%",
-        clickRate: sendsCount > 0 ? `${((clicksCount / sendsCount) * 100).toFixed(1)}%` : "0.0%",
+        openRate:
+          sendsCount > 0
+            ? `${((opensCount / sendsCount) * 100).toFixed(1)}%`
+            : "0.0%",
+        clickRate:
+          sendsCount > 0
+            ? `${((clicksCount / sendsCount) * 100).toFixed(1)}%`
+            : "0.0%",
         status: "Active",
         risk: bounceRate > 2 ? "Moderate" : "Low",
       };
@@ -74,7 +100,7 @@ export async function GET(req: any) {
     // Obliterates 21 separate individual counts by offloading to the Postgres Engine itself.
     const sevenDaysAgo = subDays(new Date(), 7);
 
-    const [rawSendAgg, rawEventAgg] = await Promise.all([
+    const [rawSendAgg, rawEventAgg] = (await Promise.all([
       prisma.$queryRaw`
         SELECT 
           DATE_TRUNC('day', cs."sent_at") as "day",
@@ -93,8 +119,8 @@ export async function GET(req: any) {
         JOIN "Campaign" c ON ee."campaign_id" = c."id"
         WHERE c."org_id" = ${targetOrgId} AND ee."occurred_at" >= ${sevenDaysAgo}
         GROUP BY 1, 2
-      `
-    ]) as [any[], any[]];
+      `,
+    ])) as [any[], any[]];
 
     // 5. Map the raw database result arrays to lookup tables for instant dictionary performance
     const sentMap: Record<string, number> = {};
@@ -119,7 +145,7 @@ export async function GET(req: any) {
         name: format(date, "eee"),
         Sent: sentMap[dateKey] || 0,
         Opens: opensMap[dateKey] || 0,
-        Clicks: clicksMap[dateKey] || 0
+        Clicks: clicksMap[dateKey] || 0,
       };
     });
 
@@ -129,14 +155,14 @@ export async function GET(req: any) {
         totalDispatched: totalDispatched.toLocaleString(),
         openRate: totalDispatched > 0 ? `${openRate.toFixed(1)}%` : "—",
         clickRate: totalDispatched > 0 ? `${clickRate.toFixed(1)}%` : "—",
-        deliverability: totalDispatched > 0 ? `${deliverability.toFixed(2)}%` : "—",
+        deliverability:
+          totalDispatched > 0 ? `${deliverability.toFixed(2)}%` : "—",
         bounceRate: totalDispatched > 0 ? `${bounceRate.toFixed(1)}%` : "—",
       },
       liveActivities,
       topCampaigns,
       performanceData,
     });
-
   } catch (error: any) {
     console.error("GET /api/dashboard error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

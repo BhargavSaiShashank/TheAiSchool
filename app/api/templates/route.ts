@@ -35,15 +35,20 @@ export async function GET(req: NextRequest) {
         category: t.category,
         content: t.blocks,
         html: t.html,
-        thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=350&h=200&q=80",
-        count: blockCount > 0 ? `Custom (${blockCount} blocks)` : "Active Template",
+        thumbnail:
+          "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=350&h=200&q=80",
+        count:
+          blockCount > 0 ? `Custom (${blockCount} blocks)` : "Active Template",
       };
     });
 
     return NextResponse.json(formattedTemplates);
   } catch (error: any) {
     console.error("GET /api/templates fault:", error.message);
-    return NextResponse.json({ error: "Access Denied: Unverifiable session" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Access Denied: Unverifiable session" },
+      { status: 401 },
+    );
   }
 }
 
@@ -58,16 +63,19 @@ export async function POST(req: NextRequest) {
     const { id, name, category, content, html } = body;
 
     if (!name) {
-      return NextResponse.json({ error: "Template identifier required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Template identifier required" },
+        { status: 400 },
+      );
     }
 
     let template;
     if (id && id !== "new") {
       // Highly defensive update: ensure the target template is owned by our exact organization context.
       template = await prisma.template.updateMany({
-        where: { 
+        where: {
           id: id,
-          org_id: orgId // Prevents high-privilege crossover attacks
+          org_id: orgId, // Prevents high-privilege crossover attacks
         },
         data: {
           name,
@@ -95,7 +103,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(template);
   } catch (error: any) {
     console.error("POST /api/templates fault:", error.message);
-    return NextResponse.json({ error: "Write forbidden without credentialed sync" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Write forbidden without credentialed sync" },
+      { status: 401 },
+    );
   }
 }
 
@@ -106,12 +117,15 @@ export async function DELETE(req: NextRequest) {
   try {
     await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
     const orgId = await getSecureOrgId(req);
-    
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "Invalid identifier provided" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid identifier provided" },
+        { status: 400 },
+      );
     }
 
     // Critical Multi-tenant Security: Force org_id verification before excision.
@@ -123,12 +137,18 @@ export async function DELETE(req: NextRequest) {
     });
 
     if (outcome.count === 0) {
-      return NextResponse.json({ error: "Resource not found or inaccessible" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Resource not found or inaccessible" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({ success: true, id });
   } catch (error: any) {
     console.error("DELETE /api/templates fault:", error.message);
-    return NextResponse.json({ error: "Purge rejected: Unauthorized context" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Purge rejected: Unauthorized context" },
+      { status: 401 },
+    );
   }
 }

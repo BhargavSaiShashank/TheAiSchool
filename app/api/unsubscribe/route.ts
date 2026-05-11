@@ -6,13 +6,19 @@ export async function POST(req: Request) {
     const { uid } = await req.json();
 
     if (!uid) {
-      return NextResponse.json({ error: "Missing campaign unique identifier" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing campaign unique identifier" },
+        { status: 400 },
+      );
     }
 
     const [contactId, campaignId] = uid.split("_");
 
     if (!contactId) {
-      return NextResponse.json({ error: "Invalid unique identifier structure" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid unique identifier structure" },
+        { status: 400 },
+      );
     }
 
     // Fetch the active contact details
@@ -59,7 +65,10 @@ export async function PUT(req: Request) {
     const { uid } = await req.json();
 
     if (!uid) {
-      return NextResponse.json({ error: "Missing unique identifier" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing unique identifier" },
+        { status: 400 },
+      );
     }
 
     const [contactId] = uid.split("_");

@@ -3,13 +3,22 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { MailOpen, Check, ShieldCheck, RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import {
+  MailOpen,
+  Check,
+  ShieldCheck,
+  RefreshCw,
+  Sparkles,
+  Loader2,
+} from "lucide-react";
 
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const uid = searchParams.get("uid") || "";
 
-  const [status, setStatus] = useState<"loading" | "unsubscribed" | "resubscribed" | "error">("loading");
+  const [status, setStatus] = useState<
+    "loading" | "unsubscribed" | "resubscribed" | "error"
+  >("loading");
   const [contactEmail, setContactEmail] = useState("");
   const [orgName, setOrgName] = useState("PulseSend Inc.");
   const [processing, setProcessing] = useState(false);
@@ -88,7 +97,9 @@ function UnsubscribeContent() {
               className="flex flex-col items-center py-8 gap-4"
             >
               <Loader2 className="w-8 h-8 animate-spin text-[#7C5CFF]" />
-              <p className="text-zinc-400 font-mono text-sm">Processing opt-out request...</p>
+              <p className="text-zinc-400 font-mono text-sm">
+                Processing opt-out request...
+              </p>
             </motion.div>
           )}
 
@@ -105,9 +116,13 @@ function UnsubscribeContent() {
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl font-bold tracking-tight text-white">Unsubscribed</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-white">
+                  Unsubscribed
+                </h1>
                 <p className="text-sm text-zinc-400 leading-relaxed">
-                  You have been successfully unsubscribed from <span className="text-white font-semibold">{orgName}</span>'s mailing list.
+                  You have been successfully unsubscribed from{" "}
+                  <span className="text-white font-semibold">{orgName}</span>'s
+                  mailing list.
                 </p>
                 {contactEmail && (
                   <p className="text-xs text-zinc-500 font-mono">
@@ -146,9 +161,13 @@ function UnsubscribeContent() {
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl font-bold tracking-tight text-white">Successfully Re-subscribed!</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-white">
+                  Successfully Re-subscribed!
+                </h1>
                 <p className="text-sm text-zinc-400 leading-relaxed">
-                  Welcome back! You have been successfully added back to <span className="text-white font-semibold">{orgName}</span>'s active marketing lists.
+                  Welcome back! You have been successfully added back to{" "}
+                  <span className="text-white font-semibold">{orgName}</span>'s
+                  active marketing lists.
                 </p>
               </div>
 
@@ -171,7 +190,8 @@ function UnsubscribeContent() {
               </div>
               <h2 className="text-lg font-bold text-white">Invalid Request</h2>
               <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mx-auto">
-                This unsubscribe request is invalid or has expired. Please verify your link details.
+                This unsubscribe request is invalid or has expired. Please
+                verify your link details.
               </p>
             </motion.div>
           )}
@@ -189,11 +209,13 @@ function UnsubscribeContent() {
 
 export default function UnsubscribePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#7C5CFF]" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#7C5CFF]" />
+        </div>
+      }
+    >
       <UnsubscribeContent />
     </Suspense>
   );

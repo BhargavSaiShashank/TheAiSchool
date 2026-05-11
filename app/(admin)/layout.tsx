@@ -38,25 +38,27 @@ export default function AdminLayout({
   // --- 🛡️ UNIVERSAL INVITATION INTERCEPTOR ---
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
-    
-    const urlString = typeof window !== "undefined" ? window.location.search : "";
-    const hasTicket = urlString.includes("__clerk_") || urlString.includes("ticket");
-    
+
+    const urlString =
+      typeof window !== "undefined" ? window.location.search : "";
+    const hasTicket =
+      urlString.includes("__clerk_") || urlString.includes("ticket");
+
     if (hasTicket) {
-       console.log("🔐 INTERCEPTING INVITATION OVERLAP INSIDE ADMIN SHELL!");
-       setInterceptActive(true);
+      console.log("🔐 INTERCEPTING INVITATION OVERLAP INSIDE ADMIN SHELL!");
+      setInterceptActive(true);
     }
   }, [isLoaded, isSignedIn]);
 
   const handleConfirmMerge = () => {
-     setInterceptActive(false);
+    setInterceptActive(false);
   };
 
   const handleSignOutForSwitch = async () => {
-     setIsHandlingSignOut(true);
-     await signOut();
-     logout(); 
-     // Forces a hard exit back to baseline
+    setIsHandlingSignOut(true);
+    await signOut();
+    logout();
+    // Forces a hard exit back to baseline
   };
 
   // Automatically close drawer on route changes
@@ -79,7 +81,9 @@ export default function AdminLayout({
 
   useEffect(() => {
     setHasHydrated(useStore.persist.hasHydrated());
-    const unsubFinishHydration = useStore.persist.onFinishHydration(() => setHasHydrated(true));
+    const unsubFinishHydration = useStore.persist.onFinishHydration(() =>
+      setHasHydrated(true),
+    );
     return () => {
       unsubFinishHydration();
     };
@@ -98,33 +102,37 @@ export default function AdminLayout({
     // 🛡️ GATEKEEPER: Strict Lifecycle Control Block
     // Prevents Next.js router.refresh() from triggering a re-fetch infinite loop cycle.
     const currentClerkOrgId = organization?.id || "SOLO_MODE";
-    
-    const alreadySyncedThisLifecycle = (lastSyncedOrgIdRef.current === currentClerkOrgId);
-    const identityCacheValid = (user && user.id === clerkUser.id && user.aws_region !== undefined);
+
+    const alreadySyncedThisLifecycle =
+      lastSyncedOrgIdRef.current === currentClerkOrgId;
+    const identityCacheValid =
+      user && user.id === clerkUser.id && user.aws_region !== undefined;
 
     if (alreadySyncedThisLifecycle && identityCacheValid) {
-       // Context hasn't moved, and cache is physically present. DO NOT re-ping API.
-       return;
+      // Context hasn't moved, and cache is physically present. DO NOT re-ping API.
+      return;
     }
 
     const syncSession = async () => {
       // Raise Shield to prevent component flashes during transit
-      setIsSyncing(true); 
-      
+      setIsSyncing(true);
+
       try {
         const res = await fetch("/api/auth/me");
         if (res.ok) {
           const dbUser = await res.json();
-          
+
           // 🔒 LOCK IN SUCCESSFUL SYNC state to break dynamic recursion loops!
           lastSyncedOrgIdRef.current = currentClerkOrgId;
 
           // Check if org strictly shifted in underlying DB representation since page generation
           if (user && user.org_id && dbUser.org_id !== user.org_id) {
-             console.log("🚨 REAL ORGANIZATION SHIFT SECURED. RELOADING DATA CONTEXT...");
-             login(dbUser);
-             router.refresh();
-             return; // Stay hidden, wait for server refresh
+            console.log(
+              "🚨 REAL ORGANIZATION SHIFT SECURED. RELOADING DATA CONTEXT...",
+            );
+            login(dbUser);
+            router.refresh();
+            return; // Stay hidden, wait for server refresh
           }
 
           login(dbUser);
@@ -141,7 +149,6 @@ export default function AdminLayout({
 
     // Trigger the hardened atomic synchronization
     syncSession();
-    
   }, [clerkUser, isLoaded, organization?.id, isOrgLoaded, user?.id]); // Added user?.id safety latch
 
   useEffect(() => {
@@ -230,7 +237,7 @@ export default function AdminLayout({
   return (
     <div className="flex-1 flex h-screen overflow-hidden bg-background relative selection:bg-primary/20 selection:text-primary-foreground">
       {/* Visual Atmosphere Background Overlays */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none transition-all duration-1000 ease-in-out"
         style={{ backgroundImage: getAtmosphereGlow() }}
       />
@@ -240,11 +247,13 @@ export default function AdminLayout({
         <div className="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] bg-[#3B82F6]/[0.04] rounded-full blur-[140px]" />
       </div>
       {/* Subtle Grid Overlay */}
-      <div className={`absolute inset-0 pointer-events-none opacity-80 ${
-        theme === "light" 
-          ? "bg-[radial-gradient(rgba(15,23,42,0.015)_1px,transparent_1px)]" 
-          : "bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)]"
-      } [background-size:24px_24px]`} />
+      <div
+        className={`absolute inset-0 pointer-events-none opacity-80 ${
+          theme === "light"
+            ? "bg-[radial-gradient(rgba(15,23,42,0.015)_1px,transparent_1px)]"
+            : "bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)]"
+        } [background-size:24px_24px]`}
+      />
       <WarpGridCanvas />
 
       <AnimatePresence>
@@ -294,7 +303,10 @@ export default function AdminLayout({
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
               className="fixed top-0 left-0 bottom-0 z-[101] w-[260px] bg-background md:hidden border-r border-border shadow-2xl"
             >
-              <div className="h-full w-full flex flex-col bg-background" style={{ width: '260px' }}>
+              <div
+                className="h-full w-full flex flex-col bg-background"
+                style={{ width: "260px" }}
+              >
                 <Sidebar onClose={() => setIsMobileMenuOpen(false)} />
               </div>
             </motion.div>
@@ -318,27 +330,30 @@ export default function AdminLayout({
       {/* --- FIRST-TIME ONBOARDING INTERCEPTOR --- */}
       <AnimatePresence>
         {/* Added strict null-check to user object and enforced SUPER_ADMIN role boundary to prevent viewers/managers from seeing technical prompts */}
-        {hasHydrated && user && user.role === "SUPER_ADMIN" && (!user?.aws_region || user.aws_region === "") && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99999]"
-          >
-            <OnboardingWizard
-              currentEmail={user.email}
-              currentOrgName={user.org_name}
-              onComplete={(updatedName, updatedRegion) => {
-                // Instantly update client state to unlock the dashboard reactively!
-                login({
-                  ...user,
-                  org_name: updatedName,
-                  aws_region: updatedRegion
-                });
-              }}
-            />
-          </motion.div>
-        )}
+        {hasHydrated &&
+          user &&
+          user.role === "SUPER_ADMIN" &&
+          (!user?.aws_region || user.aws_region === "") && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[99999]"
+            >
+              <OnboardingWizard
+                currentEmail={user.email}
+                currentOrgName={user.org_name}
+                onComplete={(updatedName, updatedRegion) => {
+                  // Instantly update client state to unlock the dashboard reactively!
+                  login({
+                    ...user,
+                    org_name: updatedName,
+                    aws_region: updatedRegion,
+                  });
+                }}
+              />
+            </motion.div>
+          )}
       </AnimatePresence>
 
       {/* --- 🚨 SECURITY INTERVENTIONAL OVERLAY --- */}
@@ -351,58 +366,61 @@ export default function AdminLayout({
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/95 backdrop-blur-md px-4"
           >
-             <motion.div 
-               initial={{ scale: 0.95, y: 10 }}
-               animate={{ scale: 1, y: 0 }}
-               className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 w-full max-w-md text-center shadow-[0_0_80px_rgba(0,0,0,0.9)] relative"
-             >
-               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500" />
-               
-               <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6 mt-2">
-                 <AlertTriangle className="w-7 h-7 text-amber-500" />
-               </div>
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 w-full max-w-md text-center shadow-[0_0_80px_rgba(0,0,0,0.9)] relative"
+            >
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500" />
 
-               <h2 className="text-xl font-bold text-white mb-2">Identity Conflict Encountered</h2>
-               <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
-                 An invitation handshake was detected, but you are actively authenticated as:
-                 <br/>
-                 <span className="font-mono font-medium text-white bg-zinc-800 px-3 py-1.5 rounded mt-2 inline-block border border-zinc-700">
-                   {clerkUser?.emailAddresses[0]?.emailAddress || "Current Operator"}
-                 </span>
-               </p>
+              <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6 mt-2">
+                <AlertTriangle className="w-7 h-7 text-amber-500" />
+              </div>
 
-               <div className="grid gap-3">
-                  <button
-                    onClick={handleConfirmMerge}
-                    disabled={isHandlingSignOut}
-                    className="flex items-center justify-center gap-2 w-full bg-white text-black py-3.5 rounded-xl font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-50"
-                  >
-                    <UserCheck className="w-4 h-4" />
-                    Continue as current user
-                  </button>
+              <h2 className="text-xl font-bold text-white mb-2">
+                Identity Conflict Encountered
+              </h2>
+              <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
+                An invitation handshake was detected, but you are actively
+                authenticated as:
+                <br />
+                <span className="font-mono font-medium text-white bg-zinc-800 px-3 py-1.5 rounded mt-2 inline-block border border-zinc-700">
+                  {clerkUser?.emailAddresses[0]?.emailAddress ||
+                    "Current Operator"}
+                </span>
+              </p>
 
-                  <button
-                    onClick={handleSignOutForSwitch}
-                    disabled={isHandlingSignOut}
-                    className="flex items-center justify-center gap-2 w-full bg-zinc-800 border border-zinc-700 text-white py-3.5 rounded-xl font-medium hover:bg-zinc-700 hover:border-zinc-600 transition-all disabled:opacity-50"
-                  >
-                    {isHandlingSignOut ? (
-                       <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                       <LogOut className="w-4 h-4 text-red-400" />
-                    )}
-                    Sign Out to use another email
-                  </button>
-               </div>
-               
-               <p className="text-[10px] text-zinc-600 mt-6 uppercase tracking-widest font-bold">
-                 Enterprise Shield Protocol
-               </p>
-             </motion.div>
+              <div className="grid gap-3">
+                <button
+                  onClick={handleConfirmMerge}
+                  disabled={isHandlingSignOut}
+                  className="flex items-center justify-center gap-2 w-full bg-white text-black py-3.5 rounded-xl font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  Continue as current user
+                </button>
+
+                <button
+                  onClick={handleSignOutForSwitch}
+                  disabled={isHandlingSignOut}
+                  className="flex items-center justify-center gap-2 w-full bg-zinc-800 border border-zinc-700 text-white py-3.5 rounded-xl font-medium hover:bg-zinc-700 hover:border-zinc-600 transition-all disabled:opacity-50"
+                >
+                  {isHandlingSignOut ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <LogOut className="w-4 h-4 text-red-400" />
+                  )}
+                  Sign Out to use another email
+                </button>
+              </div>
+
+              <p className="text-[10px] text-zinc-600 mt-6 uppercase tracking-widest font-bold">
+                Enterprise Shield Protocol
+              </p>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
 }
-

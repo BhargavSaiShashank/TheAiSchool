@@ -23,7 +23,7 @@ export default function SkeletonRow() {
           />
         </div>
       </div>
-      
+
       {/* Mock metric columns */}
       <div className="h-3 w-1/6 rounded bg-zinc-900 relative overflow-hidden">
         <motion.div
@@ -32,7 +32,7 @@ export default function SkeletonRow() {
           className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
         />
       </div>
-      
+
       <div className="h-3 w-1/12 rounded bg-zinc-900 relative overflow-hidden">
         <motion.div
           animate={{ x: ["-100%", "100%"] }}

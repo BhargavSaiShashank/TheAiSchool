@@ -21,34 +21,56 @@ export async function GET(req: Request) {
     });
 
     if (!campaign) {
-      return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Campaign not found" },
+        { status: 404 },
+      );
     }
 
     // 🚀 CRITICAL PERFORMANCE INFRASTRUCTURE 🚀
     // Parallelize EVERYTHING into a single atomic execution cluster!
     const baseTime = startOfDay(campaign.created_at);
-    
-    const [totalSent, uniqueOpens, totalClicks, openEvents, clickEvents] = await Promise.all([
-      prisma.campaignSend.count({ where: { campaign_id: campaignId } }),
-      prisma.emailEvent.count({ where: { campaign_id: campaignId, event_type: "opened" } }),
-      prisma.emailEvent.count({ where: { campaign_id: campaignId, event_type: "clicked" } }),
-      prisma.emailEvent.findMany({
-        where: { campaign_id: campaignId, event_type: "opened" },
-        select: { user_agent: true, occurred_at: true }
-      }),
-      prisma.emailEvent.findMany({
-        where: { campaign_id: campaignId, event_type: "clicked" },
-        select: { metadata: true, contact_id: true }
-      })
-    ]);
 
-    const openRate = totalSent > 0 ? ((uniqueOpens / totalSent) * 100).toFixed(1) : "0.0";
-    const clickRate = totalSent > 0 ? ((totalClicks / totalSent) * 100).toFixed(1) : "0.0";
+    const [totalSent, uniqueOpens, totalClicks, openEvents, clickEvents] =
+      await Promise.all([
+        prisma.campaignSend.count({ where: { campaign_id: campaignId } }),
+        prisma.emailEvent.count({
+          where: { campaign_id: campaignId, event_type: "opened" },
+        }),
+        prisma.emailEvent.count({
+          where: { campaign_id: campaignId, event_type: "clicked" },
+        }),
+        prisma.emailEvent.findMany({
+          where: { campaign_id: campaignId, event_type: "opened" },
+          select: { user_agent: true, occurred_at: true },
+        }),
+        prisma.emailEvent.findMany({
+          where: { campaign_id: campaignId, event_type: "clicked" },
+          select: { metadata: true, contact_id: true },
+        }),
+      ]);
+
+    const openRate =
+      totalSent > 0 ? ((uniqueOpens / totalSent) * 100).toFixed(1) : "0.0";
+    const clickRate =
+      totalSent > 0 ? ((totalClicks / totalSent) * 100).toFixed(1) : "0.0";
 
     const stats = [
-      { name: "Total Sent", value: totalSent.toLocaleString(), label: "dispatched" },
-      { name: "Unique Opens", value: `${uniqueOpens.toLocaleString()} (${openRate}%)`, label: "unique reads" },
-      { name: "Total Clicks", value: `${totalClicks.toLocaleString()} (${clickRate}%)`, label: "link weights" },
+      {
+        name: "Total Sent",
+        value: totalSent.toLocaleString(),
+        label: "dispatched",
+      },
+      {
+        name: "Unique Opens",
+        value: `${uniqueOpens.toLocaleString()} (${openRate}%)`,
+        label: "unique reads",
+      },
+      {
+        name: "Total Clicks",
+        value: `${totalClicks.toLocaleString()} (${clickRate}%)`,
+        label: "link weights",
+      },
     ];
 
     // ⚡ OPTIMIZED: Compute the time-series in-memory from the already fetched list rather than querying DB 6 more times!
@@ -70,7 +92,10 @@ export async function GET(req: Request) {
 
     // 3. User Agent Distribution (Already pre-fetched in the parallel atomic request bundle!)
 
-    let chrome = 0, safari = 0, firefox = 0, others = 0;
+    let chrome = 0,
+      safari = 0,
+      firefox = 0,
+      others = 0;
     openEvents.forEach((evt) => {
       const ua = evt.user_agent || "";
       if (ua.includes("Chrome")) chrome++;
@@ -81,14 +106,36 @@ export async function GET(req: Request) {
 
     const totalUa = openEvents.length || 1;
     const browserData = [
-      { name: "Chrome", value: Math.round((chrome / totalUa) * 100), color: "#3b82f6" },
-      { name: "Safari", value: Math.round((safari / totalUa) * 100), color: "#10b981" },
-      { name: "Firefox", value: Math.round((firefox / totalUa) * 100), color: "#f59e0b" },
-      { name: "Others", value: Math.round((others / totalUa) * 100), color: "#6b7280" },
+      {
+        name: "Chrome",
+        value: Math.round((chrome / totalUa) * 100),
+        color: "#3b82f6",
+      },
+      {
+        name: "Safari",
+        value: Math.round((safari / totalUa) * 100),
+        color: "#10b981",
+      },
+      {
+        name: "Firefox",
+        value: Math.round((firefox / totalUa) * 100),
+        color: "#f59e0b",
+      },
+      {
+        name: "Others",
+        value: Math.round((others / totalUa) * 100),
+        color: "#6b7280",
+      },
     ];
 
     // 4. Click Registry Map (Pre-fetched and immediately processed!)
-    const linksMap: { [key: string]: { url: string; clicks: number; uniqueContacts: Set<string> } } = {};
+    const linksMap: {
+      [key: string]: {
+        url: string;
+        clicks: number;
+        uniqueContacts: Set<string>;
+      };
+    } = {};
     clickEvents.forEach((evt) => {
       let url = "https://pulsesend.com";
       try {
@@ -115,7 +162,7 @@ export async function GET(req: Request) {
     if (linksTable.length === 0) {
       linksTable.push(
         { url: "https://pulsesend.com/welcome", clicks: 0, unique: 0 },
-        { url: "https://pulsesend.com/docs", clicks: 0, unique: 0 }
+        { url: "https://pulsesend.com/docs", clicks: 0, unique: 0 },
       );
     }
 

@@ -72,7 +72,9 @@ export default function AnalyticsPage() {
 
   const handleExportCSV = () => {
     if (!data) return;
-    alert(`CSV compiled successfully for campaign "${data.name}" and downloading in background.`);
+    alert(
+      `CSV compiled successfully for campaign "${data.name}" and downloading in background.`,
+    );
   };
 
   if (campaigns.length === 0 && !isLoading) {
@@ -83,9 +85,12 @@ export default function AnalyticsPage() {
             <BarChart3 className="w-6 h-6 stroke-[1.5]" />
           </div>
           <div>
-            <h3 className="text-[14px] font-bold text-foreground">No Analytics reports found</h3>
+            <h3 className="text-[14px] font-bold text-foreground">
+              No Analytics reports found
+            </h3>
             <p className="text-[11px] text-muted-foreground mt-1 font-mono uppercase tracking-wider leading-relaxed">
-              Dispatch an email campaign inside the Campaign Wizard to see deep delivery and engagement reporting analytics here.
+              Dispatch an email campaign inside the Campaign Wizard to see deep
+              delivery and engagement reporting analytics here.
             </p>
           </div>
         </div>
@@ -117,7 +122,9 @@ export default function AnalyticsPage() {
             <BarChart3 className="w-4 h-4 text-muted-foreground" />
             <span>Campaign Reporting Analytics</span>
           </h2>
-          <p className="text-[12px] text-muted-foreground mt-0.5">Visualize user engagement and deliverability metrics per dispatch</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5">
+            Visualize user engagement and deliverability metrics per dispatch
+          </p>
         </div>
 
         <div className="flex items-center gap-3.5 w-full sm:w-auto shrink-0">
@@ -148,13 +155,20 @@ export default function AnalyticsPage() {
         {data.stats.map((stat: any, idx: number) => {
           const Icon = getIcon(stat.name);
           return (
-            <div key={idx} className="p-5 bg-card border border-border rounded-md flex items-center gap-4 hover:border-zinc-700 transition">
+            <div
+              key={idx}
+              className="p-5 bg-card border border-border rounded-md flex items-center gap-4 hover:border-zinc-700 transition"
+            >
               <div className="p-2 bg-secondary rounded border border-border text-muted-foreground">
                 <Icon className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider font-mono">{stat.name}</p>
-                <p className="text-2xl font-extrabold text-foreground mt-1 font-mono">{stat.value}</p>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider font-mono">
+                  {stat.name}
+                </p>
+                <p className="text-2xl font-extrabold text-foreground mt-1 font-mono">
+                  {stat.value}
+                </p>
               </div>
             </div>
           );
@@ -166,27 +180,66 @@ export default function AnalyticsPage() {
         {/* Open Rate over time line chart */}
         <div className="p-6 bg-card border border-border rounded-md shadow-sm lg:col-span-2 flex flex-col justify-between">
           <div>
-            <h3 className="text-[13px] font-bold text-foreground tracking-tight">Unique Opens Over Time</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Campaign unique openings mapped by hourly timestamps</p>
+            <h3 className="text-[13px] font-bold text-foreground tracking-tight">
+              Unique Opens Over Time
+            </h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Campaign unique openings mapped by hourly timestamps
+            </p>
           </div>
 
           <div className="h-72 w-full mt-5 min-w-0" style={{ minHeight: 280 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.openOverTime} margin={{ top: 0, right: 10, left: -25, bottom: 0 }}>
+              <AreaChart
+                data={data.openOverTime}
+                margin={{ top: 0, right: 10, left: -25, bottom: 0 }}
+              >
                 <defs>
-                  <linearGradient id="colorOpensChart" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient
+                    id="colorOpensChart"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.08} />
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="time" stroke="#52525b" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#52525b" fontSize={11} tickLine={false} axisLine={false} />
+                <XAxis
+                  dataKey="time"
+                  stroke="#52525b"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="#52525b"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
                 <Tooltip
-                  contentStyle={{ background: "#0c0c0e", borderColor: "#1f1f23", borderRadius: "6px" }}
-                  labelStyle={{ fontSize: "12px", fontWeight: "bold", color: "#fff" }}
+                  contentStyle={{
+                    background: "#0c0c0e",
+                    borderColor: "#1f1f23",
+                    borderRadius: "6px",
+                  }}
+                  labelStyle={{
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    color: "#fff",
+                  }}
                   itemStyle={{ fontSize: "12px", color: "#a1a1aa" }}
                 />
-                <Area type="monotone" dataKey="Opens" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorOpensChart)" />
+                <Area
+                  type="monotone"
+                  dataKey="Opens"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorOpensChart)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -195,17 +248,36 @@ export default function AnalyticsPage() {
         {/* Browser breakdown */}
         <div className="p-6 bg-card border border-border rounded-md shadow-sm flex flex-col justify-between">
           <div>
-            <h3 className="text-[13px] font-bold text-foreground tracking-tight">User Agent Distribution</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Browser client breakdown by unique percentage</p>
+            <h3 className="text-[13px] font-bold text-foreground tracking-tight">
+              User Agent Distribution
+            </h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Browser client breakdown by unique percentage
+            </p>
           </div>
 
           <div className="h-44 w-full mt-5 min-w-0" style={{ minHeight: 180 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.browserData} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+              <BarChart
+                data={data.browserData}
+                layout="vertical"
+                margin={{ top: 0, right: 10, left: -20, bottom: 0 }}
+              >
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" stroke="#a1a1aa" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  stroke="#a1a1aa"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
                 <Tooltip
-                  contentStyle={{ background: "#0c0c0e", borderColor: "#1f1f23", borderRadius: "6px" }}
+                  contentStyle={{
+                    background: "#0c0c0e",
+                    borderColor: "#1f1f23",
+                    borderRadius: "6px",
+                  }}
                   itemStyle={{ fontSize: "12px", color: "#fff" }}
                 />
                 <Bar dataKey="value" radius={4} barSize={12}>
@@ -220,8 +292,13 @@ export default function AnalyticsPage() {
           <div className="flex justify-between text-[11px] font-mono text-muted-foreground pt-4 border-t border-border/40">
             {data.browserData.map((b: any) => (
               <span key={b.name} className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: b.color }} />
-                <span>{b.name} ({b.value}%)</span>
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: b.color }}
+                />
+                <span>
+                  {b.name} ({b.value}%)
+                </span>
               </span>
             ))}
           </div>
@@ -231,22 +308,35 @@ export default function AnalyticsPage() {
       {/* Link map Table */}
       <div className="p-6 bg-card border border-border rounded-md shadow-sm">
         <div className="mb-4">
-          <h3 className="text-[13px] font-bold text-foreground tracking-tight">Link Clicks Registry Map</h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Specific URLs clicked inside the campaign email</p>
+          <h3 className="text-[13px] font-bold text-foreground tracking-tight">
+            Link Clicks Registry Map
+          </h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Specific URLs clicked inside the campaign email
+          </p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border text-zinc-500 font-mono text-[11px] uppercase bg-secondary/10">
-                <th className="py-3 px-4 font-semibold">Redirect URL Address</th>
-                <th className="py-3 px-4 font-semibold text-right">Unique Clicks</th>
-                <th className="py-3 px-4 font-semibold text-right">Total Clicks</th>
+                <th className="py-3 px-4 font-semibold">
+                  Redirect URL Address
+                </th>
+                <th className="py-3 px-4 font-semibold text-right">
+                  Unique Clicks
+                </th>
+                <th className="py-3 px-4 font-semibold text-right">
+                  Total Clicks
+                </th>
               </tr>
             </thead>
             <tbody>
               {data.linksTable.map((link: any, idx: number) => (
-                <tr key={idx} className="border-b border-border/50 hover:bg-secondary/40 transition">
+                <tr
+                  key={idx}
+                  className="border-b border-border/50 hover:bg-secondary/40 transition"
+                >
                   <td className="py-4 px-4 text-[13px] text-foreground truncate max-w-sm font-mono font-semibold">
                     {link.url}
                   </td>

@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       const primaryEmail = data.email_addresses?.[0]?.email_address || "";
 
       const existingUser = await prisma.user.findUnique({
-        where: { id: id as string }
+        where: { id: id as string },
       });
 
       if (!existingUser && eventType === "user.created") {
@@ -58,8 +58,8 @@ export async function POST(req: Request) {
         const personalWorkspace = await prisma.organization.create({
           data: {
             name: "Personal Workspace",
-            from_email: primaryEmail
-          }
+            from_email: primaryEmail,
+          },
         });
 
         // Create the user, defaulting to SUPER_ADMIN, and bind to their new workspace
@@ -70,13 +70,13 @@ export async function POST(req: Request) {
             password_hash: "CLERK_MANAGED_AUTH",
             role: "SUPER_ADMIN",
             org_id: personalWorkspace.id,
-          }
+          },
         });
       } else if (existingUser) {
         // Standard update
         await prisma.user.update({
           where: { id: id as string },
-          data: { email: primaryEmail }
+          data: { email: primaryEmail },
         });
       }
     }
@@ -97,11 +97,16 @@ export async function POST(req: Request) {
       });
     }
 
-    if (eventType === "organizationMembership.created" || eventType === "organizationMembership.deleted") {
+    if (
+      eventType === "organizationMembership.created" ||
+      eventType === "organizationMembership.deleted"
+    ) {
       // 🛡️ INTENTIONALLY OMITTED: We DO NOT overwrite the User's `org_id` home base.
-      // The application relies on `getSecureOrgId()` to dynamically extract the active workspace 
+      // The application relies on `getSecureOrgId()` to dynamically extract the active workspace
       // directly from the live Clerk session token to prevent cross-tenant corruption.
-      console.log(`Clerk Membership event intercepted and ignored for structural integrity.`);
+      console.log(
+        `Clerk Membership event intercepted and ignored for structural integrity.`,
+      );
     }
 
     return NextResponse.json({ success: true });

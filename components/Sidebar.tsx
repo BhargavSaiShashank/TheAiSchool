@@ -32,18 +32,63 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const { signOut } = useClerk();
 
   const menuItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
-    { name: "Contacts", href: "/contacts", icon: Users, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
-    { name: "Templates", href: "/templates", icon: FileCode, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER"] },
-    { name: "Campaigns", href: "/campaigns", icon: Send, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
-    { name: "Analytics", href: "/analytics", icon: BarChart3, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+      roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"],
+    },
+    {
+      name: "Contacts",
+      href: "/contacts",
+      icon: Users,
+      roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"],
+    },
+    {
+      name: "Templates",
+      href: "/templates",
+      icon: FileCode,
+      roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER"],
+    },
+    {
+      name: "Campaigns",
+      href: "/campaigns",
+      icon: Send,
+      roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"],
+    },
+    {
+      name: "Analytics",
+      href: "/analytics",
+      icon: BarChart3,
+      roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"],
+    },
   ];
 
   const settingsItems = [
-    { name: "My Profile", href: "/settings/profile", icon: Sliders, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
-    { name: "Roles & Teammates", href: "/settings/roles", icon: Users, roles: ["SUPER_ADMIN"] },
-    { name: "AWS & Email Setup", href: "/settings/org", icon: Building, roles: ["SUPER_ADMIN"] },
-    { name: "Suppression List", href: "/settings/suppression", icon: ShieldAlert, roles: ["SUPER_ADMIN"] },
+    {
+      name: "My Profile",
+      href: "/settings/profile",
+      icon: Sliders,
+      roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"],
+    },
+    {
+      name: "Roles & Teammates",
+      href: "/settings/roles",
+      icon: Users,
+      roles: ["SUPER_ADMIN"],
+    },
+    {
+      name: "AWS & Email Setup",
+      href: "/settings/org",
+      icon: Building,
+      roles: ["SUPER_ADMIN"],
+    },
+    {
+      name: "Suppression List",
+      href: "/settings/suppression",
+      icon: ShieldAlert,
+      roles: ["SUPER_ADMIN"],
+    },
   ];
 
   const handleLogout = async () => {
@@ -58,8 +103,12 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   };
 
   // Filter items based on user role
-  const allowedMenuItems = menuItems.filter((item) => item.roles.includes(user?.role || "VIEWER"));
-  const allowedSettingsItems = settingsItems.filter((item) => item.roles.includes(user?.role || "VIEWER"));
+  const allowedMenuItems = menuItems.filter((item) =>
+    item.roles.includes(user?.role || "VIEWER"),
+  );
+  const allowedSettingsItems = settingsItems.filter((item) =>
+    item.roles.includes(user?.role || "VIEWER"),
+  );
 
   return (
     <motion.aside
@@ -86,7 +135,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             )}
           </AnimatePresence>
         </Link>
-        
+
         {/* Collapse Button or Close Button */}
         {onClose ? (
           <button
@@ -95,13 +144,15 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           >
             <X className="w-3.5 h-3.5" />
           </button>
-        ) : !sidebarCollapsed && (
-          <button
-            onClick={toggleSidebar}
-            className="p-1 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
+        ) : (
+          !sidebarCollapsed && (
+            <button
+              onClick={toggleSidebar}
+              className="p-1 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+          )
         )}
       </div>
 
@@ -121,7 +172,10 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                   key={item.name}
                   href={item.href}
                   onClick={() => {
-                    if (pathname !== item.href && typeof window !== "undefined") {
+                    if (
+                      pathname !== item.href &&
+                      typeof window !== "undefined"
+                    ) {
                       window.dispatchEvent(new Event("pulsesend:loading"));
                     }
                     onClose?.();
@@ -129,18 +183,28 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                 >
                   <div
                     className={`flex items-center gap-3 px-3 py-2 rounded-md font-medium text-[13px] transition relative cursor-pointer group ${
-                      isActive ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground"
+                      isActive
+                        ? "text-foreground font-bold"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="active-nav-pill"
                         className="absolute inset-0 bg-[#7C5CFF]/[0.08] border border-[#7C5CFF]/20 rounded-md shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_12px_rgba(124,92,255,0.03)]"
-                        transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 380,
+                          damping: 28,
+                        }}
                       />
                     )}
-                    <item.icon className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-muted-foreground group-hover:text-foreground"}`} />
-                    {!sidebarCollapsed && <span className="relative z-10">{item.name}</span>}
+                    <item.icon
+                      className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-muted-foreground group-hover:text-foreground"}`}
+                    />
+                    {!sidebarCollapsed && (
+                      <span className="relative z-10">{item.name}</span>
+                    )}
                   </div>
                 </Link>
               );
@@ -164,25 +228,38 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                     key={item.name}
                     href={item.href}
                     onClick={() => {
-                      if (pathname !== item.href && typeof window !== "undefined") {
+                      if (
+                        pathname !== item.href &&
+                        typeof window !== "undefined"
+                      ) {
                         window.dispatchEvent(new Event("pulsesend:loading"));
                       }
                     }}
                   >
                     <div
                       className={`flex items-center gap-3 px-3 py-2 rounded-md font-medium text-[13px] transition relative cursor-pointer group ${
-                        isActive ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground"
+                        isActive
+                          ? "text-foreground font-bold"
+                          : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {isActive && (
                         <motion.div
                           layoutId="active-settings-pill"
                           className="absolute inset-0 bg-[#7C5CFF]/[0.08] border border-[#7C5CFF]/20 rounded-md shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_12px_rgba(124,92,255,0.03)]"
-                          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 380,
+                            damping: 28,
+                          }}
                         />
                       )}
-                      <item.icon className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-muted-foreground group-hover:text-foreground"}`} />
-                      {!sidebarCollapsed && <span className="relative z-10">{item.name}</span>}
+                      <item.icon
+                        className={`w-[15px] h-[15px] shrink-0 transition relative z-10 ${isActive ? "text-[#7C5CFF]" : "text-muted-foreground group-hover:text-foreground"}`}
+                      />
+                      {!sidebarCollapsed && (
+                        <span className="relative z-10">{item.name}</span>
+                      )}
                     </div>
                   </Link>
                 );
@@ -224,7 +301,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
               </div>
             )}
           </div>
-          
+
           {!sidebarCollapsed && (
             <button
               onClick={handleLogout}

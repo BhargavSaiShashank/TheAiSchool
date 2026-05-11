@@ -64,7 +64,10 @@ export default function CommandPalette() {
       subtitle: "Overview of your campaign operations",
       icon: Compass,
       shortcut: "G D",
-      action: () => { router.push("/dashboard"); setIsOpen(false); },
+      action: () => {
+        router.push("/dashboard");
+        setIsOpen(false);
+      },
     },
     {
       id: "nav-camp",
@@ -73,7 +76,10 @@ export default function CommandPalette() {
       subtitle: "Manage and dispatch dispatches",
       icon: Compass,
       shortcut: "G C",
-      action: () => { router.push("/campaigns"); setIsOpen(false); },
+      action: () => {
+        router.push("/campaigns");
+        setIsOpen(false);
+      },
     },
     {
       id: "nav-temp",
@@ -82,7 +88,10 @@ export default function CommandPalette() {
       subtitle: "Creative email designer & library",
       icon: Compass,
       shortcut: "G T",
-      action: () => { router.push("/templates"); setIsOpen(false); },
+      action: () => {
+        router.push("/templates");
+        setIsOpen(false);
+      },
     },
     {
       id: "nav-cont",
@@ -91,7 +100,10 @@ export default function CommandPalette() {
       subtitle: "View lists and audiences",
       icon: Compass,
       shortcut: "G A",
-      action: () => { router.push("/contacts"); setIsOpen(false); },
+      action: () => {
+        router.push("/contacts");
+        setIsOpen(false);
+      },
     },
     {
       id: "nav-anal",
@@ -100,7 +112,10 @@ export default function CommandPalette() {
       subtitle: "Deep-dive deliverability insights",
       icon: Compass,
       shortcut: "G I",
-      action: () => { router.push("/analytics"); setIsOpen(false); },
+      action: () => {
+        router.push("/analytics");
+        setIsOpen(false);
+      },
     },
     // Quick Actions
     {
@@ -110,7 +125,10 @@ export default function CommandPalette() {
       subtitle: "Launch a new email dispatch campaign",
       icon: Zap,
       shortcut: "N C",
-      action: () => { router.push("/campaigns?new=true"); setIsOpen(false); },
+      action: () => {
+        router.push("/campaigns?new=true");
+        setIsOpen(false);
+      },
     },
     {
       id: "act-new-list",
@@ -119,7 +137,10 @@ export default function CommandPalette() {
       subtitle: "Segment a new contact directory",
       icon: Zap,
       shortcut: "N L",
-      action: () => { router.push("/contacts"); setIsOpen(false); },
+      action: () => {
+        router.push("/contacts");
+        setIsOpen(false);
+      },
     },
     {
       id: "act-supp",
@@ -128,7 +149,10 @@ export default function CommandPalette() {
       subtitle: "Configure bounce & complaint rules",
       icon: ShieldAlert,
       shortcut: "M S",
-      action: () => { router.push("/settings/suppression"); setIsOpen(false); },
+      action: () => {
+        router.push("/settings/suppression");
+        setIsOpen(false);
+      },
     },
     // AI Infrastructure Operations
     {
@@ -138,7 +162,12 @@ export default function CommandPalette() {
       subtitle: "Check optimal campaign interval fatigue",
       icon: Sparkles,
       shortcut: "AI F",
-      action: () => { alert("AI Analytics: High-precision audience fatigue level is 14% (Optimized)."); setIsOpen(false); },
+      action: () => {
+        alert(
+          "AI Analytics: High-precision audience fatigue level is 14% (Optimized).",
+        );
+        setIsOpen(false);
+      },
     },
     {
       id: "ai-deliverability",
@@ -147,7 +176,12 @@ export default function CommandPalette() {
       subtitle: "Validate high-deliverability infrastructure states",
       icon: Sparkles,
       shortcut: "AI D",
-      action: () => { alert("Infrastructure Sync: DKIM alignment verified & active across 100% of nodes."); setIsOpen(false); },
+      action: () => {
+        alert(
+          "Infrastructure Sync: DKIM alignment verified & active across 100% of nodes.",
+        );
+        setIsOpen(false);
+      },
     },
     {
       id: "ai-window",
@@ -156,15 +190,22 @@ export default function CommandPalette() {
       subtitle: "Predict maximum engagement peak times",
       icon: Sparkles,
       shortcut: "AI W",
-      action: () => { alert("Smart Send Recommendation: Peak audience engagement starts Saturdays at 10:30 AM."); setIsOpen(false); },
+      action: () => {
+        alert(
+          "Smart Send Recommendation: Peak audience engagement starts Saturdays at 10:30 AM.",
+        );
+        setIsOpen(false);
+      },
     },
   ];
 
   // Filter commands based on search query
-  const filteredCommands = commands.filter((cmd) =>
-    cmd.title.toLowerCase().includes(search.toLowerCase()) ||
-    (cmd.subtitle && cmd.subtitle.toLowerCase().includes(search.toLowerCase())) ||
-    cmd.category.toLowerCase().includes(search.toLowerCase())
+  const filteredCommands = commands.filter(
+    (cmd) =>
+      cmd.title.toLowerCase().includes(search.toLowerCase()) ||
+      (cmd.subtitle &&
+        cmd.subtitle.toLowerCase().includes(search.toLowerCase())) ||
+      cmd.category.toLowerCase().includes(search.toLowerCase()),
   );
 
   // Handle keyboard navigation inside the palette list
@@ -177,7 +218,10 @@ export default function CommandPalette() {
         setSelectedIndex((prev) => (prev + 1) % filteredCommands.length);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length);
+        setSelectedIndex(
+          (prev) =>
+            (prev - 1 + filteredCommands.length) % filteredCommands.length,
+        );
       } else if (e.key === "Enter") {
         e.preventDefault();
         if (filteredCommands[selectedIndex]) {
@@ -193,7 +237,10 @@ export default function CommandPalette() {
   // Click outside to close
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -211,9 +258,13 @@ export default function CommandPalette() {
           <Terminal className="w-3 h-3 text-[#7C5CFF]" />
           <span>Press</span>
         </span>
-        <kbd className="px-1.5 py-0.5 rounded bg-zinc-900 border border-white/[0.06] text-zinc-300">⌘</kbd>
+        <kbd className="px-1.5 py-0.5 rounded bg-zinc-900 border border-white/[0.06] text-zinc-300">
+          ⌘
+        </kbd>
         <span>+</span>
-        <kbd className="px-1.5 py-0.5 rounded bg-zinc-900 border border-white/[0.06] text-zinc-300">K</kbd>
+        <kbd className="px-1.5 py-0.5 rounded bg-zinc-900 border border-white/[0.06] text-zinc-300">
+          K
+        </kbd>
         <span>to operate command center</span>
       </div>
 
@@ -253,7 +304,9 @@ export default function CommandPalette() {
                   <>
                     {/* Render Grouped Sections */}
                     {(["navigation", "actions", "ai"] as const).map((cat) => {
-                      const catCmds = filteredCommands.filter((c) => c.category === cat);
+                      const catCmds = filteredCommands.filter(
+                        (c) => c.category === cat,
+                      );
                       if (catCmds.length === 0) return null;
                       return (
                         <div key={cat} className="space-y-1">
@@ -263,7 +316,9 @@ export default function CommandPalette() {
                               {cat === "actions" && "Quick System Actions"}
                               {cat === "ai" && "AI Infrastructure Operations"}
                             </span>
-                            {cat === "ai" && <Sparkles className="w-2.5 h-2.5 text-[#7C5CFF]" />}
+                            {cat === "ai" && (
+                              <Sparkles className="w-2.5 h-2.5 text-[#7C5CFF]" />
+                            )}
                           </div>
 
                           {catCmds.map((cmd) => {
@@ -283,17 +338,23 @@ export default function CommandPalette() {
                                 }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <div className={`p-1.5 rounded-md ${
-                                    isSelected 
-                                      ? "bg-[#7C5CFF]/15 text-[#7C5CFF]" 
-                                      : "bg-zinc-950 border border-white/[0.04] text-zinc-500"
-                                  }`}>
+                                  <div
+                                    className={`p-1.5 rounded-md ${
+                                      isSelected
+                                        ? "bg-[#7C5CFF]/15 text-[#7C5CFF]"
+                                        : "bg-zinc-950 border border-white/[0.04] text-zinc-500"
+                                    }`}
+                                  >
                                     <Icon className="w-3.5 h-3.5" />
                                   </div>
                                   <div className="min-w-0">
-                                    <p className="text-[12px] font-bold tracking-tight">{cmd.title}</p>
+                                    <p className="text-[12px] font-bold tracking-tight">
+                                      {cmd.title}
+                                    </p>
                                     {cmd.subtitle && (
-                                      <p className="text-[10px] text-zinc-500 mt-0.5 truncate font-mono">{cmd.subtitle}</p>
+                                      <p className="text-[10px] text-zinc-500 mt-0.5 truncate font-mono">
+                                        {cmd.subtitle}
+                                      </p>
                                     )}
                                   </div>
                                 </div>
@@ -325,8 +386,18 @@ export default function CommandPalette() {
               {/* Footer status bar */}
               <div className="px-4 py-2 bg-zinc-950 border-t border-white/[0.06] flex items-center justify-between text-[9px] font-mono text-zinc-600 uppercase font-semibold">
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1"><kbd className="px-1 py-0.2 bg-zinc-900 border border-white/[0.04] rounded">↑↓</kbd> Navigate</span>
-                  <span className="flex items-center gap-1"><kbd className="px-1 py-0.2 bg-zinc-900 border border-white/[0.04] rounded">Enter</kbd> Select</span>
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1 py-0.2 bg-zinc-900 border border-white/[0.04] rounded">
+                      ↑↓
+                    </kbd>{" "}
+                    Navigate
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1 py-0.2 bg-zinc-900 border border-white/[0.04] rounded">
+                      Enter
+                    </kbd>{" "}
+                    Select
+                  </span>
                 </div>
                 <span>Mission Control System active</span>
               </div>

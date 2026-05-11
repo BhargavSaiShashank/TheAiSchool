@@ -8,12 +8,18 @@ export async function POST(req: NextRequest) {
     const { contactIds, listId, action } = await req.json();
 
     if (!contactIds || !Array.isArray(contactIds)) {
-      return NextResponse.json({ error: "Invalid bulk selection parameters" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid bulk selection parameters" },
+        { status: 400 },
+      );
     }
 
     if (action === "add") {
       if (!listId || listId === "none") {
-        return NextResponse.json({ error: "Please select a valid target list" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Please select a valid target list" },
+          { status: 400 },
+        );
       }
 
       for (const contactId of contactIds) {
@@ -33,7 +39,10 @@ export async function POST(req: NextRequest) {
       }
     } else if (action === "remove") {
       if (!listId || listId === "none") {
-        return NextResponse.json({ error: "Please select a valid list source" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Please select a valid list source" },
+          { status: 400 },
+        );
       }
 
       await prisma.contactListMember.deleteMany({

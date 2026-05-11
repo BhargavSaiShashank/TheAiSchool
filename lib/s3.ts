@@ -17,7 +17,7 @@ export const s3Client = new S3Client({
 export async function uploadToS3(
   fileBuffer: Buffer,
   fileName: string,
-  contentType: string
+  contentType: string,
 ): Promise<string> {
   const key = `uploads/${Date.now()}-${fileName}`;
 

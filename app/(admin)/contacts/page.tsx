@@ -33,9 +33,11 @@ const initialContacts: any[] = [];
 
 export default function ContactsPage() {
   const { user } = useStore();
-  const [activeTab, setActiveTab] = useState<"lists" | "contacts" | "segments" | "import">("lists");
+  const [activeTab, setActiveTab] = useState<
+    "lists" | "contacts" | "segments" | "import"
+  >("lists");
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Lists State
   const [lists, setLists] = useState(initialLists);
   const [showNewListModal, setShowNewListModal] = useState(false);
@@ -67,7 +69,6 @@ export default function ContactsPage() {
   const [loadingTimeline, setLoadingTimeline] = useState(false);
   const [bulkTargetListId, setBulkTargetListId] = useState<string>("none");
   const [bulkProcessing, setBulkProcessing] = useState(false);
-
 
   const handleAddExistingToActiveList = async () => {
     if (selectedContactIds.length === 0) {
@@ -106,12 +107,16 @@ export default function ContactsPage() {
           }
         }
 
-        toast.success(`Successfully subscribed ${selectedContactIds.length} contact(s) to the mailing list!`);
+        toast.success(
+          `Successfully subscribed ${selectedContactIds.length} contact(s) to the mailing list!`,
+        );
         setShowAddExistingModal(false);
         setSelectedContactIds([]);
       } else {
         const errData = await res.json();
-        toast.error(`Failed to add contacts: ${errData.error || "Unknown error"}`);
+        toast.error(
+          `Failed to add contacts: ${errData.error || "Unknown error"}`,
+        );
       }
     } catch (err: any) {
       console.error("Failed to add existing contacts:", err);
@@ -149,7 +154,7 @@ export default function ContactsPage() {
           listIds: newContactListId !== "none" ? [newContactListId] : [],
         };
         setContacts([mappedContact, ...contacts]);
-        
+
         // Refresh live list counts
         const resLists = await fetch("/api/lists");
         if (resLists.ok) {
@@ -183,7 +188,7 @@ export default function ContactsPage() {
       toast.error("Please select at least one contact first.");
       return;
     }
-    
+
     if (action === "add" && bulkTargetListId === "none") {
       toast.error("Please select a target list to assign contacts to.");
       return;
@@ -202,7 +207,9 @@ export default function ContactsPage() {
       });
 
       if (res.ok) {
-        toast.success(`Successfully processed bulk action: ${action.toUpperCase()} for ${selectedRowIds.length} contact(s).`);
+        toast.success(
+          `Successfully processed bulk action: ${action.toUpperCase()} for ${selectedRowIds.length} contact(s).`,
+        );
         setSelectedRowIds([]);
         setBulkTargetListId("none");
 
@@ -253,7 +260,6 @@ export default function ContactsPage() {
     }
   };
 
-
   // Fetch live lists and contacts from Supabase via Next.js API Routes on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -271,7 +277,7 @@ export default function ContactsPage() {
             setLists(dataLists);
           }
         }
-        
+
         const resContacts = await fetch("/api/contacts", {
           headers: { "x-org-id": user?.org_id || "" },
         });
@@ -290,7 +296,10 @@ export default function ContactsPage() {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch live data from Supabase, using preloaded fallback sandbox data instead.", err);
+        console.error(
+          "Failed to fetch live data from Supabase, using preloaded fallback sandbox data instead.",
+          err,
+        );
       } finally {
         setIsLoading(false);
         if (typeof window !== "undefined") {
@@ -302,7 +311,7 @@ export default function ContactsPage() {
   }, []);
 
   // Segment Builder State
-   const [segmentName, setSegmentName] = useState("");
+  const [segmentName, setSegmentName] = useState("");
   const [logicalOperator, setLogicalOperator] = useState<"AND" | "OR">("AND");
   const [rules, setRules] = useState([
     { field: "city", operator: "equals", value: "Hyderabad" },
@@ -312,7 +321,10 @@ export default function ContactsPage() {
   const [savedSegments, setSavedSegments] = useState<any[]>([]);
 
   const handleSaveSegment = async () => {
-    const name = prompt("Enter a unique name for this dynamic segment:", "Target City Cluster");
+    const name = prompt(
+      "Enter a unique name for this dynamic segment:",
+      "Target City Cluster",
+    );
     if (!name || !name.trim()) return;
 
     try {
@@ -321,7 +333,7 @@ export default function ContactsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          rules: rules
+          rules: rules,
         }),
       });
 
@@ -352,20 +364,25 @@ export default function ContactsPage() {
     city: "4",
   });
   const [importProgress, setImportProgress] = useState(0);
-  const [importResults, setImportResults] = useState({ added: 0, updated: 0, skipped: 0, errored: 0 });
+  const [importResults, setImportResults] = useState({
+    added: 0,
+    updated: 0,
+    skipped: 0,
+    errored: 0,
+  });
 
   // Add List Handler
   const handleCreateList = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newListName.trim()) return;
-    
+
     try {
       const res = await fetch("/api/lists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newListName, description: newListDesc }),
       });
-      
+
       if (res.ok) {
         const createdList = await res.json();
         setLists([createdList, ...lists]);
@@ -373,7 +390,10 @@ export default function ContactsPage() {
         throw new Error("Failed to create list on server");
       }
     } catch (err) {
-      console.error("Live DB save failed, fallback to local memory state.", err);
+      console.error(
+        "Live DB save failed, fallback to local memory state.",
+        err,
+      );
       const newList = {
         id: `l-${Date.now()}`,
         name: newListName,
@@ -383,7 +403,7 @@ export default function ContactsPage() {
       };
       setLists([newList, ...lists]);
     }
-    
+
     setNewListName("");
     setNewListDesc("");
     setShowNewListModal(false);
@@ -398,7 +418,9 @@ export default function ContactsPage() {
 
     const matching = contacts.filter((c) => {
       const results = rules.map((r) => {
-        const fieldVal = String(c[r.field as keyof typeof c] || "").toLowerCase();
+        const fieldVal = String(
+          c[r.field as keyof typeof c] || "",
+        ).toLowerCase();
         const matchVal = String(r.value || "").toLowerCase();
 
         if (r.operator === "equals") {
@@ -431,16 +453,19 @@ export default function ContactsPage() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setCsvFile(file);
-      
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const text = event.target?.result as string;
         if (!text) return;
-        
-        const lines = text.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+
+        const lines = text
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0);
         if (lines.length === 0) return;
-        
-        const parsed = lines.map(line => {
+
+        const parsed = lines.map((line) => {
           const result = [];
           let current = "";
           let inQuotes = false;
@@ -448,7 +473,7 @@ export default function ContactsPage() {
             const char = line[i];
             if (char === '"') {
               inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
+            } else if (char === "," && !inQuotes) {
               result.push(current.trim());
               current = "";
             } else {
@@ -461,7 +486,7 @@ export default function ContactsPage() {
 
         const headers = parsed[0];
         const dataRows = parsed.slice(1);
-        
+
         setCsvHeaders(headers);
         setCsvRows(dataRows);
 
@@ -477,14 +502,23 @@ export default function ContactsPage() {
         headers.forEach((h, index) => {
           const lower = h.toLowerCase().replace(/_|[^\w]/g, "");
           if (lower === "email") initialMapping.email = String(index);
-          else if (lower === "firstname" || lower === "first" || lower === "name") initialMapping.firstName = String(index);
-          else if (lower === "lastname" || lower === "last") initialMapping.lastName = String(index);
-          else if (lower === "company" || lower === "organization") initialMapping.company = String(index);
-          else if (lower === "city" || lower === "location") initialMapping.city = String(index);
+          else if (
+            lower === "firstname" ||
+            lower === "first" ||
+            lower === "name"
+          )
+            initialMapping.firstName = String(index);
+          else if (lower === "lastname" || lower === "last")
+            initialMapping.lastName = String(index);
+          else if (lower === "company" || lower === "organization")
+            initialMapping.company = String(index);
+          else if (lower === "city" || lower === "location")
+            initialMapping.city = String(index);
         });
 
         // Fallbacks if no headers were detected
-        if (initialMapping.email === "none" && headers.length > 0) initialMapping.email = "0";
+        if (initialMapping.email === "none" && headers.length > 0)
+          initialMapping.email = "0";
 
         setColumnMapping(initialMapping);
         setImportStep(2);
@@ -499,23 +533,25 @@ export default function ContactsPage() {
     setImportProgress(10);
 
     // Map each row based on columnMapping
-    const contactsToImport = csvRows.map(row => {
-      const getVal = (fieldKey: string) => {
-        const indexStr = columnMapping[fieldKey];
-        if (indexStr === "none" || !indexStr) return "";
-        const idx = parseInt(indexStr, 10);
-        return row[idx] || "";
-      };
+    const contactsToImport = csvRows
+      .map((row) => {
+        const getVal = (fieldKey: string) => {
+          const indexStr = columnMapping[fieldKey];
+          if (indexStr === "none" || !indexStr) return "";
+          const idx = parseInt(indexStr, 10);
+          return row[idx] || "";
+        };
 
-      return {
-        email: getVal("email"),
-        firstName: getVal("firstName"),
-        lastName: getVal("lastName"),
-        company: getVal("company"),
-        city: getVal("city"),
-        status: "active",
-      };
-    }).filter(c => c.email && c.email.includes("@"));
+        return {
+          email: getVal("email"),
+          firstName: getVal("firstName"),
+          lastName: getVal("lastName"),
+          company: getVal("company"),
+          city: getVal("city"),
+          status: "active",
+        };
+      })
+      .filter((c) => c.email && c.email.includes("@"));
 
     setImportProgress(40);
 
@@ -523,7 +559,10 @@ export default function ContactsPage() {
       const res = await fetch("/api/contacts/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contacts: contactsToImport, listId: targetListId }),
+        body: JSON.stringify({
+          contacts: contactsToImport,
+          listId: targetListId,
+        }),
       });
 
       setImportProgress(80);
@@ -576,10 +615,14 @@ export default function ContactsPage() {
   const filteredContacts = contacts.filter((c) => {
     const matchesSearch =
       c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (c.firstName + " " + c.lastName).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (c.firstName + " " + c.lastName)
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       c.company.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    const matchesList = selectedListFilter === "all" || (c.listIds && c.listIds.includes(selectedListFilter));
+    const matchesList =
+      selectedListFilter === "all" ||
+      (c.listIds && c.listIds.includes(selectedListFilter));
     return matchesSearch && matchesStatus && matchesList;
   });
 
@@ -617,18 +660,23 @@ export default function ContactsPage() {
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-[15px] font-bold text-foreground tracking-tight">Contact Directories</h2>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Manage and organize your distinct mailing lists</p>
+                <h2 className="text-[15px] font-bold text-foreground tracking-tight">
+                  Contact Directories
+                </h2>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  Manage and organize your distinct mailing lists
+                </p>
               </div>
-              {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
-                <button
-                  onClick={() => setShowNewListModal(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary text-white hover:bg-primary/90 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Create List</span>
-                </button>
-              )}
+              {user?.role &&
+                ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
+                  <button
+                    onClick={() => setShowNewListModal(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary text-white hover:bg-primary/90 text-[13px] font-semibold shadow-[0_1px_3px_rgba(95,90,246,0.2)] transition cursor-pointer border border-white/5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Create List</span>
+                  </button>
+                )}
             </div>
 
             {/* Stats summary strip above cards — totals derived from the same lists data the cards use */}
@@ -637,24 +685,36 @@ export default function ContactsPage() {
               <div className="p-4 glass-hud rounded-lg flex items-center gap-3">
                 <Users className="w-5 h-5 text-[#7C5CFF] shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Total Lists</p>
-                  <p className="text-2xl font-black text-foreground font-mono">{lists.length}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">
+                    Total Lists
+                  </p>
+                  <p className="text-2xl font-black text-foreground font-mono">
+                    {lists.length}
+                  </p>
                 </div>
               </div>
               <div className="p-4 glass-hud rounded-lg flex items-center gap-3">
                 <Database className="w-5 h-5 text-emerald-500 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Total Contacts</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">
+                    Total Contacts
+                  </p>
                   <p className="text-2xl font-black text-foreground font-mono">
-                    {lists.reduce((sum, l) => sum + (l.count ?? 0), 0).toLocaleString()}
+                    {lists
+                      .reduce((sum, l) => sum + (l.count ?? 0), 0)
+                      .toLocaleString()}
                   </p>
                 </div>
               </div>
               <div className="p-4 glass-hud rounded-lg flex items-center gap-3">
                 <FileText className="w-5 h-5 text-blue-400 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Active Subscribers</p>
-                  <p className="text-2xl font-black text-foreground font-mono">{contacts.filter(c => c.status === "active").length}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">
+                    Active Subscribers
+                  </p>
+                  <p className="text-2xl font-black text-foreground font-mono">
+                    {contacts.filter((c) => c.status === "active").length}
+                  </p>
                 </div>
               </div>
             </div>
@@ -675,14 +735,18 @@ export default function ContactsPage() {
                       </span>
                     </div>
                     <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed">
-                      {list.description || "No description provided for this list."}
+                      {list.description ||
+                        "No description provided for this list."}
                     </p>
                   </div>
 
                   <div className="flex items-center justify-between mt-5 pt-3.5 border-t border-border/60">
                     <div className="flex gap-1.5 flex-wrap">
                       {(list.tags ?? []).map((tag: string) => (
-                        <span key={tag} className="text-[11px] bg-secondary text-muted-foreground border border-border px-2 py-0.5 rounded font-mono font-semibold">
+                        <span
+                          key={tag}
+                          className="text-[11px] bg-secondary text-muted-foreground border border-border px-2 py-0.5 rounded font-mono font-semibold"
+                        >
                           {tag}
                         </span>
                       ))}
@@ -710,13 +774,19 @@ export default function ContactsPage() {
                   className="w-full max-w-md bg-card border border-border p-6 rounded-md shadow-lg space-y-6"
                 >
                   <div>
-                    <h3 className="text-sm font-bold text-foreground tracking-tight">Create Mailing List</h3>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Initialize a new contact audience segment</p>
+                    <h3 className="text-sm font-bold text-foreground tracking-tight">
+                      Create Mailing List
+                    </h3>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Initialize a new contact audience segment
+                    </p>
                   </div>
 
                   <form onSubmit={handleCreateList} className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-400 font-mono">List Name</label>
+                      <label className="text-xs font-semibold text-zinc-400 font-mono">
+                        List Name
+                      </label>
                       <input
                         type="text"
                         value={newListName}
@@ -727,7 +797,9 @@ export default function ContactsPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-400 font-mono">Description</label>
+                      <label className="text-xs font-semibold text-zinc-400 font-mono">
+                        Description
+                      </label>
                       <textarea
                         value={newListDesc}
                         onChange={(e) => setNewListDesc(e.target.value)}
@@ -770,21 +842,30 @@ export default function ContactsPage() {
             {selectedListFilter !== "all" && (
               <div className="p-4 bg-zinc-950/40 border border-[#7C5CFF]/20 rounded flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h4 className="text-xs font-bold text-zinc-300 font-mono">Managing Audience List: <span className="text-[#7C5CFF]">{lists.find(l => l.id === selectedListFilter)?.name}</span></h4>
-                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Subscribe other existing contacts in your directory directly to this mailing list.</p>
+                  <h4 className="text-xs font-bold text-zinc-300 font-mono">
+                    Managing Audience List:{" "}
+                    <span className="text-[#7C5CFF]">
+                      {lists.find((l) => l.id === selectedListFilter)?.name}
+                    </span>
+                  </h4>
+                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                    Subscribe other existing contacts in your directory directly
+                    to this mailing list.
+                  </p>
                 </div>
-                {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
-                  <button
-                    onClick={() => {
-                      setSelectedContactIds([]);
-                      setShowAddExistingModal(true);
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[#7C5CFF] border border-[#7C5CFF]/30 text-[11px] font-bold transition cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Existing Contacts</span>
-                  </button>
-                )}
+                {user?.role &&
+                  ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
+                    <button
+                      onClick={() => {
+                        setSelectedContactIds([]);
+                        setShowAddExistingModal(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[#7C5CFF] border border-[#7C5CFF]/30 text-[11px] font-bold transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Existing Contacts</span>
+                    </button>
+                  )}
               </div>
             )}
 
@@ -812,7 +893,9 @@ export default function ContactsPage() {
                 >
                   <option value="all">All Lists</option>
                   {lists.map((l) => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
                   ))}
                 </select>
 
@@ -828,16 +911,17 @@ export default function ContactsPage() {
                   <option value="complained">Complained</option>
                 </select>
 
-                {user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
-                  <button
-                    type="button"
-                    onClick={() => setShowNewContactModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-primary text-white hover:bg-primary/90 text-xs font-bold shadow-sm border border-white/5 transition cursor-pointer shrink-0"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Contact</span>
-                  </button>
-                )}
+                {user?.role &&
+                  ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowNewContactModal(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-primary text-white hover:bg-primary/90 text-xs font-bold shadow-sm border border-white/5 transition cursor-pointer shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Contact</span>
+                    </button>
+                  )}
               </div>
             </div>
 
@@ -850,10 +934,15 @@ export default function ContactsPage() {
                       <th className="py-3 px-5 font-semibold w-12 text-center">
                         <input
                           type="checkbox"
-                          checked={filteredContacts.length > 0 && selectedRowIds.length === filteredContacts.length}
+                          checked={
+                            filteredContacts.length > 0 &&
+                            selectedRowIds.length === filteredContacts.length
+                          }
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedRowIds(filteredContacts.map((c) => c.id));
+                              setSelectedRowIds(
+                                filteredContacts.map((c) => c.id),
+                              );
                             } else {
                               setSelectedRowIds([]);
                             }
@@ -866,57 +955,82 @@ export default function ContactsPage() {
                       <th className="py-3 px-5 font-semibold">Last Name</th>
                       <th className="py-3 px-5 font-semibold">Company</th>
                       <th className="py-3 px-5 font-semibold">City</th>
-                      <th className="py-3 px-5 font-semibold text-right">Status</th>
+                      <th className="py-3 px-5 font-semibold text-right">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredContacts.map((contact) => {
                       const isSelected = selectedRowIds.includes(contact.id);
                       return (
-                        <tr key={contact.id} className={`border-b border-border/50 transition ${isSelected ? "bg-[#7C5CFF]/[0.02]" : "hover:bg-secondary/40"}`}>
+                        <tr
+                          key={contact.id}
+                          className={`border-b border-border/50 transition ${isSelected ? "bg-[#7C5CFF]/[0.02]" : "hover:bg-secondary/40"}`}
+                        >
                           <td className="py-3.5 px-5 text-center w-12">
                             <input
                               type="checkbox"
                               checked={isSelected}
                               onChange={(e) => {
                                 if (e.target.checked) {
-                                  setSelectedRowIds([...selectedRowIds, contact.id]);
+                                  setSelectedRowIds([
+                                    ...selectedRowIds,
+                                    contact.id,
+                                  ]);
                                 } else {
-                                  setSelectedRowIds(selectedRowIds.filter((id) => id !== contact.id));
+                                  setSelectedRowIds(
+                                    selectedRowIds.filter(
+                                      (id) => id !== contact.id,
+                                    ),
+                                  );
                                 }
                               }}
                               className="w-4 h-4 accent-[#7C5CFF] rounded cursor-pointer"
                             />
                           </td>
-                          <td 
+                          <td
                             onClick={() => fetchContactTimeline(contact)}
                             className="py-3.5 px-5 font-bold text-zinc-100 font-mono text-[13px] hover:text-[#9E86FF] cursor-pointer transition underline decoration-[#7C5CFF]/30 underline-offset-4"
                           >
                             {contact.email}
                           </td>
-                        <td className="py-3.5 px-5 text-[13px] text-zinc-300">{contact.firstName}</td>
-                        <td className="py-3.5 px-5 text-[13px] text-zinc-300">{contact.lastName}</td>
-                        <td className="py-3.5 px-5 text-[13px] text-foreground font-semibold">{contact.company}</td>
-                        <td className="py-3.5 px-5 text-[13px] text-muted-foreground font-mono">{contact.city}</td>
-                        <td className="py-3.5 px-5 text-right">
-                          <span className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded uppercase ${
-                            contact.status === "active"
-                              ? "bg-emerald-950/20 text-emerald-400 border border-emerald-900/30"
-                              : contact.status === "unsubscribed"
-                              ? "bg-amber-950/20 text-amber-400 border border-amber-900/30"
-                              : contact.status === "bounced"
-                              ? "bg-red-950/20 text-red-400 border border-red-900/30"
-                              : "bg-red-950/40 text-red-500 border border-red-800/40"
-                          }`}>
-                            {contact.status}
-                          </span>
-                        </td>
+                          <td className="py-3.5 px-5 text-[13px] text-zinc-300">
+                            {contact.firstName}
+                          </td>
+                          <td className="py-3.5 px-5 text-[13px] text-zinc-300">
+                            {contact.lastName}
+                          </td>
+                          <td className="py-3.5 px-5 text-[13px] text-foreground font-semibold">
+                            {contact.company}
+                          </td>
+                          <td className="py-3.5 px-5 text-[13px] text-muted-foreground font-mono">
+                            {contact.city}
+                          </td>
+                          <td className="py-3.5 px-5 text-right">
+                            <span
+                              className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded uppercase ${
+                                contact.status === "active"
+                                  ? "bg-emerald-950/20 text-emerald-400 border border-emerald-900/30"
+                                  : contact.status === "unsubscribed"
+                                    ? "bg-amber-950/20 text-amber-400 border border-amber-900/30"
+                                    : contact.status === "bounced"
+                                      ? "bg-red-950/20 text-red-400 border border-red-900/30"
+                                      : "bg-red-950/40 text-red-500 border border-red-800/40"
+                              }`}
+                            >
+                              {contact.status}
+                            </span>
+                          </td>
                         </tr>
                       );
                     })}
                     {filteredContacts.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="text-center py-12 text-zinc-500 font-mono">
+                        <td
+                          colSpan={7}
+                          className="text-center py-12 text-zinc-500 font-mono"
+                        >
                           No matching contacts discovered.
                         </td>
                       </tr>
@@ -928,79 +1042,93 @@ export default function ContactsPage() {
 
             {/* FLOATING BOTTOM BULK ACTIONS PANEL */}
             <AnimatePresence>
-              {selectedRowIds.length > 0 && user?.role && ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
-                <motion.div
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 50 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-2xl bg-[#0d0e12] border border-[#7C5CFF]/30 hover:border-[#7C5CFF]/50 shadow-[0_10px_35px_-5px_rgba(124,92,255,0.2),inset_0_1px_0_rgba(255,255,255,0.05)] rounded-2xl px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-lg select-none"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-5 h-5 rounded-full bg-[#7C5CFF]/15 border border-[#7C5CFF]/35 flex items-center justify-center text-[10px] font-mono font-bold text-[#A890FF]">
-                      {selectedRowIds.length}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-white">Contacts Selected</p>
-                      <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Perform bulk mutations across mailing lists</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-                    {/* List assign action */}
-                    <div className="flex items-center gap-1.5 bg-zinc-950/80 border border-zinc-850 p-1 rounded-xl text-xs">
-                      <select
-                        value={bulkTargetListId}
-                        onChange={(e) => setBulkTargetListId(e.target.value)}
-                        className="px-2.5 py-1 rounded bg-transparent text-zinc-300 font-medium font-mono focus:outline-none focus:border-zinc-700"
-                      >
-                        <option value="none">Assign to List...</option>
-                        {lists.map((l) => (
-                          <option key={l.id} value={l.id}>{l.name}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => handleBulkAction("add")}
-                        disabled={bulkProcessing || bulkTargetListId === "none"}
-                        className="px-2.5 py-1 rounded bg-white text-black font-semibold text-[11px] hover:bg-zinc-200 disabled:opacity-50 transition cursor-pointer"
-                      >
-                        Apply
-                      </button>
+              {selectedRowIds.length > 0 &&
+                user?.role &&
+                ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 50 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-2xl bg-[#0d0e12] border border-[#7C5CFF]/30 hover:border-[#7C5CFF]/50 shadow-[0_10px_35px_-5px_rgba(124,92,255,0.2),inset_0_1px_0_rgba(255,255,255,0.05)] rounded-2xl px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-lg select-none"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-5 h-5 rounded-full bg-[#7C5CFF]/15 border border-[#7C5CFF]/35 flex items-center justify-center text-[10px] font-mono font-bold text-[#A890FF]">
+                        {selectedRowIds.length}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-white">
+                          Contacts Selected
+                        </p>
+                        <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                          Perform bulk mutations across mailing lists
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Remove from active list action */}
-                    {selectedListFilter !== "all" && (
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                      {/* List assign action */}
+                      <div className="flex items-center gap-1.5 bg-zinc-950/80 border border-zinc-850 p-1 rounded-xl text-xs">
+                        <select
+                          value={bulkTargetListId}
+                          onChange={(e) => setBulkTargetListId(e.target.value)}
+                          className="px-2.5 py-1 rounded bg-transparent text-zinc-300 font-medium font-mono focus:outline-none focus:border-zinc-700"
+                        >
+                          <option value="none">Assign to List...</option>
+                          {lists.map((l) => (
+                            <option key={l.id} value={l.id}>
+                              {l.name}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => handleBulkAction("add")}
+                          disabled={
+                            bulkProcessing || bulkTargetListId === "none"
+                          }
+                          className="px-2.5 py-1 rounded bg-white text-black font-semibold text-[11px] hover:bg-zinc-200 disabled:opacity-50 transition cursor-pointer"
+                        >
+                          Apply
+                        </button>
+                      </div>
+
+                      {/* Remove from active list action */}
+                      {selectedListFilter !== "all" && (
+                        <button
+                          onClick={() => handleBulkAction("remove")}
+                          disabled={bulkProcessing}
+                          className="px-3 py-1.5 rounded-xl border border-amber-900/40 bg-amber-950/10 text-amber-400 font-bold hover:bg-amber-950/20 text-[11px] transition cursor-pointer"
+                        >
+                          Remove from List
+                        </button>
+                      )}
+
+                      {/* Bulk Delete action */}
                       <button
-                        onClick={() => handleBulkAction("remove")}
+                        onClick={() => {
+                          if (
+                            confirm(
+                              `Are you sure you want to delete these ${selectedRowIds.length} selected contacts permanently?`,
+                            )
+                          ) {
+                            handleBulkAction("delete");
+                          }
+                        }}
                         disabled={bulkProcessing}
-                        className="px-3 py-1.5 rounded-xl border border-amber-900/40 bg-amber-950/10 text-amber-400 font-bold hover:bg-amber-950/20 text-[11px] transition cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl border border-red-950/40 bg-red-950/10 hover:bg-red-950/20 text-red-400 font-bold text-[11px] transition cursor-pointer"
                       >
-                        Remove from List
+                        Delete
                       </button>
-                    )}
 
-                    {/* Bulk Delete action */}
-                    <button
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to delete these ${selectedRowIds.length} selected contacts permanently?`)) {
-                          handleBulkAction("delete");
-                        }
-                      }}
-                      disabled={bulkProcessing}
-                      className="px-3 py-1.5 rounded-xl border border-red-950/40 bg-red-950/10 hover:bg-red-950/20 text-red-400 font-bold text-[11px] transition cursor-pointer"
-                    >
-                      Delete
-                    </button>
-
-                    <button
-                      onClick={() => setSelectedRowIds([])}
-                      className="text-zinc-500 hover:text-zinc-300 text-xs font-semibold px-2 cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </motion.div>
-              )}
+                      <button
+                        onClick={() => setSelectedRowIds([])}
+                        className="text-zinc-500 hover:text-zinc-300 text-xs font-semibold px-2 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
             </AnimatePresence>
 
             {/* SLIDE-OVER CONTACT DETAIL TIMELINE DRAWER */}
@@ -1027,8 +1155,12 @@ export default function ContactsPage() {
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-zinc-900 pb-5">
                       <div>
-                        <h3 className="text-sm font-bold text-white tracking-tight">Subscriber Profile</h3>
-                        <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Chronological engagement & audit timeline</p>
+                        <h3 className="text-sm font-bold text-white tracking-tight">
+                          Subscriber Profile
+                        </h3>
+                        <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                          Chronological engagement & audit timeline
+                        </p>
                       </div>
                       <button
                         onClick={() => setSelectedDetailContact(null)}
@@ -1041,40 +1173,60 @@ export default function ContactsPage() {
                     {/* Profile Metadata */}
                     <div className="py-6 space-y-4 border-b border-zinc-900 text-xs shrink-0">
                       <div className="space-y-1">
-                        <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Email Address</span>
-                        <p className="text-sm font-bold text-white font-mono">{selectedDetailContact.email}</p>
+                        <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">
+                          Email Address
+                        </span>
+                        <p className="text-sm font-bold text-white font-mono">
+                          {selectedDetailContact.email}
+                        </p>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Subscriber Name</span>
+                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">
+                            Subscriber Name
+                          </span>
                           <p className="text-xs text-zinc-300 font-semibold">
-                            {selectedDetailContact.firstName || selectedDetailContact.lastName 
-                              ? `${selectedDetailContact.firstName || ""} ${selectedDetailContact.lastName || ""}` 
+                            {selectedDetailContact.firstName ||
+                            selectedDetailContact.lastName
+                              ? `${selectedDetailContact.firstName || ""} ${selectedDetailContact.lastName || ""}`
                               : "Unnamed Subscriber"}
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Location (City)</span>
-                          <p className="text-xs text-zinc-300 font-mono">{selectedDetailContact.city || "—"}</p>
+                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">
+                            Location (City)
+                          </span>
+                          <p className="text-xs text-zinc-300 font-mono">
+                            {selectedDetailContact.city || "—"}
+                          </p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Company</span>
-                          <p className="text-xs text-white font-bold">{selectedDetailContact.company || "—"}</p>
+                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">
+                            Company
+                          </span>
+                          <p className="text-xs text-white font-bold">
+                            {selectedDetailContact.company || "—"}
+                          </p>
                         </div>
                         <div className="space-y-1">
-                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">Audience Status</span>
+                          <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">
+                            Audience Status
+                          </span>
                           <div>
-                            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
-                              selectedDetailContact.status === "active"
-                                ? "bg-emerald-950/20 text-emerald-400 border border-emerald-900/30"
-                                : selectedDetailContact.status === "unsubscribed"
-                                ? "bg-amber-950/20 text-amber-400 border border-amber-900/30"
-                                : "bg-red-950/20 text-red-400 border border-red-900/30"
-                            }`}>
+                            <span
+                              className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
+                                selectedDetailContact.status === "active"
+                                  ? "bg-emerald-950/20 text-emerald-400 border border-emerald-900/30"
+                                  : selectedDetailContact.status ===
+                                      "unsubscribed"
+                                    ? "bg-amber-950/20 text-amber-400 border border-amber-900/30"
+                                    : "bg-red-950/20 text-red-400 border border-red-900/30"
+                              }`}
+                            >
                               {selectedDetailContact.status}
                             </span>
                           </div>
@@ -1084,51 +1236,78 @@ export default function ContactsPage() {
 
                     {/* Chronological Event Timeline */}
                     <div className="flex-1 overflow-y-auto pt-6 flex flex-col min-h-0">
-                      <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider mb-4 block shrink-0">Engagement History Stream</span>
-                      
+                      <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider mb-4 block shrink-0">
+                        Engagement History Stream
+                      </span>
+
                       <div className="flex-1 pr-1">
                         {loadingTimeline ? (
                           <div className="flex flex-col items-center justify-center h-48 space-y-2 text-zinc-500">
                             <Loader2 className="w-5 h-5 animate-spin text-[#7C5CFF]" />
-                            <span className="text-[10px] font-mono">Fetching database records...</span>
+                            <span className="text-[10px] font-mono">
+                              Fetching database records...
+                            </span>
                           </div>
                         ) : contactTimeline.length === 0 ? (
                           <div className="h-48 border border-dashed border-zinc-900 rounded-xl flex flex-col items-center justify-center text-center p-4 text-zinc-600 space-y-1">
                             <AlertCircle className="w-5 h-5 text-zinc-700" />
-                            <p className="text-[10px] font-bold font-mono uppercase">No Events Recorded</p>
+                            <p className="text-[10px] font-bold font-mono uppercase">
+                              No Events Recorded
+                            </p>
                             <p className="text-[9px] text-zinc-600 max-w-xs leading-relaxed">
-                              This contact has not interacted with any sent campaigns yet.
+                              This contact has not interacted with any sent
+                              campaigns yet.
                             </p>
                           </div>
                         ) : (
                           <div className="relative pl-4 border-l border-zinc-900 space-y-6 text-xs ml-2 py-2">
                             {contactTimeline.map((ev, index) => {
-                              const iconColor = 
-                                ev.event_type === "opened" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" :
-                                ev.event_type === "clicked" ? "bg-[#7C5CFF] shadow-[0_0_8px_rgba(124,92,255,0.5)]" :
-                                ev.event_type === "unsubscribed" ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" :
-                                "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]";
+                              const iconColor =
+                                ev.event_type === "opened"
+                                  ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                                  : ev.event_type === "clicked"
+                                    ? "bg-[#7C5CFF] shadow-[0_0_8px_rgba(124,92,255,0.5)]"
+                                    : ev.event_type === "unsubscribed"
+                                      ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                                      : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]";
 
                               return (
                                 <div key={ev.id} className="relative group">
                                   {/* Bullet point */}
-                                  <div className={`absolute -left-[20.5px] top-1 w-2.5 h-2.5 rounded-full ${iconColor} border-2 border-black z-10`} />
+                                  <div
+                                    className={`absolute -left-[20.5px] top-1 w-2.5 h-2.5 rounded-full ${iconColor} border-2 border-black z-10`}
+                                  />
 
                                   <div className="space-y-1">
                                     <div className="flex items-center justify-between gap-4">
-                                      <span className="font-bold text-zinc-300 capitalize font-mono text-[11px]">{ev.event_type}</span>
+                                      <span className="font-bold text-zinc-300 capitalize font-mono text-[11px]">
+                                        {ev.event_type}
+                                      </span>
                                       <span className="text-[10px] text-zinc-600 font-mono font-medium">
-                                        {new Date(ev.occurred_at).toLocaleDateString()} {new Date(ev.occurred_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                        {new Date(
+                                          ev.occurred_at,
+                                        ).toLocaleDateString()}{" "}
+                                        {new Date(
+                                          ev.occurred_at,
+                                        ).toLocaleTimeString([], {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
                                       </span>
                                     </div>
                                     <p className="text-[11px] text-zinc-500">
-                                      Campaign: <span className="text-zinc-400 font-semibold">{ev.campaign?.name || "General Email Link"}</span>
+                                      Campaign:{" "}
+                                      <span className="text-zinc-400 font-semibold">
+                                        {ev.campaign?.name ||
+                                          "General Email Link"}
+                                      </span>
                                     </p>
-                                    {ev.metadata && JSON.parse(ev.metadata).url && (
-                                      <p className="text-[10px] text-zinc-600 font-mono truncate max-w-[320px]">
-                                        URL: {JSON.parse(ev.metadata).url}
-                                      </p>
-                                    )}
+                                    {ev.metadata &&
+                                      JSON.parse(ev.metadata).url && (
+                                        <p className="text-[10px] text-zinc-600 font-mono truncate max-w-[320px]">
+                                          URL: {JSON.parse(ev.metadata).url}
+                                        </p>
+                                      )}
                                     {ev.user_agent && (
                                       <p className="text-[9px] text-zinc-700 font-mono truncate max-w-[320px]">
                                         Client: {ev.user_agent}
@@ -1162,8 +1341,12 @@ export default function ContactsPage() {
             <div className="lg:col-span-2 p-6 bg-zinc-950 border border-zinc-900 rounded-lg glass space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-white tracking-tight">Dynamic Segment Creator</h3>
-                  <p className="text-[10px] text-zinc-500 mt-0.5">Filter audience contacts dynamically with conditional rules</p>
+                  <h3 className="text-sm font-bold text-white tracking-tight">
+                    Dynamic Segment Creator
+                  </h3>
+                  <p className="text-[10px] text-zinc-500 mt-0.5">
+                    Filter audience contacts dynamically with conditional rules
+                  </p>
                 </div>
                 <div className="flex items-center gap-1.5 p-1 bg-zinc-900 rounded border border-zinc-800 text-[10px] font-mono font-bold">
                   <button
@@ -1184,7 +1367,10 @@ export default function ContactsPage() {
               {/* Rules Stack - Stacks vertically on mobile, rows on desktop */}
               <div className="space-y-3">
                 {rules.map((rule, idx) => (
-                  <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 rounded bg-zinc-900/60 border border-zinc-850">
+                  <div
+                    key={idx}
+                    className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 rounded bg-zinc-900/60 border border-zinc-850"
+                  >
                     <select
                       value={rule.field}
                       onChange={(e) => {
@@ -1228,7 +1414,9 @@ export default function ContactsPage() {
                       />
 
                       <button
-                        onClick={() => setRules(rules.filter((_, i) => i !== idx))}
+                        onClick={() =>
+                          setRules(rules.filter((_, i) => i !== idx))
+                        }
                         className="p-2 hover:bg-zinc-800 text-zinc-500 hover:text-red-400 rounded transition border border-zinc-850 sm:border-none"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1249,8 +1437,12 @@ export default function ContactsPage() {
 
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="text-right">
-                    <p className="text-[9px] font-semibold text-zinc-500 font-mono uppercase tracking-wider">Audience</p>
-                    <p className="text-xs font-bold font-mono text-white mt-0.5">{liveSegmentCount}</p>
+                    <p className="text-[9px] font-semibold text-zinc-500 font-mono uppercase tracking-wider">
+                      Audience
+                    </p>
+                    <p className="text-xs font-bold font-mono text-white mt-0.5">
+                      {liveSegmentCount}
+                    </p>
                   </div>
                   <button
                     onClick={handleSaveSegment}
@@ -1265,17 +1457,28 @@ export default function ContactsPage() {
             {/* Saved Segments Side List */}
             <div className="p-6 bg-zinc-950 border border-zinc-900 rounded-lg glass space-y-6">
               <div>
-                <h3 className="text-sm font-bold text-white tracking-tight">Active Saved Segments</h3>
-                <p className="text-[10px] text-zinc-500 mt-0.5">Quickly query matching filter parameters</p>
+                <h3 className="text-sm font-bold text-white tracking-tight">
+                  Active Saved Segments
+                </h3>
+                <p className="text-[10px] text-zinc-500 mt-0.5">
+                  Quickly query matching filter parameters
+                </p>
               </div>
 
               <div className="space-y-3">
                 {savedSegments.length > 0 ? (
                   savedSegments.map((seg) => (
-                    <div key={seg.id} className="p-4 rounded bg-zinc-900/40 border border-zinc-900 flex items-center justify-between hover:border-zinc-800 transition">
+                    <div
+                      key={seg.id}
+                      className="p-4 rounded bg-zinc-900/40 border border-zinc-900 flex items-center justify-between hover:border-zinc-800 transition"
+                    >
                       <div>
-                        <p className="text-xs font-bold text-zinc-300">{seg.name}</p>
-                        <p className="text-[10px] text-zinc-500 mt-0.5 font-mono">{seg.count} contacts match</p>
+                        <p className="text-xs font-bold text-zinc-300">
+                          {seg.name}
+                        </p>
+                        <p className="text-[10px] text-zinc-500 mt-0.5 font-mono">
+                          {seg.count} contacts match
+                        </p>
                       </div>
                       <button className="p-1 text-zinc-500 hover:text-white transition">
                         <Play className="w-3.5 h-3.5" />
@@ -1286,9 +1489,12 @@ export default function ContactsPage() {
                   <div className="p-6 border border-dashed border-zinc-900 rounded-lg text-center space-y-2 bg-zinc-950/20">
                     <AlertCircle className="w-4.5 h-4.5 text-zinc-600 mx-auto" />
                     <div>
-                      <p className="text-[10px] font-bold text-zinc-500 font-mono uppercase">No Saved Segments</p>
+                      <p className="text-[10px] font-bold text-zinc-500 font-mono uppercase">
+                        No Saved Segments
+                      </p>
                       <p className="text-[9px] text-zinc-600 mt-0.5 leading-relaxed">
-                        Create filter rules on the left and click "Save Segment" to persist them.
+                        Create filter rules on the left and click "Save Segment"
+                        to persist them.
                       </p>
                     </div>
                   </div>
@@ -1310,18 +1516,30 @@ export default function ContactsPage() {
             {/* Import Header Wizard indicator - Dynamically wraps for small screens */}
             <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-900 pb-5 gap-4">
               <div>
-                <h3 className="text-sm font-bold text-white tracking-tight">CSV Contact Importer</h3>
-                <p className="text-[10px] text-zinc-500 mt-0.5">Bulk-insert subscriber directories in seconds</p>
+                <h3 className="text-sm font-bold text-white tracking-tight">
+                  CSV Contact Importer
+                </h3>
+                <p className="text-[10px] text-zinc-500 mt-0.5">
+                  Bulk-insert subscriber directories in seconds
+                </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 xs:gap-3 text-[10px] font-mono font-bold text-zinc-500">
-                <span className={importStep === 1 ? "text-white" : ""}>1.<span className="hidden xs:inline"> Upload</span></span>
+                <span className={importStep === 1 ? "text-white" : ""}>
+                  1.<span className="hidden xs:inline"> Upload</span>
+                </span>
                 <span>/</span>
-                <span className={importStep === 2 ? "text-white" : ""}>2.<span className="hidden xs:inline"> Mapping</span></span>
+                <span className={importStep === 2 ? "text-white" : ""}>
+                  2.<span className="hidden xs:inline"> Mapping</span>
+                </span>
                 <span>/</span>
-                <span className={importStep === 3 ? "text-white" : ""}>3.<span className="hidden xs:inline"> Progress</span></span>
+                <span className={importStep === 3 ? "text-white" : ""}>
+                  3.<span className="hidden xs:inline"> Progress</span>
+                </span>
                 <span>/</span>
-                <span className={importStep === 4 ? "text-white" : ""}>4.<span className="hidden xs:inline"> Complete</span></span>
+                <span className={importStep === 4 ? "text-white" : ""}>
+                  4.<span className="hidden xs:inline"> Complete</span>
+                </span>
               </div>
             </div>
 
@@ -1329,13 +1547,21 @@ export default function ContactsPage() {
             {importStep === 1 && (
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-zinc-850 rounded-lg py-16 px-6 text-center bg-zinc-900/10 hover:border-zinc-700 transition">
                 <Upload className="w-10 h-10 text-zinc-500 mb-4" />
-                <h4 className="text-sm font-bold text-zinc-300">Upload CSV Directory file</h4>
+                <h4 className="text-sm font-bold text-zinc-300">
+                  Upload CSV Directory file
+                </h4>
                 <p className="text-xs text-zinc-500 max-w-xs mt-1 mb-6 leading-relaxed">
-                  Supports files up to 25MB. Columns will be matched in the next step.
+                  Supports files up to 25MB. Columns will be matched in the next
+                  step.
                 </p>
                 <label className="px-5 py-2 rounded bg-white text-black hover:bg-zinc-200 text-xs font-semibold shadow-md cursor-pointer transition">
                   <span>Choose CSV file</span>
-                  <input type="file" accept=".csv" onChange={handleCsvUpload} className="hidden" />
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCsvUpload}
+                    className="hidden"
+                  />
                 </label>
               </div>
             )}
@@ -1344,21 +1570,35 @@ export default function ContactsPage() {
             {importStep === 2 && (
               <div className="space-y-6">
                 <div className="p-4 rounded border border-zinc-850 bg-zinc-900/20">
-                  <h4 className="text-xs font-bold text-zinc-400 uppercase font-mono mb-3">CSV Row Preview (First 3 Rows)</h4>
+                  <h4 className="text-xs font-bold text-zinc-400 uppercase font-mono mb-3">
+                    CSV Row Preview (First 3 Rows)
+                  </h4>
                   <div className="overflow-x-auto text-[10px] font-mono text-zinc-500">
                     <table className="w-full text-left">
                       <thead>
                         <tr className="border-b border-zinc-900 text-zinc-400 font-bold">
                           {csvHeaders.map((header, idx) => (
-                            <th key={idx} className="pb-2 pr-4">Col {idx} ({header})</th>
+                            <th key={idx} className="pb-2 pr-4">
+                              Col {idx} ({header})
+                            </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {csvRows.slice(0, 3).map((row, rowIdx) => (
-                          <tr key={rowIdx} className="border-b border-zinc-900/40 py-2">
+                          <tr
+                            key={rowIdx}
+                            className="border-b border-zinc-900/40 py-2"
+                          >
                             {row.map((cell, cellIdx) => (
-                              <td key={cellIdx} className={cellIdx === 0 ? "text-zinc-300 py-2 pr-4" : "py-2 pr-4"}>
+                              <td
+                                key={cellIdx}
+                                className={
+                                  cellIdx === 0
+                                    ? "text-zinc-300 py-2 pr-4"
+                                    : "py-2 pr-4"
+                                }
+                              >
                                 {cell}
                               </td>
                             ))}
@@ -1370,14 +1610,34 @@ export default function ContactsPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-white font-mono">Map Columns to Contact Fields</h4>
+                  <h4 className="text-xs font-bold text-white font-mono">
+                    Map Columns to Contact Fields
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {(["email", "firstName", "lastName", "company", "city"] as const).map((field) => (
-                      <div key={field} className="flex flex-col gap-1.5 p-3.5 rounded bg-zinc-900/50 border border-zinc-900">
-                        <label className="text-[10px] font-semibold text-zinc-500 uppercase font-mono">{field}</label>
+                    {(
+                      [
+                        "email",
+                        "firstName",
+                        "lastName",
+                        "company",
+                        "city",
+                      ] as const
+                    ).map((field) => (
+                      <div
+                        key={field}
+                        className="flex flex-col gap-1.5 p-3.5 rounded bg-zinc-900/50 border border-zinc-900"
+                      >
+                        <label className="text-[10px] font-semibold text-zinc-500 uppercase font-mono">
+                          {field}
+                        </label>
                         <select
                           value={columnMapping[field] || "none"}
-                          onChange={(e) => setColumnMapping({ ...columnMapping, [field]: e.target.value })}
+                          onChange={(e) =>
+                            setColumnMapping({
+                              ...columnMapping,
+                              [field]: e.target.value,
+                            })
+                          }
                           className="px-2.5 py-1.5 rounded bg-zinc-950 border border-zinc-800 text-xs text-zinc-300 focus:outline-none"
                         >
                           {csvHeaders.map((header, idx) => (
@@ -1393,8 +1653,13 @@ export default function ContactsPage() {
                 </div>
 
                 <div className="p-4 rounded border border-zinc-900 bg-zinc-950/40 space-y-2">
-                  <label className="text-xs font-bold text-white uppercase font-mono">Import Into Mailing List</label>
-                  <p className="text-[10px] text-zinc-500 mt-0.5">Select a mailing list directory where these contacts will be assigned.</p>
+                  <label className="text-xs font-bold text-white uppercase font-mono">
+                    Import Into Mailing List
+                  </label>
+                  <p className="text-[10px] text-zinc-500 mt-0.5">
+                    Select a mailing list directory where these contacts will be
+                    assigned.
+                  </p>
                   <select
                     value={targetListId}
                     onChange={(e) => setTargetListId(e.target.value)}
@@ -1402,14 +1667,19 @@ export default function ContactsPage() {
                   >
                     <option value="none">Do not assign to any list</option>
                     {lists.map((l) => (
-                      <option key={l.id} value={l.id}>{l.name}</option>
+                      <option key={l.id} value={l.id}>
+                        {l.name}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6 border-t border-zinc-900">
                   <button
-                    onClick={() => { setCsvFile(null); setImportStep(1); }}
+                    onClick={() => {
+                      setCsvFile(null);
+                      setImportStep(1);
+                    }}
                     className="px-4 py-2 rounded border border-zinc-850 hover:bg-zinc-900 text-zinc-400 text-xs font-semibold transition"
                   >
                     Cancel
@@ -1430,8 +1700,12 @@ export default function ContactsPage() {
               <div className="flex flex-col items-center justify-center py-16 space-y-6 max-w-sm mx-auto text-center">
                 <Database className="w-10 h-10 text-zinc-500 animate-pulse" />
                 <div className="space-y-1.5 w-full">
-                  <h4 className="text-sm font-bold text-zinc-300">Importing subscriber directory...</h4>
-                  <p className="text-[10px] text-zinc-500 font-mono">Parsing rows & running AWS validation sets...</p>
+                  <h4 className="text-sm font-bold text-zinc-300">
+                    Importing subscriber directory...
+                  </h4>
+                  <p className="text-[10px] text-zinc-500 font-mono">
+                    Parsing rows & running AWS validation sets...
+                  </p>
                 </div>
 
                 <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden border border-zinc-800">
@@ -1440,7 +1714,9 @@ export default function ContactsPage() {
                     className="bg-white h-full shadow-[0_0_8px_rgba(255,255,255,0.7)]"
                   />
                 </div>
-                <span className="text-xs font-bold font-mono text-zinc-400">{importProgress}%</span>
+                <span className="text-xs font-bold font-mono text-zinc-400">
+                  {importProgress}%
+                </span>
               </div>
             )}
 
@@ -1452,32 +1728,56 @@ export default function ContactsPage() {
                     <CheckCircle className="w-8 h-8" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white">Import Job Succeeded</h4>
-                    <p className="text-[10px] text-zinc-500 font-mono mt-0.5">Subscriber list is now active and merged</p>
+                    <h4 className="text-sm font-bold text-white">
+                      Import Job Succeeded
+                    </h4>
+                    <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                      Subscriber list is now active and merged
+                    </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-xs font-mono">
                   <div className="p-4 rounded border border-zinc-900 bg-zinc-950/50">
-                    <p className="text-zinc-500 text-[10px] uppercase font-semibold">Added Rows</p>
-                    <p className="text-lg font-bold text-emerald-400 mt-1">{importResults.added}</p>
+                    <p className="text-zinc-500 text-[10px] uppercase font-semibold">
+                      Added Rows
+                    </p>
+                    <p className="text-lg font-bold text-emerald-400 mt-1">
+                      {importResults.added}
+                    </p>
                   </div>
                   <div className="p-4 rounded border border-zinc-900 bg-zinc-950/50">
-                    <p className="text-zinc-500 text-[10px] uppercase font-semibold">Updated Rows</p>
-                    <p className="text-lg font-bold text-blue-400 mt-1">{importResults.updated}</p>
+                    <p className="text-zinc-500 text-[10px] uppercase font-semibold">
+                      Updated Rows
+                    </p>
+                    <p className="text-lg font-bold text-blue-400 mt-1">
+                      {importResults.updated}
+                    </p>
                   </div>
                   <div className="p-4 rounded border border-zinc-900 bg-zinc-950/50">
-                    <p className="text-zinc-500 text-[10px] uppercase font-semibold">Skipped Rows</p>
-                    <p className="text-lg font-bold text-zinc-400 mt-1">{importResults.skipped}</p>
+                    <p className="text-zinc-500 text-[10px] uppercase font-semibold">
+                      Skipped Rows
+                    </p>
+                    <p className="text-lg font-bold text-zinc-400 mt-1">
+                      {importResults.skipped}
+                    </p>
                   </div>
                   <div className="p-4 rounded border border-zinc-900 bg-zinc-950/50">
-                    <p className="text-zinc-500 text-[10px] uppercase font-semibold">Errors</p>
-                    <p className="text-lg font-bold text-red-400 mt-1">{importResults.errored}</p>
+                    <p className="text-zinc-500 text-[10px] uppercase font-semibold">
+                      Errors
+                    </p>
+                    <p className="text-lg font-bold text-red-400 mt-1">
+                      {importResults.errored}
+                    </p>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => { setCsvFile(null); setImportStep(1); setActiveTab("contacts"); }}
+                  onClick={() => {
+                    setCsvFile(null);
+                    setImportStep(1);
+                    setActiveTab("contacts");
+                  }}
                   className="px-5 py-2.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-semibold shadow-md transition cursor-pointer"
                 >
                   View Updated Contacts Directory
@@ -1496,13 +1796,22 @@ export default function ContactsPage() {
               className="w-full max-w-md bg-card border border-border p-6 rounded-md shadow-lg space-y-6"
             >
               <div>
-                <h3 className="text-sm font-bold text-foreground tracking-tight">Add Contact Manually</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Create a subscriber and assign them directly to a mailing list</p>
+                <h3 className="text-sm font-bold text-foreground tracking-tight">
+                  Add Contact Manually
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Create a subscriber and assign them directly to a mailing list
+                </p>
               </div>
 
-              <form onSubmit={handleCreateContact} className="space-y-4 text-xs">
+              <form
+                onSubmit={handleCreateContact}
+                className="space-y-4 text-xs"
+              >
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-muted-foreground font-mono">Email Address *</label>
+                  <label className="font-semibold text-muted-foreground font-mono">
+                    Email Address *
+                  </label>
                   <input
                     type="email"
                     value={newContactEmail}
@@ -1515,7 +1824,9 @@ export default function ContactsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="font-semibold text-muted-foreground font-mono">First Name</label>
+                    <label className="font-semibold text-muted-foreground font-mono">
+                      First Name
+                    </label>
                     <input
                       type="text"
                       value={newContactFirstName}
@@ -1525,7 +1836,9 @@ export default function ContactsPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="font-semibold text-muted-foreground font-mono">Last Name</label>
+                    <label className="font-semibold text-muted-foreground font-mono">
+                      Last Name
+                    </label>
                     <input
                       type="text"
                       value={newContactLastName}
@@ -1538,7 +1851,9 @@ export default function ContactsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="font-semibold text-muted-foreground font-mono">Company</label>
+                    <label className="font-semibold text-muted-foreground font-mono">
+                      Company
+                    </label>
                     <input
                       type="text"
                       value={newContactCompany}
@@ -1548,7 +1863,9 @@ export default function ContactsPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="font-semibold text-muted-foreground font-mono">City</label>
+                    <label className="font-semibold text-muted-foreground font-mono">
+                      City
+                    </label>
                     <input
                       type="text"
                       value={newContactCity}
@@ -1560,15 +1877,21 @@ export default function ContactsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-muted-foreground font-mono">Add Directly Into Mailing List</label>
+                  <label className="font-semibold text-muted-foreground font-mono">
+                    Add Directly Into Mailing List
+                  </label>
                   <select
                     value={newContactListId}
                     onChange={(e) => setNewContactListId(e.target.value)}
                     className="w-full px-3 py-2.5 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-400 font-medium"
                   >
-                    <option value="none">Do not assign to a list (general pool)</option>
+                    <option value="none">
+                      Do not assign to a list (general pool)
+                    </option>
                     {lists.map((l) => (
-                      <option key={l.id} value={l.id}>{l.name}</option>
+                      <option key={l.id} value={l.id}>
+                        {l.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -1603,45 +1926,64 @@ export default function ContactsPage() {
               className="w-full max-w-lg bg-card border border-border p-6 rounded-md shadow-lg space-y-6 flex flex-col max-h-[85vh]"
             >
               <div>
-                <h3 className="text-sm font-bold text-foreground tracking-tight">Add Existing Contacts to Mailing List</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Subscribe contacts in your database who are not already on this list.</p>
+                <h3 className="text-sm font-bold text-foreground tracking-tight">
+                  Add Existing Contacts to Mailing List
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Subscribe contacts in your database who are not already on
+                  this list.
+                </p>
               </div>
 
               {/* List of Contacts */}
               <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[250px]">
-                {contacts.filter(c => !c.listIds?.includes(selectedListFilter)).length === 0 ? (
+                {contacts.filter(
+                  (c) => !c.listIds?.includes(selectedListFilter),
+                ).length === 0 ? (
                   <div className="text-center py-12 text-zinc-500 font-mono text-xs">
-                    All contacts in your database are already members of this list.
+                    All contacts in your database are already members of this
+                    list.
                   </div>
                 ) : (
                   contacts
-                    .filter(c => !c.listIds?.includes(selectedListFilter))
+                    .filter((c) => !c.listIds?.includes(selectedListFilter))
                     .map((contact) => {
                       const isChecked = selectedContactIds.includes(contact.id);
                       return (
-                        <div 
+                        <div
                           key={contact.id}
                           onClick={() => {
                             if (isChecked) {
-                              setSelectedContactIds(selectedContactIds.filter(id => id !== contact.id));
+                              setSelectedContactIds(
+                                selectedContactIds.filter(
+                                  (id) => id !== contact.id,
+                                ),
+                              );
                             } else {
-                              setSelectedContactIds([...selectedContactIds, contact.id]);
+                              setSelectedContactIds([
+                                ...selectedContactIds,
+                                contact.id,
+                              ]);
                             }
                           }}
                           className={`p-3 rounded border text-xs flex items-center justify-between cursor-pointer transition ${
-                            isChecked 
-                              ? "bg-[#7C5CFF]/10 border-[#7C5CFF]/50 text-white" 
+                            isChecked
+                              ? "bg-[#7C5CFF]/10 border-[#7C5CFF]/50 text-white"
                               : "bg-zinc-950/40 border-border/60 hover:bg-zinc-900/60 hover:border-zinc-800 text-zinc-300"
                           }`}
                         >
                           <div className="space-y-0.5">
-                            <p className="font-bold font-mono">{contact.email}</p>
+                            <p className="font-bold font-mono">
+                              {contact.email}
+                            </p>
                             <p className="text-[10px] text-zinc-500">
-                              {contact.firstName ? `${contact.firstName} ${contact.lastName || ""}` : "Unnamed Subscriber"} 
+                              {contact.firstName
+                                ? `${contact.firstName} ${contact.lastName || ""}`
+                                : "Unnamed Subscriber"}
                               {contact.company ? ` • ${contact.company}` : ""}
                             </p>
                           </div>
-                          <input 
+                          <input
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => {}} // handled by row onClick
@@ -1671,7 +2013,9 @@ export default function ContactsPage() {
                   <button
                     type="button"
                     onClick={handleAddExistingToActiveList}
-                    disabled={submittingExisting || selectedContactIds.length === 0}
+                    disabled={
+                      submittingExisting || selectedContactIds.length === 0
+                    }
                     className="px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 text-xs font-semibold transition shadow-md border border-white/5 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
                   >
                     {submittingExisting ? "Adding..." : `Add Selected to List`}

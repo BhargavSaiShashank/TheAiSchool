@@ -25,22 +25,32 @@ export async function GET(req: any) {
 
     const formattedCampaigns = campaigns.map((camp) => {
       const sentCount = camp.sends ? camp.sends.length : 0;
-      const openCount = camp.email_events ? camp.email_events.filter((e) => e?.event_type === "opened").length : 0;
-      const clickCount = camp.email_events ? camp.email_events.filter((e) => e?.event_type === "clicked").length : 0;
+      const openCount = camp.email_events
+        ? camp.email_events.filter((e) => e?.event_type === "opened").length
+        : 0;
+      const clickCount = camp.email_events
+        ? camp.email_events.filter((e) => e?.event_type === "clicked").length
+        : 0;
 
-      const openRateStr = sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
-      const clickRateStr = sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
+      const openRateStr =
+        sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
+      const clickRateStr =
+        sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
 
       let sendDateStr = "—";
       if (camp.status === "sent" && camp.created_at) {
         try {
-          sendDateStr = formatDistanceToNow(new Date(camp.created_at), { addSuffix: true });
+          sendDateStr = formatDistanceToNow(new Date(camp.created_at), {
+            addSuffix: true,
+          });
         } catch (err) {
           sendDateStr = "Recent";
         }
       }
 
-      const statusStr = camp.status ? (camp.status.charAt(0).toUpperCase() + camp.status.slice(1)) : "Draft";
+      const statusStr = camp.status
+        ? camp.status.charAt(0).toUpperCase() + camp.status.slice(1)
+        : "Draft";
 
       return {
         id: camp.id,
@@ -66,13 +76,24 @@ export async function POST(req: any) {
   try {
     // --- 🛡️ RBAC ENFORCEMENT: ONLY ADMINS & MANAGERS CAN CREATE CAMPAIGNS ---
     await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
-    
+
     const orgId = await getSecureOrgId(req);
     const body = await req.json();
-    const { name, subject, previewText, fromName, fromEmail, status, templateId } = body;
+    const {
+      name,
+      subject,
+      previewText,
+      fromName,
+      fromEmail,
+      status,
+      templateId,
+    } = body;
 
     if (!name || !subject) {
-      return NextResponse.json({ error: "Campaign name and subject are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Campaign name and subject are required" },
+        { status: 400 },
+      );
     }
 
     // Safely verify if templateId exists in the database before assigning it to prevent foreign key constraint crashes (e.g. on mock starter IDs like t1, t2)
@@ -114,7 +135,10 @@ export async function POST(req: any) {
       try {
         await pushToCampaignQueue(newCamp.id);
       } catch (sqsErr) {
-        console.error("Failed to push campaign dispatch job to AWS SQS:", sqsErr);
+        console.error(
+          "Failed to push campaign dispatch job to AWS SQS:",
+          sqsErr,
+        );
       }
 
       const contacts = await prisma.contact.findMany({
@@ -145,10 +169,18 @@ export async function POST(req: any) {
       }[] = [];
 
       for (const contact of contacts) {
-        eventData.push({ contact_id: contact.id, campaign_id: newCamp.id, event_type: "sent" });
+        eventData.push({
+          contact_id: contact.id,
+          campaign_id: newCamp.id,
+          event_type: "sent",
+        });
 
         if (contact.status !== "bounced") {
-          eventData.push({ contact_id: contact.id, campaign_id: newCamp.id, event_type: "delivered" });
+          eventData.push({
+            contact_id: contact.id,
+            campaign_id: newCamp.id,
+            event_type: "delivered",
+          });
 
           if (Math.random() < 0.65) {
             openCount++;
@@ -156,7 +188,8 @@ export async function POST(req: any) {
               contact_id: contact.id,
               campaign_id: newCamp.id,
               event_type: "opened",
-              user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+              user_agent:
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
             });
 
             if (Math.random() < 0.25) {
@@ -184,8 +217,10 @@ export async function POST(req: any) {
         await prisma.emailEvent.createMany({ data: eventData });
       }
 
-      openRateStr = sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
-      clickRateStr = sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
+      openRateStr =
+        sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
+      clickRateStr =
+        sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
 
       // 🔥 OPTIMIZED: Offload Live AWS Dispatch entirely to background execution!
       // This guarantees the endpoint returns a success response in <500ms!
@@ -199,10 +234,14 @@ export async function POST(req: any) {
               accessKeyId,
               secretAccessKey,
               region: process.env.AWS_REGION || "eu-north-1",
-              senderEmail: process.env.AWS_SENDER_EMAIL || "dommetishashank@gmail.com",
+              senderEmail:
+                process.env.AWS_SENDER_EMAIL || "dommetishashank@gmail.com",
             });
           } catch (err: any) {
-            console.error("Critical Background Execution Failure:", err.message);
+            console.error(
+              "Critical Background Execution Failure:",
+              err.message,
+            );
           }
         });
       }
@@ -213,7 +252,10 @@ export async function POST(req: any) {
       name: newCamp.name,
       subject: newCamp.subject,
       status: newCamp.status.charAt(0).toUpperCase() + newCamp.status.slice(1),
-      sendDate: status === "sent" ? formatDistanceToNow(newCamp.created_at, { addSuffix: true }) : "—",
+      sendDate:
+        status === "sent"
+          ? formatDistanceToNow(newCamp.created_at, { addSuffix: true })
+          : "—",
       recipients: sentCount,
       openRate: openRateStr,
       clickRate: clickRateStr,
@@ -233,11 +275,22 @@ export async function PUT(req: any) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "Campaign ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Campaign ID is required" },
+        { status: 400 },
+      );
     }
 
     const body = await req.json();
-    const { name, subject, previewText, fromName, fromEmail, status, templateId } = body;
+    const {
+      name,
+      subject,
+      previewText,
+      fromName,
+      fromEmail,
+      status,
+      templateId,
+    } = body;
 
     let validTemplateId: string | null = null;
     if (templateId && typeof templateId === "string") {
@@ -274,7 +327,10 @@ export async function PUT(req: any) {
       try {
         await pushToCampaignQueue(updated.id);
       } catch (sqsErr) {
-        console.error("Failed to push campaign dispatch job to AWS SQS:", sqsErr);
+        console.error(
+          "Failed to push campaign dispatch job to AWS SQS:",
+          sqsErr,
+        );
       }
 
       const contacts = await prisma.contact.findMany({
@@ -291,7 +347,9 @@ export async function PUT(req: any) {
         status: contact.status === "bounced" ? "bounced" : "delivered",
       }));
       if (sendData.length > 0) {
-        await prisma.campaignSend.deleteMany({ where: { campaign_id: updated.id } });
+        await prisma.campaignSend.deleteMany({
+          where: { campaign_id: updated.id },
+        });
         await prisma.campaignSend.createMany({ data: sendData });
       }
 
@@ -304,10 +362,18 @@ export async function PUT(req: any) {
       }[] = [];
 
       for (const contact of contacts) {
-        eventData.push({ contact_id: contact.id, campaign_id: updated.id, event_type: "sent" });
+        eventData.push({
+          contact_id: contact.id,
+          campaign_id: updated.id,
+          event_type: "sent",
+        });
 
         if (contact.status !== "bounced") {
-          eventData.push({ contact_id: contact.id, campaign_id: updated.id, event_type: "delivered" });
+          eventData.push({
+            contact_id: contact.id,
+            campaign_id: updated.id,
+            event_type: "delivered",
+          });
 
           if (Math.random() < 0.65) {
             openCount++;
@@ -315,7 +381,8 @@ export async function PUT(req: any) {
               contact_id: contact.id,
               campaign_id: updated.id,
               event_type: "opened",
-              user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+              user_agent:
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
             });
 
             if (Math.random() < 0.25) {
@@ -339,12 +406,16 @@ export async function PUT(req: any) {
       }
 
       if (eventData.length > 0) {
-        await prisma.emailEvent.deleteMany({ where: { campaign_id: updated.id } });
+        await prisma.emailEvent.deleteMany({
+          where: { campaign_id: updated.id },
+        });
         await prisma.emailEvent.createMany({ data: eventData });
       }
 
-      openRateStr = sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
-      clickRateStr = sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
+      openRateStr =
+        sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
+      clickRateStr =
+        sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
 
       // 🔥 OPTIMIZED: Unified background dispatcher approach to eliminate duplicate slow code and typescript import errors.
       const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
@@ -357,10 +428,14 @@ export async function PUT(req: any) {
               accessKeyId,
               secretAccessKey,
               region: process.env.AWS_REGION || "eu-north-1",
-              senderEmail: process.env.AWS_SENDER_EMAIL || "dommetishashank@gmail.com",
+              senderEmail:
+                process.env.AWS_SENDER_EMAIL || "dommetishashank@gmail.com",
             });
           } catch (err: any) {
-            console.error("Critical Background PUT Execution Failure:", err.message);
+            console.error(
+              "Critical Background PUT Execution Failure:",
+              err.message,
+            );
           }
         });
       }

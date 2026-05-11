@@ -1,4 +1,7 @@
-import { ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
+import {
+  ReceiveMessageCommand,
+  DeleteMessageCommand,
+} from "@aws-sdk/client-sqs";
 import { sqsClient } from "../lib/sqs";
 import { processCampaignDispatch } from "../lib/dispatcher";
 // Load env variables automatically in Node 20+ using --env-file=.env flag or via production environment injects.
@@ -10,7 +13,9 @@ async function runDaemon() {
   console.log(`📡 Watching AWS SQS: ${QUEUE_URL}`);
 
   if (!QUEUE_URL) {
-    console.error("🔴 ERROR: AWS_SQS_QUEUE_URL is not defined. Worker exiting.");
+    console.error(
+      "🔴 ERROR: AWS_SQS_QUEUE_URL is not defined. Worker exiting.",
+    );
     process.exit(1);
   }
 
@@ -35,34 +40,39 @@ async function runDaemon() {
       if (data.Messages && data.Messages.length > 0) {
         for (const msg of data.Messages) {
           console.log(`📥 Job Received. MessageID: ${msg.MessageId}`);
-          
+
           try {
             const payload = JSON.parse(msg.Body || "{}");
             const campaignId = payload.campaignId;
 
             if (campaignId) {
               console.log(`🚀 Executing Campaign Dispatch Task: ${campaignId}`);
-              
+
               // Execute full isolated heavy lifting
               await processCampaignDispatch(campaignId, config);
 
               console.log("✅ Task Complete. Deleting from queue...");
-              
+
               // Safety: Only remove from queue if processed cleanly
-              await sqsClient.send(new DeleteMessageCommand({
-                QueueUrl: QUEUE_URL,
-                ReceiptHandle: msg.ReceiptHandle!,
-              }));
+              await sqsClient.send(
+                new DeleteMessageCommand({
+                  QueueUrl: QUEUE_URL,
+                  ReceiptHandle: msg.ReceiptHandle!,
+                }),
+              );
             }
           } catch (parseErr: any) {
-            console.error("❌ Malformed queue payload skipped:", parseErr.message);
+            console.error(
+              "❌ Malformed queue payload skipped:",
+              parseErr.message,
+            );
           }
         }
       }
     } catch (pollErr: any) {
       console.error("⚠️ Loop Exception (will retry):", pollErr.message);
       // Prevent infinite CPU spin on tight loops if offline
-      await new Promise(res => setTimeout(res, 5000)); 
+      await new Promise((res) => setTimeout(res, 5000));
     }
   }
 }

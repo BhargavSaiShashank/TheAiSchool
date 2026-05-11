@@ -7,7 +7,10 @@ export async function GET(req: Request) {
     const uid = searchParams.get("uid") || "";
 
     if (!uid) {
-      return NextResponse.json({ error: "Missing unique identifier" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing unique identifier" },
+        { status: 400 },
+      );
     }
 
     const [contactId] = uid.split("_");
@@ -52,7 +55,10 @@ export async function POST(req: Request) {
     const { uid, listIds } = await req.json();
 
     if (!uid || !Array.isArray(listIds)) {
-      return NextResponse.json({ error: "Invalid request parameters" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid request parameters" },
+        { status: 400 },
+      );
     }
 
     const [contactId] = uid.split("_");

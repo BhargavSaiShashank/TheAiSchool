@@ -47,19 +47,19 @@ interface CanvasBlock {
 export default function TemplatesPage() {
   const { user } = useStore();
   const router = useRouter();
-  
+
   const [view, setView] = useState<"library" | "editor">("library");
   const [templates, setTemplates] = useState<any[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Hard gate for manual URL bypass
   useEffect(() => {
     if (user && user.role === "VIEWER") {
       router.replace("/dashboard");
     }
   }, [user, router]);
-  
+
   // Library filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -71,18 +71,53 @@ export default function TemplatesPage() {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   // Editor States
-  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-  const [editorTab, setEditorTab] = useState<"blocks" | "html" | "settings">("blocks");
+  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(
+    "desktop",
+  );
+  const [editorTab, setEditorTab] = useState<"blocks" | "html" | "settings">(
+    "blocks",
+  );
   const [mergeTagDropdown, setMergeTagDropdown] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState("All changes saved");
   const [zoomScale, setZoomScale] = useState(100);
-  
+
   // Selected block editing state
   const [canvasBlocks, setCanvasBlocks] = useState<CanvasBlock[]>([
-    { id: "b1", type: "Header", content: "Welcome to PulseSend", bgColor: "#18181b", fontSize: "24", padding: "16" },
-    { id: "b2", type: "Text", content: "Hey {{first_name}},\n\nWe are absolutely thrilled to have you join us at {{custom.company}}! Prepare to create amazing, high-performance newsletters.", bgColor: "transparent", fontSize: "14", padding: "20" },
-    { id: "b3", type: "Button", content: "Get Started Now", url: "https://pulsesend.com", bgColor: "#7C5CFF", textColor: "#ffffff", fontSize: "14", padding: "12" },
-    { id: "b4", type: "Footer", content: "PulseSend Inc, Hyderabad, India. All rights reserved.", bgColor: "transparent", fontSize: "11", padding: "16" },
+    {
+      id: "b1",
+      type: "Header",
+      content: "Welcome to PulseSend",
+      bgColor: "#18181b",
+      fontSize: "24",
+      padding: "16",
+    },
+    {
+      id: "b2",
+      type: "Text",
+      content:
+        "Hey {{first_name}},\n\nWe are absolutely thrilled to have you join us at {{custom.company}}! Prepare to create amazing, high-performance newsletters.",
+      bgColor: "transparent",
+      fontSize: "14",
+      padding: "20",
+    },
+    {
+      id: "b3",
+      type: "Button",
+      content: "Get Started Now",
+      url: "https://pulsesend.com",
+      bgColor: "#7C5CFF",
+      textColor: "#ffffff",
+      fontSize: "14",
+      padding: "12",
+    },
+    {
+      id: "b4",
+      type: "Footer",
+      content: "PulseSend Inc, Hyderabad, India. All rights reserved.",
+      bgColor: "transparent",
+      fontSize: "11",
+      padding: "16",
+    },
   ]);
   const [selectedBlockIdx, setSelectedBlockIdx] = useState<number | null>(null);
 
@@ -102,7 +137,10 @@ export default function TemplatesPage() {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch templates from Supabase, using defaults.", err);
+        console.error(
+          "Failed to fetch templates from Supabase, using defaults.",
+          err,
+        );
       } finally {
         setIsLoading(false);
         if (typeof window !== "undefined") {
@@ -169,7 +207,7 @@ export default function TemplatesPage() {
             window.unlayer.init({
               id: "editor-container",
               displayMode: "email",
-              defaultDevice: isMobileView ? 'mobile' : 'desktop', // Forces engine to fit mobile width natively
+              defaultDevice: isMobileView ? "mobile" : "desktop", // Forces engine to fit mobile width natively
               features: {
                 preview: false, // Kills the internal fixed-width simulator toolbar that causes clipping
               },
@@ -177,11 +215,11 @@ export default function TemplatesPage() {
                 theme: "dark",
                 panels: {
                   tools: {
-                    dock: 'right',
+                    dock: "right",
                     collapsible: true,
-                  }
-                }
-              }
+                  },
+                },
+              },
             });
 
             // Immediately check viewport and instruct Unlayer to minimize the sidebar on compact screens
@@ -189,7 +227,10 @@ export default function TemplatesPage() {
               // Give native editor a fractional moment to render before executing collapse command
               setTimeout(() => {
                 // @ts-ignore
-                if (window.unlayer && typeof window.unlayer.collapseSidebar === 'function') {
+                if (
+                  window.unlayer &&
+                  typeof window.unlayer.collapseSidebar === "function"
+                ) {
                   // @ts-ignore
                   window.unlayer.collapseSidebar();
                 }
@@ -220,20 +261,29 @@ export default function TemplatesPage() {
                     console.error("Upload endpoint returned error status.");
                   }
                 } catch (err) {
-                  console.error("Failed to stream image to secure S3 storage:", err);
+                  console.error(
+                    "Failed to stream image to secure S3 storage:",
+                    err,
+                  );
                 }
               };
             });
 
             const loadSavedDesign = () => {
-              const blocksData = selectedTemplate?.blocks || (selectedTemplate as any)?.content;
+              const blocksData =
+                selectedTemplate?.blocks || (selectedTemplate as any)?.content;
               if (blocksData) {
                 try {
-                  const parsed = typeof blocksData === "string"
-                    ? JSON.parse(blocksData)
-                    : blocksData;
+                  const parsed =
+                    typeof blocksData === "string"
+                      ? JSON.parse(blocksData)
+                      : blocksData;
 
-                  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                  if (
+                    parsed &&
+                    typeof parsed === "object" &&
+                    !Array.isArray(parsed)
+                  ) {
                     // @ts-ignore
                     window.unlayer.loadDesign(parsed);
                   }
@@ -321,8 +371,15 @@ export default function TemplatesPage() {
     setView("editor");
   };
 
-  const handleDeleteTemplate = async (templateId: string, templateName: string) => {
-    if (!window.confirm(`Are you absolutely sure you wish to permanently delete template "${templateName}"? This action is irreversible.`)) {
+  const handleDeleteTemplate = async (
+    templateId: string,
+    templateName: string,
+  ) => {
+    if (
+      !window.confirm(
+        `Are you absolutely sure you wish to permanently delete template "${templateName}"? This action is irreversible.`,
+      )
+    ) {
       return;
     }
 
@@ -335,10 +392,15 @@ export default function TemplatesPage() {
         // Atomically slice the UI list state
         setTemplates((prev) => prev.filter((t) => t.id !== templateId));
       } else {
-        alert("Deletion failed. Ensure you possess high-level workspace clearance.");
+        alert(
+          "Deletion failed. Ensure you possess high-level workspace clearance.",
+        );
       }
     } catch (err) {
-      console.error("Communication breakdown during deletion payload delivery:", err);
+      console.error(
+        "Communication breakdown during deletion payload delivery:",
+        err,
+      );
     }
   };
 
@@ -355,18 +417,27 @@ export default function TemplatesPage() {
   };
 
   // Categories list
-  const categories = ["all", "Welcome", "Newsletter", "Promotional", "Event Invite", "Training Notice"];
+  const categories = [
+    "all",
+    "Welcome",
+    "Newsletter",
+    "Promotional",
+    "Event Invite",
+    "Training Notice",
+  ];
 
   const filteredTemplates = templates.filter((t) => {
-    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || t.category === selectedCategory;
+    const matchesSearch = t.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" || t.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   return (
     <div className="space-y-8 select-none">
       <AnimatePresence mode="wait">
-        
         {/* ==================================================
             A. TEMPLATE LIBRARY VIEW
             ================================================== */}
@@ -381,8 +452,12 @@ export default function TemplatesPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/50 pb-5">
               <div>
-                <h2 className="text-sm font-bold text-foreground uppercase font-mono tracking-tight">Template Library</h2>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider font-mono">Creative Infrastructure Workspace</p>
+                <h2 className="text-sm font-bold text-foreground uppercase font-mono tracking-tight">
+                  Template Library
+                </h2>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider font-mono">
+                  Creative Infrastructure Workspace
+                </p>
               </div>
               <button
                 onClick={() => {
@@ -429,7 +504,11 @@ export default function TemplatesPage() {
                         <motion.div
                           layoutId="active-template-cat"
                           className="absolute inset-0 bg-[#7C5CFF] rounded"
-                          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 380,
+                            damping: 28,
+                          }}
                         />
                       )}
                       <span className="relative z-10">{cat}</span>
@@ -484,16 +563,24 @@ export default function TemplatesPage() {
                         <div className="flex items-center justify-between mt-6 pt-3 border-t border-border/50 text-xs">
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => alert(`Duplicated template: ${template.name}`)}
+                              onClick={() =>
+                                alert(`Duplicated template: ${template.name}`)
+                              }
                               className="text-muted-foreground hover:text-foreground p-1 rounded transition"
                               title="Duplicate Template"
                             >
                               <Copy className="w-4 h-4" />
                             </button>
 
-                            {(user?.role === "SUPER_ADMIN" || user?.role === "CAMPAIGN_MANAGER") && (
+                            {(user?.role === "SUPER_ADMIN" ||
+                              user?.role === "CAMPAIGN_MANAGER") && (
                               <button
-                                onClick={() => handleDeleteTemplate(template.id, template.name)}
+                                onClick={() =>
+                                  handleDeleteTemplate(
+                                    template.id,
+                                    template.name,
+                                  )
+                                }
                                 className="text-red-500/60 hover:text-red-500 p-1 rounded transition cursor-pointer"
                                 title="Delete Template"
                               >
@@ -522,8 +609,13 @@ export default function TemplatesPage() {
                   <FileCode className="w-5 h-5 text-[#7C5CFF]" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-foreground uppercase font-mono">No Templates Found</h4>
-                  <p className="text-[10px] text-muted-foreground font-medium">Your creative library is empty. Create your first drag-and-drop newsletter template to get started.</p>
+                  <h4 className="text-xs font-bold text-foreground uppercase font-mono">
+                    No Templates Found
+                  </h4>
+                  <p className="text-[10px] text-muted-foreground font-medium">
+                    Your creative library is empty. Create your first
+                    drag-and-drop newsletter template to get started.
+                  </p>
                 </div>
                 <button
                   onClick={() => {
@@ -566,16 +658,31 @@ export default function TemplatesPage() {
                       <input
                         type="text"
                         value={selectedTemplate?.name || ""}
-                        onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
+                        onChange={(e) =>
+                          setSelectedTemplate({
+                            ...selectedTemplate,
+                            name: e.target.value,
+                          })
+                        }
                         onBlur={() => setIsEditingTitle(false)}
-                        onKeyDown={(e) => { if (e.key === "Enter") setIsEditingTitle(false); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") setIsEditingTitle(false);
+                        }}
                         autoFocus
                         className="px-2 py-0.5 rounded bg-zinc-950 border border-[#7C5CFF]/30 text-xs text-white font-mono uppercase tracking-tight focus:outline-none focus:border-[#7C5CFF]"
                       />
-                      <button onClick={() => setIsEditingTitle(false)} className="text-[10px] text-emerald-400 font-bold hover:underline cursor-pointer">Done</button>
+                      <button
+                        onClick={() => setIsEditingTitle(false)}
+                        className="text-[10px] text-emerald-400 font-bold hover:underline cursor-pointer"
+                      >
+                        Done
+                      </button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setIsEditingTitle(true)}>
+                    <div
+                      className="flex items-center gap-2 group cursor-pointer"
+                      onClick={() => setIsEditingTitle(true)}
+                    >
                       <h3 className="text-xs font-bold text-zinc-100 uppercase font-mono tracking-tight leading-none">
                         {selectedTemplate?.name || "Blank Template"}
                       </h3>
@@ -583,9 +690,12 @@ export default function TemplatesPage() {
                     </div>
                   )}
                   <div className="flex items-center gap-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full ${autosaveStatus === "Saving changes..." ? "bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"}`} />
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${autosaveStatus === "Saving changes..." ? "bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"}`}
+                    />
                     <span className="text-[9px] text-zinc-500 font-mono font-bold uppercase">
-                      {autosaveStatus} — {selectedTemplate?.category || "General"}
+                      {autosaveStatus} —{" "}
+                      {selectedTemplate?.category || "General"}
                     </span>
                   </div>
                 </div>
@@ -593,13 +703,22 @@ export default function TemplatesPage() {
 
               {/* Toolbar Controls - Dynamic wrapping enabled for cellular widths */}
               <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                
                 {/* Zoom Control - Automatically concealed on compact mobile for space */}
                 <div className="hidden md:flex items-center gap-2 bg-zinc-900 border border-white/[0.04] px-2 py-1 rounded text-[10px] font-mono text-zinc-400 font-semibold">
                   <span className="uppercase">Zoom:</span>
-                  <button onClick={() => setZoomScale(Math.max(50, zoomScale - 10))} className="hover:text-white">-</button>
+                  <button
+                    onClick={() => setZoomScale(Math.max(50, zoomScale - 10))}
+                    className="hover:text-white"
+                  >
+                    -
+                  </button>
                   <span>{zoomScale}%</span>
-                  <button onClick={() => setZoomScale(Math.min(120, zoomScale + 10))} className="hover:text-white">+</button>
+                  <button
+                    onClick={() => setZoomScale(Math.min(120, zoomScale + 10))}
+                    className="hover:text-white"
+                  >
+                    +
+                  </button>
                 </div>
 
                 {/* Device Selector - Also concealed on compact mobile for space */}
@@ -630,9 +749,9 @@ export default function TemplatesPage() {
 
             {/* Deeply Compressed Embedded Workspace Container - Replaced transform with native zoom to kill ghost space */}
             <div className="flex-1 rounded-lg border border-white/[0.04] overflow-hidden bg-zinc-950/40 relative">
-              <div 
-                id="editor-container" 
-                className="w-full h-full min-h-[200px]" 
+              <div
+                id="editor-container"
+                className="w-full h-full min-h-[200px]"
                 style={{
                   zoom: "0.80", // React handles prefixes automatically!
                 }}
@@ -641,7 +760,7 @@ export default function TemplatesPage() {
                 @media (min-width: 768px) {
                   #editor-container {
                     zoom: 1 !important;
-                    WebkitZoom: 1 !important;
+                    webkitzoom: 1 !important;
                     min-height: 500px !important;
                   }
                 }
@@ -649,7 +768,6 @@ export default function TemplatesPage() {
             </div>
           </motion.div>
         )}
-
       </AnimatePresence>
 
       {/* CREATE NEW TEMPLATE DETAILS MODAL */}
@@ -674,13 +792,22 @@ export default function TemplatesPage() {
               className="relative w-full max-w-md bg-[#090a0f] border border-white/[0.06] rounded-2xl p-6 shadow-2xl space-y-6 overflow-hidden select-none"
             >
               <div>
-                <h3 className="text-sm font-bold text-white tracking-tight uppercase font-mono">Create Template Details</h3>
-                <p className="text-[10px] text-zinc-500 mt-0.5">Define your design assets and categorizations</p>
+                <h3 className="text-sm font-bold text-white tracking-tight uppercase font-mono">
+                  Create Template Details
+                </h3>
+                <p className="text-[10px] text-zinc-500 mt-0.5">
+                  Define your design assets and categorizations
+                </p>
               </div>
 
-              <form onSubmit={handleConfirmCreateTemplate} className="space-y-4">
+              <form
+                onSubmit={handleConfirmCreateTemplate}
+                className="space-y-4"
+              >
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400 font-mono">Template Name</label>
+                  <label className="text-xs font-semibold text-zinc-400 font-mono">
+                    Template Name
+                  </label>
                   <input
                     type="text"
                     value={newTemplateName}
@@ -693,7 +820,9 @@ export default function TemplatesPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400 font-mono">Template Category</label>
+                  <label className="text-xs font-semibold text-zinc-400 font-mono">
+                    Template Category
+                  </label>
                   <select
                     value={newTemplateCategory}
                     onChange={(e) => setNewTemplateCategory(e.target.value)}

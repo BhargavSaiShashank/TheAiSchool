@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(formatted);
   } catch (error: any) {
-    return NextResponse.json({ error: "Failed to retrieve team manifest" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Failed to retrieve team manifest" },
+      { status: 401 },
+    );
   }
 }
 
@@ -30,7 +33,10 @@ export async function POST(req: NextRequest) {
     const { email, role } = await req.json();
 
     if (!email || !role) {
-      return NextResponse.json({ error: "Mandatory email/role pairs expected" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Mandatory email/role pairs expected" },
+        { status: 400 },
+      );
     }
 
     // Force assignment to the secure organization ID resolved by token
@@ -51,7 +57,10 @@ export async function POST(req: NextRequest) {
       status: "Provisioned",
     });
   } catch (error: any) {
-    return NextResponse.json({ error: "Resource allocation rejected" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Resource allocation rejected" },
+      { status: 401 },
+    );
   }
 }
 
@@ -60,13 +69,17 @@ export async function PUT(req: NextRequest) {
     const orgId = await getSecureOrgId(req);
     const { id, role } = await req.json();
 
-    if (!id || !role) return NextResponse.json({ error: "Parameters invalid" }, { status: 400 });
+    if (!id || !role)
+      return NextResponse.json(
+        { error: "Parameters invalid" },
+        { status: 400 },
+      );
 
     // Safe update filtering by composite id & org_id to block lateral elevation attacks
     const updated = await prisma.user.updateMany({
-      where: { 
+      where: {
         id: id,
-        org_id: orgId
+        org_id: orgId,
       },
       data: { role },
     });
@@ -83,12 +96,13 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
-    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+    if (!id)
+      return NextResponse.json({ error: "ID required" }, { status: 400 });
 
     await prisma.user.deleteMany({
-      where: { 
+      where: {
         id: id,
-        org_id: orgId
+        org_id: orgId,
       },
     });
 

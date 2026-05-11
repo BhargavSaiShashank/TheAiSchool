@@ -3,13 +3,22 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sliders, Check, ShieldCheck, Sparkles, Loader2, Save } from "lucide-react";
+import {
+  Sliders,
+  Check,
+  ShieldCheck,
+  Sparkles,
+  Loader2,
+  Save,
+} from "lucide-react";
 
 function PreferencesContent() {
   const searchParams = useSearchParams();
   const uid = searchParams.get("uid") || "";
 
-  const [status, setStatus] = useState<"loading" | "loaded" | "saved" | "error">("loading");
+  const [status, setStatus] = useState<
+    "loading" | "loaded" | "saved" | "error"
+  >("loading");
   const [contactEmail, setContactEmail] = useState("");
   const [orgName, setOrgName] = useState("PulseSend Inc.");
   const [allLists, setAllLists] = useState<any[]>([]);
@@ -96,7 +105,9 @@ function PreferencesContent() {
               className="flex flex-col items-center py-8 gap-4"
             >
               <Loader2 className="w-8 h-8 animate-spin text-[#7C5CFF]" />
-              <p className="text-zinc-400 font-mono text-sm">Loading subscriber preferences...</p>
+              <p className="text-zinc-400 font-mono text-sm">
+                Loading subscriber preferences...
+              </p>
             </motion.div>
           )}
 
@@ -125,7 +136,9 @@ function PreferencesContent() {
               {contactEmail && (
                 <div className="bg-zinc-900/30 border border-zinc-850 rounded-xl p-3 text-xs text-zinc-400 font-mono leading-none flex items-center justify-between">
                   <span>Active Email Address:</span>
-                  <span className="text-white font-semibold">{contactEmail}</span>
+                  <span className="text-white font-semibold">
+                    {contactEmail}
+                  </span>
                 </div>
               )}
 
@@ -155,7 +168,9 @@ function PreferencesContent() {
                                 : "border-zinc-700"
                             }`}
                           >
-                            {isSubscribed && <Check className="w-3 h-3 text-white stroke-[3px]" />}
+                            {isSubscribed && (
+                              <Check className="w-3 h-3 text-white stroke-[3px]" />
+                            )}
                           </div>
                           <div>
                             <p className="text-xs font-bold text-white leading-none mb-1">
@@ -200,9 +215,13 @@ function PreferencesContent() {
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl font-bold tracking-tight text-white">Preferences Saved!</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-white">
+                  Preferences Saved!
+                </h1>
                 <p className="text-sm text-zinc-400 leading-relaxed">
-                  Your list subscription preferences have been updated successfully for <span className="text-white font-semibold">{orgName}</span>.
+                  Your list subscription preferences have been updated
+                  successfully for{" "}
+                  <span className="text-white font-semibold">{orgName}</span>.
                 </p>
               </div>
 
@@ -225,7 +244,8 @@ function PreferencesContent() {
               </div>
               <h2 className="text-lg font-bold text-white">Invalid Link</h2>
               <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mx-auto">
-                This preference request is invalid or has expired. Please verify your link details.
+                This preference request is invalid or has expired. Please verify
+                your link details.
               </p>
             </motion.div>
           )}
@@ -243,11 +263,13 @@ function PreferencesContent() {
 
 export default function PreferencesPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#7C5CFF]" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#7C5CFF]" />
+        </div>
+      }
+    >
       <PreferencesContent />
     </Suspense>
   );

@@ -18,7 +18,10 @@ export async function POST() {
     await prisma.suppressionList.deleteMany({});
 
     console.log("Database successfully reset!");
-    return NextResponse.json({ success: true, message: "All sandbox, campaign, and contact data successfully wiped." });
+    return NextResponse.json({
+      success: true,
+      message: "All sandbox, campaign, and contact data successfully wiped.",
+    });
   } catch (error: any) {
     console.error("Database reset error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

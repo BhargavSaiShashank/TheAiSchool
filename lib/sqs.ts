@@ -14,7 +14,9 @@ export const sqsClient = new SQSClient({
 /**
  * Pushes a campaign dispatch job to the AWS SQS Queue
  */
-export async function pushToCampaignQueue(campaignId: string): Promise<string | undefined> {
+export async function pushToCampaignQueue(
+  campaignId: string,
+): Promise<string | undefined> {
   if (!queueUrl) {
     console.error("AWS SQS Queue URL is not defined in environment variables.");
     return undefined;

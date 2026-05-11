@@ -10,9 +10,12 @@ export async function GET(req: Request) {
   try {
     // 1. Security Guard: Protect against raw public browser execution
     const authHeader = req.headers.get("Authorization");
-    
+
     // In Vercel, CRON_SECRET is injected automatically by Vercel Cron
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (
+      process.env.CRON_SECRET &&
+      authHeader !== `Bearer ${process.env.CRON_SECRET}`
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -28,7 +31,10 @@ export async function GET(req: Request) {
     });
 
     if (pendingCampaigns.length === 0) {
-      return NextResponse.json({ success: true, message: "No campaigns scheduled for current window." });
+      return NextResponse.json({
+        success: true,
+        message: "No campaigns scheduled for current window.",
+      });
     }
 
     let activatedCount = 0;
@@ -44,10 +50,13 @@ export async function GET(req: Request) {
 
         // Push dispatcher message to AWS SQS queue
         await pushToCampaignQueue(camp.id);
-        
+
         activatedCount++;
       } catch (err: any) {
-        console.error(`Cron process failed to launch campaign ${camp.id}:`, err.message);
+        console.error(
+          `Cron process failed to launch campaign ${camp.id}:`,
+          err.message,
+        );
       }
     }
 

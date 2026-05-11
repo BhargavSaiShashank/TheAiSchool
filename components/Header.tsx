@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import { Search, Bell, Plus, Sun, Moon, Menu, CheckCircle, Sparkles } from "lucide-react";
+import {
+  Search,
+  Bell,
+  Plus,
+  Sun,
+  Moon,
+  Menu,
+  CheckCircle,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { OrganizationSwitcher } from "@clerk/nextjs";
@@ -32,20 +41,22 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       // Strip Next.js route group segments like (admin), (auth)
       .filter((p) => !/^\(.*\)$/.test(p));
     if (parts.length === 0) return "Platform";
-    return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("  /  ");
+    return parts
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join("  /  ");
   };
 
   return (
     <header className="h-[52px] flex items-center justify-between px-4 md:px-6 border-b border-border bg-background select-none sticky top-0 z-50 shrink-0">
       {/* Left Section: Hamburger + Title */}
       <div className="flex items-center gap-3">
-        <button 
+        <button
           onClick={onMenuClick}
           className="md:hidden p-1.5 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer"
         >
           <Menu className="w-4 h-4" />
         </button>
-        
+
         <div className="flex flex-col">
           <p className="hidden xs:block text-[11px] font-semibold text-zinc-500 font-mono tracking-wider uppercase mb-0.5">
             {getBreadcrumbs()}
@@ -64,9 +75,10 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             appearance={{
               baseTheme: theme === "light" ? undefined : dark,
               elements: {
-                organizationSwitcherTrigger: "hover:bg-secondary transition-all px-2 py-1.5 rounded border border-transparent hover:border-border h-9",
+                organizationSwitcherTrigger:
+                  "hover:bg-secondary transition-all px-2 py-1.5 rounded border border-transparent hover:border-border h-9",
                 organizationPreviewTextContainer: "font-semibold text-sm",
-              }
+              },
             }}
             hidePersonal={false} // Explicitly permit solo personal usage per Rule #1!
             afterCreateOrganizationUrl="/dashboard"
@@ -110,7 +122,9 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <button
           onClick={toggleTheme}
           className="p-1.5 hover:bg-secondary rounded border border-border text-muted-foreground hover:text-foreground transition cursor-pointer relative overflow-hidden"
-          title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+          title={
+            theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"
+          }
         >
           {theme === "light" ? (
             <Sun className="w-4 h-4 text-amber-500 fill-amber-500/20" />
@@ -121,7 +135,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
         {/* Alerts Popover Container */}
         <div className="relative">
-          <button 
+          <button
             onClick={() => setShowNotifications(!showNotifications)}
             className={`relative p-1.5 rounded border transition cursor-pointer ${showNotifications ? "bg-secondary border-[#7C5CFF] text-foreground" : "hover:bg-secondary border-border text-muted-foreground hover:text-foreground"}`}
           >
@@ -133,8 +147,11 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             {showNotifications && (
               <>
                 {/* Backdrop to close */}
-                <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)} />
-                
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowNotifications(false)}
+                />
+
                 <motion.div
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -143,10 +160,14 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                   className="absolute right-0 mt-2 w-72 bg-[#0d0e12] border border-zinc-800 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] rounded-xl overflow-hidden z-20 select-none"
                 >
                   <div className="p-3 border-b border-zinc-800 bg-zinc-900/30 flex items-center justify-between">
-                    <h3 className="text-[12px] font-bold text-white">System Notifications</h3>
-                    <span className="text-[9px] font-mono font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase">2 Active</span>
+                    <h3 className="text-[12px] font-bold text-white">
+                      System Notifications
+                    </h3>
+                    <span className="text-[9px] font-mono font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase">
+                      2 Active
+                    </span>
                   </div>
-                  
+
                   <div className="max-h-64 overflow-y-auto py-1">
                     <div className="p-3 border-b border-zinc-900/50 hover:bg-zinc-900/40 transition cursor-pointer group">
                       <div className="flex items-start gap-2.5">
@@ -154,8 +175,12 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                           <CheckCircle className="w-3 h-3" />
                         </div>
                         <div>
-                          <p className="text-[11px] font-bold text-zinc-100 group-hover:text-white transition">Identity fully synchronized</p>
-                          <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">Clerk authentication and local persistence active.</p>
+                          <p className="text-[11px] font-bold text-zinc-100 group-hover:text-white transition">
+                            Identity fully synchronized
+                          </p>
+                          <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
+                            Clerk authentication and local persistence active.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -166,8 +191,12 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                           <Sparkles className="w-3 h-3" />
                         </div>
                         <div>
-                          <p className="text-[11px] font-bold text-zinc-100 group-hover:text-white transition">Welcome to PulseSend</p>
-                          <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">Your high-velocity SES dispatch platform is live.</p>
+                          <p className="text-[11px] font-bold text-zinc-100 group-hover:text-white transition">
+                            Welcome to PulseSend
+                          </p>
+                          <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
+                            Your high-velocity SES dispatch platform is live.
+                          </p>
                         </div>
                       </div>
                     </div>

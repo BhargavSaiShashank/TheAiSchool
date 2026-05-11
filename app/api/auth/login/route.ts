@@ -6,7 +6,10 @@ export async function POST(req: Request) {
     const { email, password } = await req.json();
 
     if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Email and password are required" },
+        { status: 400 },
+      );
     }
 
     const user = await prisma.user.findFirst({
@@ -15,7 +18,10 @@ export async function POST(req: Request) {
     });
 
     if (!user || user.password_hash !== password) {
-      return NextResponse.json({ error: "Invalid email address or security credentials." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Invalid email address or security credentials." },
+        { status: 401 },
+      );
     }
 
     return NextResponse.json({

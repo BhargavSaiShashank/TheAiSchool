@@ -47,10 +47,8 @@ export default function Preloader() {
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#06070A] text-white overflow-hidden select-none">
       {/* Sleek dotted dark grid background */}
-      <div 
-        className="absolute inset-0 bg-[radial-gradient(#1e1b4b_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.15] pointer-events-none" 
-      />
-      
+      <div className="absolute inset-0 bg-[radial-gradient(#1e1b4b_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.15] pointer-events-none" />
+
       {/* Ambient background glows */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#7C5CFF]/[0.02] rounded-full blur-[140px] pointer-events-none animate-pulse" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#3B82F6]/[0.01] rounded-full blur-[100px] pointer-events-none" />
@@ -68,7 +66,7 @@ export default function Preloader() {
         <div className="relative w-24 h-24 flex items-center justify-center">
           {/* Outer glow ring */}
           <div className="absolute inset-0 rounded-full border border-white/[0.02] shadow-[0_0_50px_rgba(124,92,255,0.05)]" />
-          
+
           {/* Spinning dashed rail */}
           <motion.div
             animate={{ rotate: 360 }}
@@ -88,7 +86,9 @@ export default function Preloader() {
             <span className="text-2xl font-mono font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-400 select-none">
               {String(progress).padStart(3, "0")}
             </span>
-            <span className="text-[10px] font-mono font-bold text-[#7C5CFF] ml-0.5">%</span>
+            <span className="text-[10px] font-mono font-bold text-[#7C5CFF] ml-0.5">
+              %
+            </span>
           </div>
         </div>
 
@@ -104,9 +104,13 @@ export default function Preloader() {
               className="font-mono text-[9px] font-bold tracking-widest uppercase text-zinc-500 flex items-center gap-1.5"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#7C5CFF] animate-pulse" />
-              <span className="text-[#7C5CFF]">{BOOT_LOGS[logIdx].split(":")[0]}</span>
+              <span className="text-[#7C5CFF]">
+                {BOOT_LOGS[logIdx].split(":")[0]}
+              </span>
               <span className="text-zinc-600">❯</span>
-              <span className="text-zinc-400 font-medium">{BOOT_LOGS[logIdx].split(":")[1]}</span>
+              <span className="text-zinc-400 font-medium">
+                {BOOT_LOGS[logIdx].split(":")[1]}
+              </span>
             </motion.div>
           </AnimatePresence>
         </div>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { after } from "next/server"; 
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
@@ -9,7 +9,10 @@ export async function GET(req: Request) {
     const originalUrl = searchParams.get("url") || "";
 
     if (!originalUrl) {
-      return NextResponse.json({ error: "Missing target redirect URL" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing target redirect URL" },
+        { status: 400 },
+      );
     }
 
     if (uid) {

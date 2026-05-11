@@ -59,10 +59,22 @@ export async function POST(req: NextRequest) {
     await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
     const orgId = await getSecureOrgId(req);
     const body = await req.json();
-    const { email, firstName, lastName, status, company, city, jobTitle, listId } = body;
+    const {
+      email,
+      firstName,
+      lastName,
+      status,
+      company,
+      city,
+      jobTitle,
+      listId,
+    } = body;
 
     if (!email) {
-      return NextResponse.json({ error: "Email address is mandatory" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Email address is mandatory" },
+        { status: 400 },
+      );
     }
 
     // Create within strict org isolation

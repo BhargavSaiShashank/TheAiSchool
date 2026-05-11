@@ -9,7 +9,10 @@ export async function POST(req: NextRequest) {
     const { to, subject, html } = body;
 
     if (!to || !subject) {
-      return NextResponse.json({ error: "Recipient and subject are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Recipient and subject are required" },
+        { status: 400 },
+      );
     }
 
     const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
@@ -19,8 +22,11 @@ export async function POST(req: NextRequest) {
 
     if (!accessKeyId || !secretAccessKey || !senderEmail) {
       return NextResponse.json(
-        { error: "AWS credentials or sender email are not fully configured in .env" },
-        { status: 500 }
+        {
+          error:
+            "AWS credentials or sender email are not fully configured in .env",
+        },
+        { status: 500 },
       );
     }
 
@@ -44,7 +50,9 @@ export async function POST(req: NextRequest) {
         },
         Body: {
           Html: {
-            Data: html || `
+            Data:
+              html ||
+              `
               <div style="font-family: sans-serif; padding: 24px; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px;">
                 <h2 style="color: #111;">Test Dispatch Successful! 🚀</h2>
                 <p>Hello,</p>

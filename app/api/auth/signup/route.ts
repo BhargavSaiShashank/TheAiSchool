@@ -6,7 +6,10 @@ export async function POST(req: Request) {
     const { email, password, orgName } = await req.json();
 
     if (!email || !password || !orgName) {
-      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "All fields are required" },
+        { status: 400 },
+      );
     }
 
     // Check if user already exists
@@ -15,7 +18,10 @@ export async function POST(req: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ error: "Email address is already registered." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Email address is already registered." },
+        { status: 400 },
+      );
     }
 
     // 1. Create a brand new organization for the signing-up user

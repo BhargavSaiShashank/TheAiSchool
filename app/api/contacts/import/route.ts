@@ -9,7 +9,10 @@ export async function POST(req: NextRequest) {
     const { contacts, listId } = await req.json();
 
     if (!contacts || !Array.isArray(contacts)) {
-      return NextResponse.json({ error: "Contact array invalid" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Contact array invalid" },
+        { status: 400 },
+      );
     }
 
     let addedCount = 0;

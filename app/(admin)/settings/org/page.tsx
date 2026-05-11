@@ -74,13 +74,17 @@ export default function OrgSettingsPage() {
             <Building className="w-[18px] h-[18px] text-muted-foreground" />
             <span>AWS & Email Parameters</span>
           </h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Manage details and AWS SES integrations for {user?.org_name}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            Manage details and AWS SES integrations for {user?.org_name}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
             <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-semibold text-muted-foreground font-mono">Organisation Name</label>
+              <label className="text-xs font-semibold text-muted-foreground font-mono">
+                Organisation Name
+              </label>
               <input
                 type="text"
                 value={name}
@@ -91,7 +95,9 @@ export default function OrgSettingsPage() {
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-semibold text-muted-foreground font-mono">Default Sender Address</label>
+              <label className="text-xs font-semibold text-muted-foreground font-mono">
+                Default Sender Address
+              </label>
               <input
                 type="email"
                 value={fromEmail}
@@ -118,7 +124,9 @@ export default function OrgSettingsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground font-mono">SES Event Configuration Set</label>
+              <label className="text-xs font-semibold text-muted-foreground font-mono">
+                SES Event Configuration Set
+              </label>
               <input
                 type="text"
                 value={configSet}

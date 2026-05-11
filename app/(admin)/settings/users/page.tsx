@@ -66,15 +66,15 @@ export default function TeammatesPage() {
       });
 
       if (res.ok) {
-        setTeammates(
-          teammates.map((u) => (u.id === id ? { ...u, role } : u))
-        );
+        setTeammates(teammates.map((u) => (u.id === id ? { ...u, role } : u)));
         const editedTeammate = teammates.find((u) => u.id === id);
-        if (currentLoggedUser && editedTeammate && (
-          currentLoggedUser.id === id || 
-          currentLoggedUser.email === editedTeammate.email ||
-          currentLoggedUser.email === "synced@clerk.user"
-        )) {
+        if (
+          currentLoggedUser &&
+          editedTeammate &&
+          (currentLoggedUser.id === id ||
+            currentLoggedUser.email === editedTeammate.email ||
+            currentLoggedUser.email === "synced@clerk.user")
+        ) {
           login({ ...currentLoggedUser, role: role as any });
         }
       }
@@ -107,7 +107,10 @@ export default function TeammatesPage() {
             <Users className="w-[18px] h-[18px] text-zinc-400" />
             <span>Roles & Teammates Directory</span>
           </h2>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Manage and assign permission roles, and invite teammates to PulseSend</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            Manage and assign permission roles, and invite teammates to
+            PulseSend
+          </p>
         </div>
         <button
           onClick={() => setShowInviteModal(true)}
@@ -132,19 +135,28 @@ export default function TeammatesPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-muted-foreground font-mono tracking-widest text-[11px] uppercase">
+                  <td
+                    colSpan={4}
+                    className="py-8 text-center text-muted-foreground font-mono tracking-widest text-[11px] uppercase"
+                  >
                     Loading directory...
                   </td>
                 </tr>
               ) : teammates.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-muted-foreground font-mono tracking-wider text-[11px] uppercase">
+                  <td
+                    colSpan={4}
+                    className="py-8 text-center text-muted-foreground font-mono tracking-wider text-[11px] uppercase"
+                  >
                     No teammates found inside organization registry.
                   </td>
                 </tr>
               ) : (
                 teammates.map((user) => (
-                  <tr key={user.id} className="border-b border-border/50 hover:bg-secondary/40 transition">
+                  <tr
+                    key={user.id}
+                    className="border-b border-border/50 hover:bg-secondary/40 transition"
+                  >
                     <td className="py-3.5 px-5 font-bold text-foreground font-mono text-[11px] flex items-center gap-2.5">
                       <div className="w-[26px] h-[26px] rounded-full bg-secondary border border-border flex items-center justify-center text-[10px] font-black uppercase text-muted-foreground">
                         {user.email[0]}
@@ -154,20 +166,26 @@ export default function TeammatesPage() {
                     <td className="py-3.5 px-5">
                       <select
                         value={user.role}
-                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        onChange={(e) =>
+                          handleRoleChange(user.id, e.target.value)
+                        }
                         className="px-2 py-1 rounded bg-secondary border border-border text-[10px] text-foreground font-semibold font-mono focus:outline-none"
                       >
                         <option value="SUPER_ADMIN">SUPER ADMIN</option>
-                        <option value="CAMPAIGN_MANAGER">CAMPAIGN MANAGER</option>
+                        <option value="CAMPAIGN_MANAGER">
+                          CAMPAIGN MANAGER
+                        </option>
                         <option value="VIEWER">VIEWER</option>
                       </select>
                     </td>
                     <td className="py-3.5 px-5">
-                      <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
-                        user.status === "Active"
-                          ? "bg-emerald-500/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                          : "bg-amber-500/10 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                      }`}>
+                      <span
+                        className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase ${
+                          user.status === "Active"
+                            ? "bg-emerald-500/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                            : "bg-amber-500/10 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                        }`}
+                      >
                         {user.status}
                       </span>
                     </td>
@@ -199,13 +217,19 @@ export default function TeammatesPage() {
               className="w-full max-w-md glass-hud p-6 rounded-lg space-y-6"
             >
               <div>
-                <h3 className="text-sm font-bold text-foreground tracking-tight">Invite Teammate</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Invite a teammate to collaborate on PulseSend campaigns</p>
+                <h3 className="text-sm font-bold text-foreground tracking-tight">
+                  Invite Teammate
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Invite a teammate to collaborate on PulseSend campaigns
+                </p>
               </div>
 
               <form onSubmit={handleInvite} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Email Address</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Email Address
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <input
@@ -220,14 +244,20 @@ export default function TeammatesPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground font-mono">Permission Role</label>
+                  <label className="text-xs font-semibold text-muted-foreground font-mono">
+                    Permission Role
+                  </label>
                   <select
                     value={newRole}
                     onChange={(e) => setNewRole(e.target.value)}
                     className="w-full px-3 py-2.5 rounded bg-secondary border border-border focus:outline-none focus:border-primary text-sm text-foreground font-medium"
                   >
-                    <option value="SUPER_ADMIN">SUPER ADMIN (Full Access)</option>
-                    <option value="CAMPAIGN_MANAGER">CAMPAIGN MANAGER (Campaign Access)</option>
+                    <option value="SUPER_ADMIN">
+                      SUPER ADMIN (Full Access)
+                    </option>
+                    <option value="CAMPAIGN_MANAGER">
+                      CAMPAIGN MANAGER (Campaign Access)
+                    </option>
                     <option value="VIEWER">VIEWER (Read-Only Access)</option>
                   </select>
                 </div>

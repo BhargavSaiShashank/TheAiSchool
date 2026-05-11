@@ -16,7 +16,9 @@ export async function GET(req: NextRequest) {
       id: item.id,
       email: item.email,
       reason: item.reason,
-      date: formatDistanceToNow(new Date(item.suppressed_at), { addSuffix: true }),
+      date: formatDistanceToNow(new Date(item.suppressed_at), {
+        addSuffix: true,
+      }),
       log: item.audit_log || "System auto-suppressed",
     }));
 
@@ -33,7 +35,10 @@ export async function POST(req: NextRequest) {
     const { email, reason, log } = await req.json();
 
     if (!email || !reason) {
-      return NextResponse.json({ error: "Field inputs missing" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Field inputs missing" },
+        { status: 400 },
+      );
     }
 
     const created = await prisma.suppressionList.create({
@@ -58,18 +63,25 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
-    if (!id) return NextResponse.json({ error: "Missing record identifier" }, { status: 400 });
+    if (!id)
+      return NextResponse.json(
+        { error: "Missing record identifier" },
+        { status: 400 },
+      );
 
     // Use deleteMany combined with org_id for secure deletion verification
     await prisma.suppressionList.deleteMany({
       where: {
         id: id,
-        org_id: orgId
+        org_id: orgId,
       },
     });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    return NextResponse.json({ error: "Deletion execution failed" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Deletion execution failed" },
+      { status: 401 },
+    );
   }
 }
