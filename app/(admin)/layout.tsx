@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { useUser, useOrganization } from "@clerk/nextjs";
+import { useUser, useOrganization, useClerk } from "@clerk/nextjs";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import Preloader from "@/components/Preloader";
@@ -11,6 +11,7 @@ import CommandPalette from "@/components/CommandPalette";
 import ToastContainer from "@/components/ToastContainer";
 import WarpGridCanvas from "@/components/WarpGridCanvas";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import { AlertTriangle, UserCheck, LogOut, Loader2 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -21,13 +22,42 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, login, theme } = useStore();
-  const { user: clerkUser, isLoaded } = useUser();
+  const { user, login, logout, theme } = useStore();
+  const { user: clerkUser, isLoaded, isSignedIn } = useUser();
   const { organization, isLoaded: isOrgLoaded } = useOrganization();
+  const { signOut } = useClerk();
+
   const [mounted, setMounted] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const lastSyncedOrgIdRef = useRef<string | null | undefined>(undefined);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [interceptActive, setInterceptActive] = useState(false);
+  const [isHandlingSignOut, setIsHandlingSignOut] = useState(false);
+
+  // --- 🛡️ UNIVERSAL INVITATION INTERCEPTOR ---
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    
+    const urlString = typeof window !== "undefined" ? window.location.search : "";
+    const hasTicket = urlString.includes("__clerk_") || urlString.includes("ticket");
+    
+    if (hasTicket) {
+       console.log("🔐 INTERCEPTING INVITATION OVERLAP INSIDE ADMIN SHELL!");
+       setInterceptActive(true);
+    }
+  }, [isLoaded, isSignedIn]);
+
+  const handleConfirmMerge = () => {
+     setInterceptActive(false);
+  };
+
+  const handleSignOutForSwitch = async () => {
+     setIsHandlingSignOut(true);
+     await signOut();
+     logout(); 
+     // Forces a hard exit back to baseline
+  };
 
   // Automatically close drawer on route changes
   useEffect(() => {
@@ -307,6 +337,68 @@ export default function AdminLayout({
                 });
               }}
             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- 🚨 SECURITY INTERVENTIONAL OVERLAY --- */}
+      <AnimatePresence>
+        {interceptActive && (
+          <motion.div
+            key="global-intercept-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/95 backdrop-blur-md px-4"
+          >
+             <motion.div 
+               initial={{ scale: 0.95, y: 10 }}
+               animate={{ scale: 1, y: 0 }}
+               className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 w-full max-w-md text-center shadow-[0_0_80px_rgba(0,0,0,0.9)] relative"
+             >
+               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500" />
+               
+               <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6 mt-2">
+                 <AlertTriangle className="w-7 h-7 text-amber-500" />
+               </div>
+
+               <h2 className="text-xl font-bold text-white mb-2">Identity Conflict Encountered</h2>
+               <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
+                 An invitation handshake was detected, but you are actively authenticated as:
+                 <br/>
+                 <span className="font-mono font-medium text-white bg-zinc-800 px-3 py-1.5 rounded mt-2 inline-block border border-zinc-700">
+                   {clerkUser?.emailAddresses[0]?.emailAddress || "Current Operator"}
+                 </span>
+               </p>
+
+               <div className="grid gap-3">
+                  <button
+                    onClick={handleConfirmMerge}
+                    disabled={isHandlingSignOut}
+                    className="flex items-center justify-center gap-2 w-full bg-white text-black py-3.5 rounded-xl font-semibold hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    Continue as current user
+                  </button>
+
+                  <button
+                    onClick={handleSignOutForSwitch}
+                    disabled={isHandlingSignOut}
+                    className="flex items-center justify-center gap-2 w-full bg-zinc-800 border border-zinc-700 text-white py-3.5 rounded-xl font-medium hover:bg-zinc-700 hover:border-zinc-600 transition-all disabled:opacity-50"
+                  >
+                    {isHandlingSignOut ? (
+                       <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                       <LogOut className="w-4 h-4 text-red-400" />
+                    )}
+                    Sign Out to use another email
+                  </button>
+               </div>
+               
+               <p className="text-[10px] text-zinc-600 mt-6 uppercase tracking-widest font-bold">
+                 Enterprise Shield Protocol
+               </p>
+             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

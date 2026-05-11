@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { UserButton, useOrganization } from "@clerk/nextjs";
+import { UserButton, useOrganization, useClerk } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,6 +29,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
   const { user, sidebarCollapsed, toggleSidebar, logout, theme } = useStore();
   const { organization } = useOrganization();
+  const { signOut } = useClerk();
 
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["SUPER_ADMIN", "CAMPAIGN_MANAGER", "VIEWER"] },
@@ -45,9 +46,15 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
     { name: "Suppression List", href: "/settings/suppression", icon: ShieldAlert, roles: ["SUPER_ADMIN"] },
   ];
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      // 💣 Nuclear Option: MUST terminate global Clerk identity first to block auto-login loop!
+      await signOut();
+      logout(); // Wipe internal store
+      router.push("/login");
+    } catch (e) {
+      console.error("Logout fault:", e);
+    }
   };
 
   // Filter items based on user role
