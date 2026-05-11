@@ -265,10 +265,19 @@ export default function CampaignsPage() {
     );
   };
 
-  const handleSaveCampaign = async (status: "draft" | "sent") => {
+  const handleSaveCampaign = async (status: string) => {
     if (isSaving) return;
     setIsSaving(true);
     try {
+      let scheduledAt = null;
+      if (status === "scheduled" && scheduleDate && scheduleTime) {
+        try {
+          scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+        } catch (e) {
+          console.warn("Failed to parse scheduled date/time", e);
+        }
+      }
+
       const url = editingCampaignId
         ? `/api/campaigns?id=${editingCampaignId}`
         : "/api/campaigns";
@@ -286,6 +295,8 @@ export default function CampaignsPage() {
           status,
           templateId: selectedTemplateId || null,
           recipientsConfig: JSON.stringify({ selectedLists, excludedLists }),
+          scheduledAt,
+          timezone: scheduleTimezone,
         }),
       });
       if (res.ok) {
@@ -294,17 +305,15 @@ export default function CampaignsPage() {
           setCampaigns(
             campaigns.map((c) => (c.id === editingCampaignId ? campResult : c)),
           );
-          toast.success(`Updated campaign draft: ${campResult.name}`);
+          toast.success(`Updated campaign: ${campResult.name}`);
         } else {
           setCampaigns([campResult, ...campaigns]);
           toast.success(`Saved campaign: ${campResult.name}`);
         }
       }
     } catch (err) {
-      console.error(
-        "Failed to save campaign to Supabase, running simulation local state.",
-        err,
-      );
+      console.error("Failed to execute save operation:", err);
+      toast.error("Connectivity error preventing cloud synchronization.");
     } finally {
       setIsSaving(false);
       setEditingCampaignId(null);
@@ -319,14 +328,24 @@ export default function CampaignsPage() {
     )
     .reduce((sum, list) => sum + (list.count ?? 0), 0);
 
-  // Launch Queue Sending Simulation with real database counts and debouncing
-  const handleSendCampaignNow = async () => {
+  // Master finalization handler for firing now OR locking in a future cron schedule
+  const handleFinalizeCampaign = async () => {
     if (isSaving) return;
-    await handleSaveCampaign("sent");
-    setSentCount(0);
-    setTotalCount(totalRecipientsCount);
-    setQueueStatus("sending");
-    setView("queue");
+    
+    if (sendOption === "schedule") {
+      if (!scheduleDate || !scheduleTime) {
+        toast.error("Activation blocked: missing launch date or time coordinates.");
+        return;
+      }
+      await handleSaveCampaign("scheduled");
+      setView("list"); 
+    } else {
+      await handleSaveCampaign("sent");
+      setSentCount(0);
+      setTotalCount(totalRecipientsCount);
+      setQueueStatus("sending");
+      setView("queue");
+    }
   };
 
   return (
@@ -1027,12 +1046,16 @@ export default function CampaignsPage() {
                   <button
                     type="button"
                     disabled={isSaving}
-                    onClick={handleSendCampaignNow}
+                    onClick={handleFinalizeCampaign}
                     className="flex items-center gap-1.5 px-5 py-1.5 rounded bg-white text-black hover:bg-zinc-200 text-xs font-extrabold shadow transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Send className="w-3.5 h-3.5" />
+                    {sendOption === "schedule" ? <Clock className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
                     <span>
-                      {isSaving ? "Launching..." : "Confirm & Send Now"}
+                      {isSaving 
+                        ? "Locking Engine..." 
+                        : sendOption === "schedule" 
+                          ? "Confirm & Schedule" 
+                          : "Confirm & Send Now"}
                     </span>
                   </button>
                 )}

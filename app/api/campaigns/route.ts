@@ -88,6 +88,8 @@ export async function POST(req: any) {
       status,
       templateId,
       recipientsConfig,
+      scheduledAt,
+      timezone,
     } = body;
 
     if (!name || !subject) {
@@ -124,6 +126,8 @@ export async function POST(req: any) {
         template_id: validTemplateId,
         org_id: orgId,
         recipients_config: recipientsConfig,
+        scheduled_at: scheduledAt ? new Date(scheduledAt) : null,
+        timezone: timezone || null,
       },
     });
 
@@ -187,6 +191,8 @@ export async function PUT(req: any) {
       status,
       templateId,
       recipientsConfig,
+      scheduledAt,
+      timezone,
     } = body;
 
     let validTemplateId: string | null = null;
@@ -214,6 +220,8 @@ export async function PUT(req: any) {
         status: status || "draft",
         template_id: validTemplateId,
         recipients_config: recipientsConfig,
+        scheduled_at: scheduledAt ? new Date(scheduledAt) : null,
+        timezone: timezone || null,
       },
     });
 
