@@ -70,11 +70,10 @@ export default function AnalyticsPage() {
     fetchReport();
   }, [selectedCampaignId]);
 
-  const handleExportCSV = () => {
+  const handlePrintPDF = () => {
     if (!data) return;
-    alert(
-      `CSV compiled successfully for campaign "${data.name}" and downloading in background.`,
-    );
+    // Native optimized route using standardized print layout overlays
+    window.print();
   };
 
   if (campaigns.length === 0 && !isLoading) {
@@ -141,11 +140,11 @@ export default function AnalyticsPage() {
           </select>
 
           <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-secondary border border-border hover:border-primary text-muted-foreground hover:text-foreground text-[13px] font-mono font-bold transition cursor-pointer"
+            onClick={handlePrintPDF}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-[#7C5CFF] text-white hover:bg-[#7C5CFF]/90 shadow-[0_2px_5px_rgba(124,92,255,0.25)] text-[13px] font-bold transition cursor-pointer border border-white/10"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Export CSV</span>
+            <span>Export PDF</span>
           </button>
         </div>
       </div>
@@ -352,6 +351,34 @@ export default function AnalyticsPage() {
           </table>
         </div>
       </div>
+
+      {/* Print Specific Logic Injected Inline to guarantee zero-leak isolation */}
+      <style>{`
+        @media print {
+          /* Hide all ambient layout noise: sidebars, user panels, selection triggers */
+          nav, aside, .sidebar-node, .header-node, header, button, select { display: none !important; }
+          
+          /* Force layout into full-width paper geometry */
+          body, main, div#__next { background: #ffffff !important; color: #000000 !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; float: none !important; width: 100% !important; }
+          
+          /* Invert dark dashboard to print-friendly high-contrast light mode */
+          .bg-card, .glass-hud, .glass {
+             background: #ffffff !important; 
+             border: 1px solid #e0e0e0 !important; 
+             box-shadow: none !important;
+             color: #000000 !important;
+          }
+          
+          h2, h3, p, td, th { color: #111111 !important; }
+          
+          /* Conserve chart saturation for final ink layout */
+          * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+          
+          /* Forced separation for grid systems */
+          .grid { display: block !important; }
+          .grid > div { margin-bottom: 20px !important; page-break-inside: avoid; }
+        }
+      `}</style>
     </div>
   );
 }

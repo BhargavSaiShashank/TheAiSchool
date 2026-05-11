@@ -56,6 +56,8 @@ export default function ContactsPage() {
   const [newContactCompany, setNewContactCompany] = useState("");
   const [newContactCity, setNewContactCity] = useState("");
   const [newContactListId, setNewContactListId] = useState("none");
+  const [customFieldName, setCustomFieldName] = useState("");
+  const [customFieldValue, setCustomFieldValue] = useState("");
   const [addingContact, setAddingContact] = useState(false);
 
   const [showAddExistingModal, setShowAddExistingModal] = useState(false);
@@ -133,6 +135,11 @@ export default function ContactsPage() {
       return;
     }
     setAddingContact(true);
+    const customFieldsMap: Record<string, string> = {};
+    if (customFieldName.trim()) {
+      customFieldsMap[customFieldName.trim()] = customFieldValue;
+    }
+
     try {
       const res = await fetch("/api/contacts", {
         method: "POST",
@@ -144,6 +151,7 @@ export default function ContactsPage() {
           company: newContactCompany,
           city: newContactCity,
           listId: newContactListId,
+          customFields: Object.keys(customFieldsMap).length > 0 ? JSON.stringify(customFieldsMap) : null,
         }),
       });
 
@@ -171,6 +179,8 @@ export default function ContactsPage() {
         setNewContactCompany("");
         setNewContactCity("");
         setNewContactListId("none");
+        setCustomFieldName("");
+        setCustomFieldValue("");
       } else {
         const errData = await res.json();
         alert(`Failed to add contact: ${errData.error || "Unknown error"}`);
@@ -484,6 +494,46 @@ export default function ContactsPage() {
   // Add rule in Segment builder
   const addRule = () => {
     setRules([...rules, { field: "email", operator: "contains", value: "" }]);
+  };
+
+  const handleExportToCSV = () => {
+    if (contacts.length === 0) {
+      toast.error("No contact metrics detected to manifest export.");
+      return;
+    }
+    
+    // Enforce standardized structure headers
+    const headers = ["Email", "First_Name", "Last_Name", "Company", "City", "Status", "Custom_Fields"];
+    
+    const csvDataRows = contacts.map(c => {
+      // Guard against embedded comma corruption using absolute quote confinement
+      const e = `"${(c.email || '').replace(/"/g, '""')}"`;
+      const fn = `"${(c.firstName || '').replace(/"/g, '""')}"`;
+      const ln = `"${(c.lastName || '').replace(/"/g, '""')}"`;
+      const comp = `"${(c.company || '').replace(/"/g, '""')}"`;
+      const ct = `"${(c.city || '').replace(/"/g, '""')}"`;
+      const st = `"${(c.status || '').replace(/"/g, '""')}"`;
+      const cf = `"${(c.customFields || c.custom_fields || '').replace(/"/g, '""')}"`;
+      
+      return [e, fn, ln, comp, ct, st, cf].join(",");
+    });
+    
+    const csvBlobString = [headers.join(","), ...csvDataRows].join("\n");
+    
+    // Forge high-performance memory blob stream
+    const blob = new Blob([csvBlobString], { type: 'text/csv;charset=utf-8;' });
+    const downloadUri = URL.createObjectURL(blob);
+    
+    // Instantiate stealth virtual traversal element
+    const shadowTrigger = document.createElement("a");
+    shadowTrigger.setAttribute("href", downloadUri);
+    shadowTrigger.setAttribute("download", `PulseSend_Master_Registry_${Date.now()}.csv`);
+    shadowTrigger.style.visibility = 'hidden';
+    document.body.appendChild(shadowTrigger);
+    shadowTrigger.click();
+    document.body.removeChild(shadowTrigger);
+    
+    toast.success("Global Registry Export serialized and dispatched.");
   };
 
   // CSV File upload with real dynamic parsing
@@ -969,6 +1019,16 @@ export default function ContactsPage() {
                   <option value="bounced">Bounced</option>
                   <option value="complained">Complained</option>
                 </select>
+
+                <button
+                  type="button"
+                  onClick={handleExportToCSV}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 border border-border text-muted-foreground hover:text-white hover:bg-zinc-800 text-xs font-semibold transition cursor-pointer shrink-0"
+                  title="Download Current List view as CSV"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">Export CSV</span>
+                </button>
 
                 {user?.role &&
                   ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(user.role) && (
@@ -1931,6 +1991,29 @@ export default function ContactsPage() {
                       onChange={(e) => setNewContactCity(e.target.value)}
                       placeholder="City"
                       className="w-full px-3 py-2 rounded bg-zinc-900 border border-border focus:outline-none focus:border-zinc-700 text-sm text-zinc-200"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2 pb-2 border-t border-zinc-900/50 mt-2 border-dashed">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 font-mono uppercase">
+                    <Sparkles className="w-3 h-3 text-[#7C5CFF]" />
+                    <span>Append Dynamic Attribute</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      value={customFieldName}
+                      onChange={(e) => setCustomFieldName(e.target.value)}
+                      placeholder="Trait Key (e.g. Birthday)"
+                      className="w-full px-3 py-2 rounded bg-zinc-900/70 border border-zinc-800/70 focus:outline-none focus:border-[#7C5CFF]/50 text-xs text-zinc-300"
+                    />
+                    <input
+                      type="text"
+                      value={customFieldValue}
+                      onChange={(e) => setCustomFieldValue(e.target.value)}
+                      placeholder="Trait Value"
+                      className="w-full px-3 py-2 rounded bg-zinc-900/70 border border-zinc-800/70 focus:outline-none focus:border-[#7C5CFF]/50 text-xs text-zinc-300"
                     />
                   </div>
                 </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Preloader from "@/components/Preloader";
 import { toast } from "@/lib/toast";
 import { useStore } from "@/lib/store";
@@ -29,6 +30,8 @@ import {
   Sparkles,
   RotateCcw,
   Activity,
+  TrendingUp,
+  SlidersHorizontal,
 } from "lucide-react";
 
 // Mock Campaign List
@@ -36,6 +39,7 @@ const initialCampaigns: any[] = [];
 
 export default function CampaignsPage() {
   const { user } = useStore();
+  const router = useRouter();
   const [view, setView] = useState<"list" | "wizard" | "queue">("list");
   const [isLoading, setIsLoading] = useState(true);
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
@@ -66,6 +70,8 @@ export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [lists, setLists] = useState<any[]>([]);
   const [dbTemplates, setDbTemplates] = useState<any[]>([]);
+  const [selectedCompareIds, setSelectedCompareIds] = useState<string[]>([]);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
 
   // Sync session details automatically
   useEffect(() => {
@@ -221,6 +227,22 @@ export default function CampaignsPage() {
     return () => clearInterval(interval);
   }, [view, queueStatus, totalCount]);
 
+  const handleDeleteCampaign = async (id: string, name: string) => {
+    if (!confirm(`CRITICAL: This will permanently delete "${name}" and all tracking history. Continue?`)) return;
+
+    try {
+      const res = await fetch(`/api/campaigns?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setCampaigns(campaigns.filter(c => c.id !== id));
+        toast.success(`Successfully erased campaign trace: "${name}"`);
+      } else {
+        toast.error("Network rejection: Failed to remove targeted campaign.");
+      }
+    } catch (err) {
+      console.error("Eradicate Campaign Failure:", err);
+    }
+  };
+
   // Campaign duplication handler
   const handleDuplicate = (camp: (typeof initialCampaigns)[0]) => {
     const duplicated = {
@@ -354,6 +376,9 @@ export default function CampaignsPage() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-border text-zinc-500 font-mono text-[11px] uppercase bg-secondary/10">
+                      <th className="py-3.5 px-5 w-10 text-center">
+                        <SlidersHorizontal className="w-3.5 h-3.5 mx-auto text-muted-foreground/50" />
+                      </th>
                       <th className="py-3.5 px-5 font-semibold">
                         Campaign Details
                       </th>
@@ -373,7 +398,7 @@ export default function CampaignsPage() {
                   <tbody>
                     {campaigns.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-12 px-5 text-center">
+                        <td colSpan={7} className="py-12 px-5 text-center">
                           <div className="flex flex-col items-center justify-center space-y-3.5">
                             <div className="p-3 rounded-full bg-secondary border border-border text-muted-foreground">
                               <Mail className="w-6 h-6 stroke-[1.5]" />
@@ -394,10 +419,25 @@ export default function CampaignsPage() {
                       campaigns.map((camp) => (
                         <tr
                           key={camp.id}
-                          className="border-b border-border/50 hover:bg-secondary/40 transition"
+                          onClick={() => router.push(`/campaigns/${camp.id}/report`)}
+                          className={`border-b border-border/50 transition cursor-pointer group ${selectedCompareIds.includes(camp.id) ? 'bg-[#7C5CFF]/[0.04]' : 'hover:bg-secondary/40'}`}
                         >
+                          <td className="py-4 px-5 w-10 text-center" onClick={(e) => e.stopPropagation()}>
+                            <input 
+                              type="checkbox"
+                              checked={selectedCompareIds.includes(camp.id)}
+                              onChange={(e) => {
+                                if(e.target.checked) {
+                                  setSelectedCompareIds([...selectedCompareIds, camp.id]);
+                                } else {
+                                  setSelectedCompareIds(selectedCompareIds.filter(id => id !== camp.id));
+                                }
+                              }}
+                              className="w-3.5 h-3.5 accent-[#7C5CFF] rounded border-zinc-700 bg-zinc-900 cursor-pointer"
+                            />
+                          </td>
                           <td className="py-4 px-5">
-                            <p className="text-[13px] font-bold text-foreground truncate max-w-xs">
+                            <p className="text-[13px] font-bold text-foreground group-hover:text-primary transition truncate max-w-xs">
                               {camp.name}
                             </p>
                             <p className="text-[11px] text-muted-foreground truncate mt-0.5 max-w-xs font-mono">
@@ -424,7 +464,7 @@ export default function CampaignsPage() {
                           <td className="py-4 px-5 text-right text-[13px] font-mono font-semibold text-blue-400">
                             {camp.clickRate}
                           </td>
-                          <td className="py-4 px-5 text-right">
+                          <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
                             {user?.role &&
                               ["SUPER_ADMIN", "CAMPAIGN_MANAGER"].includes(
                                 user.role,
@@ -432,7 +472,8 @@ export default function CampaignsPage() {
                                 <div className="flex items-center justify-end gap-2">
                                   {camp.status !== "Sent" && (
                                     <button
-                                      onClick={() => {
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         setEditingCampaignId(camp.id);
                                         setCampaignName(camp.name);
                                         setSubject(camp.subject);
@@ -447,25 +488,31 @@ export default function CampaignsPage() {
                                     </button>
                                   )}
                                   <button
-                                    onClick={() => handleDuplicate(camp)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDuplicate(camp);
+                                    }}
                                     className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
                                     title="Duplicate Campaign"
                                   >
                                     <Copy className="w-3.5 h-3.5" />
                                   </button>
+                                  
                                   {camp.status === "Sent" && (
                                     <>
                                       <Link
                                         href={`/campaigns/${camp.id}/report`}
                                         className="text-emerald-400 hover:text-emerald-300 transition p-1.5 rounded hover:bg-emerald-400/10"
                                         title="View Analytics Report"
+                                        onClick={(e) => e.stopPropagation()}
                                       >
                                         <Activity className="w-3.5 h-3.5" />
                                       </Link>
                                       <button
-                                        onClick={() =>
-                                          handleResendToNonOpeners(camp.name)
-                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleResendToNonOpeners(camp.name);
+                                        }}
                                         className="text-muted-foreground hover:text-foreground transition p-1.5 rounded hover:bg-secondary"
                                         title="Re-send to non-openers"
                                       >
@@ -473,6 +520,19 @@ export default function CampaignsPage() {
                                       </button>
                                     </>
                                   )}
+                                  
+                                  <div className="w-[1px] h-3.5 bg-border/60 mx-1" />
+                                  
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteCampaign(camp.id, camp.name);
+                                    }}
+                                    className="text-muted-foreground hover:text-red-400 transition p-1.5 rounded hover:bg-red-950/20"
+                                    title="Permanently Delete Campaign"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
                               )}
                           </td>
@@ -1099,6 +1159,81 @@ export default function CampaignsPage() {
               )}
             </div>
           </motion.div>
+        )}
+        {/* Campaign Comparison Floating Bar */}
+        {selectedCompareIds.length >= 2 && view === "list" && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 bg-[#0d0e12] border border-[#7C5CFF]/40 shadow-xl rounded-2xl px-6 py-4 flex items-center gap-6 backdrop-blur-lg"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded bg-[#7C5CFF]/20 border border-[#7C5CFF]/40 flex items-center justify-center font-mono text-xs font-bold text-[#7C5CFF]">
+                {selectedCompareIds.length}
+              </div>
+              <span className="text-sm font-bold text-white">Campaigns Selected</span>
+            </div>
+            <div className="flex items-center gap-3 border-l border-border/50 pl-6">
+              <button 
+                onClick={() => setShowComparisonModal(true)}
+                className="px-4 py-2 bg-[#7C5CFF] hover:bg-[#7C5CFF]/90 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <TrendingUp className="w-3.5 h-3.5" />
+                Compare Results
+              </button>
+              <button 
+                onClick={() => setSelectedCompareIds([])}
+                className="text-muted-foreground hover:text-foreground text-xs font-semibold px-2 cursor-pointer"
+              >
+                Clear
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Comparison Overlay Modal */}
+        {showComparisonModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-4xl glass-hud border border-[#7C5CFF]/30 rounded-xl p-6 flex flex-col space-y-6"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-border/50">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-[#7C5CFF]" />
+                    Performance Benchmarking
+                  </h3>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">Side-by-side direct engagement visualization</p>
+                </div>
+                <button onClick={() => setShowComparisonModal(false)} className="text-muted-foreground hover:text-white text-xs font-semibold px-2 cursor-pointer">Close</button>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-auto pb-4">
+                {campaigns.filter(c => selectedCompareIds.includes(c.id)).map(camp => (
+                  <div key={camp.id} className="p-4 bg-secondary/30 border border-border rounded-lg min-w-[200px]">
+                    <p className="text-xs font-bold text-white truncate" title={camp.name}>{camp.name}</p>
+                    <div className="mt-4 space-y-3">
+                       <div>
+                         <span className="text-[9px] uppercase font-bold text-zinc-500 font-mono">Open Rate</span>
+                         <p className="text-xl font-black text-emerald-400 mt-0.5">{camp.openRate || "0.0%"}</p>
+                       </div>
+                       <div>
+                         <span className="text-[9px] uppercase font-bold text-zinc-500 font-mono">Click Rate</span>
+                         <p className="text-xl font-black text-blue-400 mt-0.5">{camp.clickRate || "0.0%"}</p>
+                       </div>
+                       <div>
+                         <span className="text-[9px] uppercase font-bold text-zinc-500 font-mono">Sent Status</span>
+                         <p className="text-[11px] font-bold text-zinc-300 mt-0.5">{camp.status}</p>
+                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

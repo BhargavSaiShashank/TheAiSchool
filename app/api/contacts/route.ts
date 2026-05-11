@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
       city,
       jobTitle,
       listId,
+      customFields: rawCustomFields,
     } = body;
 
     if (!email) {
@@ -77,6 +78,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Synthesize and harmonize dynamic data fields
+    let customFieldsParsed = {};
+    try {
+      if (rawCustomFields) {
+        customFieldsParsed = typeof rawCustomFields === 'string' ? JSON.parse(rawCustomFields) : rawCustomFields;
+      }
+    } catch (e) {
+      console.warn("Ignoring unparseable custom fields string.");
+    }
+
+    const unifiedCustomFields = {
+      company: company || "",
+      city: city || "",
+      jobTitle: jobTitle || "",
+      ...customFieldsParsed // Overlay user-defined arbitrary traits
+    };
+
     // Create within strict org isolation
     const newContact = await prisma.contact.create({
       data: {
@@ -85,7 +103,7 @@ export async function POST(req: NextRequest) {
         last_name: lastName,
         status: status || "active",
         org_id: orgId,
-        custom_fields: JSON.stringify({ company, city, jobTitle }),
+        custom_fields: JSON.stringify(unifiedCustomFields),
         source: "manual",
       },
     });

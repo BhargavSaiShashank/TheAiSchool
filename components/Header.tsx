@@ -22,6 +22,20 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname();
   const { user, theme, toggleTheme } = useStore();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([
+    {
+      id: 1,
+      title: "Identity fully synchronized",
+      body: "Clerk authentication and local persistence active.",
+      type: "success"
+    },
+    {
+      id: 2,
+      title: "Welcome to PulseSend",
+      body: "Your high-velocity SES dispatch platform is live.",
+      type: "welcome"
+    }
+  ]);
 
   const getPageTitle = () => {
     if (pathname.startsWith("/dashboard")) return "Dashboard";
@@ -140,7 +154,9 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             className={`relative p-1.5 rounded border transition cursor-pointer ${showNotifications ? "bg-secondary border-[#7C5CFF] text-foreground" : "hover:bg-secondary border-border text-muted-foreground hover:text-foreground"}`}
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            {notifications.length > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            )}
           </button>
 
           <AnimatePresence>
@@ -164,43 +180,47 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                       System Notifications
                     </h3>
                     <span className="text-[9px] font-mono font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase">
-                      2 Active
+                      {notifications.length} Active
                     </span>
                   </div>
 
-                  <div className="max-h-64 overflow-y-auto py-1">
-                    <div className="p-3 border-b border-zinc-900/50 hover:bg-zinc-900/40 transition cursor-pointer group">
-                      <div className="flex items-start gap-2.5">
-                        <div className="p-1.5 rounded bg-emerald-950/30 text-emerald-400 border border-emerald-900/30 shrink-0">
-                          <CheckCircle className="w-3 h-3" />
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map(noti => (
+                        <div key={noti.id} className="p-3 border-b border-zinc-900/50 hover:bg-zinc-900/40 transition cursor-pointer group last:border-0">
+                          <div className="flex items-start gap-2.5">
+                            <div className={`p-1.5 rounded border shrink-0 ${noti.type === 'success' ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900/30' : 'bg-[#7C5CFF]/10 text-[#7C5CFF] border-[#7C5CFF]/20'}`}>
+                              {noti.type === 'success' ? <CheckCircle className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-bold text-zinc-100 group-hover:text-white transition">
+                                {noti.title}
+                              </p>
+                              <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
+                                {noti.body}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[11px] font-bold text-zinc-100 group-hover:text-white transition">
-                            Identity fully synchronized
-                          </p>
-                          <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
-                            Clerk authentication and local persistence active.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-3 hover:bg-zinc-900/40 transition cursor-pointer group">
-                      <div className="flex items-start gap-2.5">
-                        <div className="p-1.5 rounded bg-[#7C5CFF]/10 text-[#7C5CFF] border border-[#7C5CFF]/20 shrink-0">
-                          <Sparkles className="w-3 h-3" />
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-bold text-zinc-100 group-hover:text-white transition">
-                            Welcome to PulseSend
-                          </p>
-                          <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
-                            Your high-velocity SES dispatch platform is live.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                      ))
+                    ) : (
+                       <div className="py-10 text-center flex flex-col items-center justify-center text-zinc-600">
+                         <Bell className="w-6 h-6 mb-2 opacity-30" />
+                         <p className="text-[10px] font-bold uppercase font-mono">System Inboxes Clean</p>
+                       </div>
+                    )}
                   </div>
+
+                  {notifications.length > 0 && (
+                    <div className="p-2 border-t border-zinc-800 bg-zinc-900/20">
+                      <button 
+                        onClick={() => setNotifications([])}
+                        className="w-full py-1.5 text-center text-[10px] font-bold text-zinc-500 hover:text-white transition rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800"
+                      >
+                        Mark all as read
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               </>
             )}

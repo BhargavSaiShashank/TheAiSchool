@@ -456,3 +456,33 @@ export async function PUT(req: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: any) {
+  try {
+    await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
+    const orgId = await getSecureOrgId(req);
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Identifier required for deletion" }, { status: 400 });
+    }
+
+    // Execute atomic deletion anchored to high-integrity org context validation
+    const outcome = await prisma.campaign.deleteMany({
+      where: {
+        id: id,
+        org_id: orgId
+      }
+    });
+
+    if (outcome.count === 0) {
+      return NextResponse.json({ error: "Resource not targeted or not owned" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, id });
+  } catch (error: any) {
+    console.error("DELETE /api/campaigns error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { toast } from "@/lib/toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
@@ -396,6 +397,43 @@ export default function TemplatesPage() {
     }
   };
 
+  const handleDuplicateTemplate = async (template: any) => {
+    try {
+      const res = await fetch("/api/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: "new", // Deliberately enforce new record creation instead of update
+          name: `${template.name || "Untitled"} (Copy)`,
+          category: template.category || "General",
+          content: template.content || "[]",
+          html: template.html || "",
+        }),
+      });
+
+      if (res.ok) {
+        const freshClone = await res.json();
+        // Prepend the new replica straight into current UI context for instant feedback
+        setTemplates((prev) => [
+          {
+            ...freshClone,
+            id: freshClone.id,
+            name: freshClone.name,
+            category: freshClone.category,
+            thumbnail: template.thumbnail, // Carry over visual skin
+            count: "Active Copy",
+          },
+          ...prev,
+        ]);
+        toast.success(`Synchronized Clone Complete: "${freshClone.name}" spawned successfully.`);
+      } else {
+        toast.error("Template cloning transmission interdicted on server.");
+      }
+    } catch (err) {
+      console.error("Critical template duplication gridlock:", err);
+    }
+  };
+
   // Inject Merge Tag Helper
   const injectMergeTag = (tag: string) => {
     if (selectedBlockIdx === null) return;
@@ -555,10 +593,8 @@ export default function TemplatesPage() {
                         <div className="flex items-center justify-between mt-6 pt-3 border-t border-border/50 text-xs">
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() =>
-                                alert(`Duplicated template: ${template.name}`)
-                              }
-                              className="text-muted-foreground hover:text-foreground p-1 rounded transition"
+                              onClick={() => handleDuplicateTemplate(template)}
+                              className="text-muted-foreground hover:text-foreground p-1 rounded transition cursor-pointer"
                               title="Duplicate Template"
                             >
                               <Copy className="w-4 h-4" />
