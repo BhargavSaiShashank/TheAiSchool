@@ -106,6 +106,23 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // --- 🔄 DYNAMIC CONTEXT SYNCHRONIZATION 🔄 ---
+    // Detect if the database physically drifts from the current session authority.
+    // If it drifts, execute an immediate hot-patch to sync current workspace.
+    const hasOrgDrift = activeOrg && dbUser.org_id !== activeOrg.id;
+    const hasRoleDrift = dbUser.role !== activeRole;
+
+    if (hasOrgDrift || hasRoleDrift) {
+       // Sync DB to reflect reality of current workspace
+       await prisma.user.update({
+         where: { id: dbUser.id },
+         data: {
+           org_id: activeOrg?.id || dbUser.org_id,
+           role: activeRole,
+         },
+       });
+    }
+
     // FINAL CONTEXT DELIVERY
     return NextResponse.json({
       id: dbUser.id,
