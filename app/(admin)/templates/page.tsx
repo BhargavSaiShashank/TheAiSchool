@@ -234,7 +234,7 @@ export default function TemplatesPage() {
             }
 
             // Register secure AWS S3 image upload callback
-            (window as any).unlayer.registerCallback("image", (file, done) => {
+            (window as any).unlayer.registerCallback("image", (file: any, done: any) => {
               const reader = new FileReader();
               reader.readAsDataURL(file.attachments[0]);
               reader.onload = async () => {
