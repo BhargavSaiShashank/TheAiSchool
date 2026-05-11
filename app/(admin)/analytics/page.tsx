@@ -26,6 +26,11 @@ export default function AnalyticsPage() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>("");
   const [data, setData] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Fetch list of sent campaigns first
   useEffect(() => {
@@ -188,8 +193,9 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="h-72 w-full mt-5 min-w-0" style={{ minHeight: 280 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
                 data={data.openOverTime}
                 margin={{ top: 0, right: 10, left: -25, bottom: 0 }}
               >
@@ -239,8 +245,9 @@ export default function AnalyticsPage() {
                   fillOpacity={1}
                   fill="url(#colorOpensChart)"
                 />
-              </AreaChart>
-            </ResponsiveContainer>
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
