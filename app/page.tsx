@@ -3,13 +3,22 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
+import { useUser, useAuth, useOrganizationList } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { Sparkles, Loader2 } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
   const { user } = useStore();
-  const [loading, setLoading] = useState(true);
+  const { isLoaded, isSignedIn } = useUser();
+  const { orgId } = useAuth();
+  const { setActive, userMemberships, isLoaded: isOrgListLoaded } = useOrganizationList({
+    userMemberships: {
+      infinite: true,
+      keepPreviousData: true,
+    },
+  });
+  
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
@@ -21,13 +30,48 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!hasHydrated) return;
-    if (user) {
-      router.push("/dashboard");
+    // CRITICAL: Wait for hydration, basic Clerk load, and full organization list population!
+    if (!hasHydrated || !isLoaded || !isOrgListLoaded) return;
+
+    if (isSignedIn) {
+      // --- 🛡️ INVITATION HANDSHAKE DETECTOR ---
+      // If URL contains clerk handshake tokens, user just clicked an invite/verification link.
+      // In this specific edge-case, we must find the absolute newest organization membership and force it active!
+      const urlString = window.location.search;
+      const isClerkFlow = urlString.includes("__clerk_") || urlString.includes("invitation");
+
+      const executeRedirect = () => {
+         router.push("/dashboard");
+      };
+
+      if (isClerkFlow && setActive && userMemberships.data && userMemberships.data.length > 0) {
+        // Sort memberships by creation date descending to find the absolute newest one (the one just accepted)
+        const sortedMemberships = [...userMemberships.data].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        
+        const newestMembership = sortedMemberships[0];
+        
+        // Only trigger setActive if the newest org is not ALREADY active!
+        if (newestMembership.organization.id !== orgId) {
+          console.log("🚀 INVITATION DETECTED! Switching active workspace to:", newestMembership.organization.name);
+          setActive({ organization: newestMembership.organization.id })
+            .then(executeRedirect)
+            .catch((err) => {
+              console.error("Failed to auto-switch org:", err);
+              executeRedirect();
+            });
+          return; // Exit effect to await completion of the setActive promise
+        }
+      }
+
+      // Normal entry: Clerk already maintains the last-active organization inherently. Proceed safely.
+      executeRedirect();
     } else {
+      // No session detected. Push to signup flow.
       router.push("/signup");
     }
-  }, [user, router, hasHydrated]);
+  }, [isSignedIn, isLoaded, isOrgListLoaded, hasHydrated, router, orgId, userMemberships.data, setActive]);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-black text-white relative">
