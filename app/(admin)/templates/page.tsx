@@ -174,8 +174,7 @@ export default function TemplatesPage() {
 
     script.addEventListener("load", handleScriptLoad);
 
-    // @ts-ignore
-    if (window.unlayer) {
+    if ((window as any).unlayer) {
       setUnlayerLoaded(true);
     }
 
@@ -196,15 +195,13 @@ export default function TemplatesPage() {
     const tryInit = () => {
       const container = document.getElementById("editor-container");
       if (container) {
-        // @ts-ignore
-        if (window.unlayer) {
+        if ((window as any).unlayer) {
           try {
             container.innerHTML = ""; // Clear any stale or duplicate iframes before fresh init!
 
             const isMobileView = window.innerWidth < 768;
 
-            // @ts-ignore
-            window.unlayer.init({
+            (window as any).unlayer.init({
               id: "editor-container",
               displayMode: "email",
               defaultDevice: isMobileView ? "mobile" : "desktop", // Forces engine to fit mobile width natively
@@ -226,20 +223,18 @@ export default function TemplatesPage() {
             if (window.innerWidth < 768) {
               // Give native editor a fractional moment to render before executing collapse command
               setTimeout(() => {
-                // @ts-ignore
+                const win = window as any;
                 if (
-                  window.unlayer &&
-                  typeof window.unlayer.collapseSidebar === "function"
+                  win.unlayer &&
+                  typeof win.unlayer.collapseSidebar === "function"
                 ) {
-                  // @ts-ignore
-                  window.unlayer.collapseSidebar();
+                  win.unlayer.collapseSidebar();
                 }
               }, 500);
             }
 
             // Register secure AWS S3 image upload callback
-            // @ts-ignore
-            window.unlayer.registerCallback("image", (file, done) => {
+            (window as any).unlayer.registerCallback("image", (file, done) => {
               const reader = new FileReader();
               reader.readAsDataURL(file.attachments[0]);
               reader.onload = async () => {
@@ -284,8 +279,7 @@ export default function TemplatesPage() {
                     typeof parsed === "object" &&
                     !Array.isArray(parsed)
                   ) {
-                    // @ts-ignore
-                    window.unlayer.loadDesign(parsed);
+                    (window as any).unlayer.loadDesign(parsed);
                   }
                 } catch (err) {
                   console.error("Error loading saved Unlayer design:", err);
@@ -294,10 +288,9 @@ export default function TemplatesPage() {
             };
 
             // Wrap design loading in the official ready callback with robust type safety checks
-            // @ts-ignore
-            if (window.unlayer && typeof window.unlayer.ready === "function") {
-              // @ts-ignore
-              window.unlayer.ready(() => {
+            const win = window as any;
+            if (win.unlayer && typeof win.unlayer.ready === "function") {
+              win.unlayer.ready(() => {
                 loadSavedDesign();
               });
             } else {
@@ -327,10 +320,9 @@ export default function TemplatesPage() {
     try {
       setAutosaveStatus("Saving...");
 
-      // @ts-ignore
-      if (window.unlayer) {
-        // @ts-ignore
-        window.unlayer.exportHtml(async (data: any) => {
+      const win = window as any;
+      if (win.unlayer) {
+        win.unlayer.exportHtml(async (data: any) => {
           const { design, html } = data;
 
           const res = await fetch("/api/templates", {
