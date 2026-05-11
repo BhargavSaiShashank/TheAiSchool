@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { useUser, useOrganization } from "@clerk/nextjs";
@@ -26,6 +26,7 @@ export default function AdminLayout({
   const { organization, isLoaded: isOrgLoaded } = useOrganization();
   const [mounted, setMounted] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const lastSyncedOrgIdRef = useRef<string | null | undefined>(undefined);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Automatically close drawer on route changes
@@ -64,14 +65,20 @@ export default function AdminLayout({
       return;
     }
 
-    // CRITICAL TRIGGER: Enforce rigid cache validation BEFORE rendering to block visual artifacts.
-    const needsSync = 
-      !user || 
-      user.id !== clerkUser.id || 
-      (organization?.id && user?.aws_region === undefined); 
+    // 🛡️ GATEKEEPER: Strict Lifecycle Control Block
+    // Prevents Next.js router.refresh() from triggering a re-fetch infinite loop cycle.
+    const currentClerkOrgId = organization?.id || "SOLO_MODE";
+    
+    const alreadySyncedThisLifecycle = (lastSyncedOrgIdRef.current === currentClerkOrgId);
+    const identityCacheValid = (user && user.id === clerkUser.id && user.aws_region !== undefined);
+
+    if (alreadySyncedThisLifecycle && identityCacheValid) {
+       // Context hasn't moved, and cache is physically present. DO NOT re-ping API.
+       return;
+    }
 
     const syncSession = async () => {
-      // 🛡️ RAISE SHIELD: Blocks UI interaction and masks with Preloader until data is clean!
+      // Raise Shield to prevent component flashes during transit
       setIsSyncing(true); 
       
       try {
@@ -79,31 +86,33 @@ export default function AdminLayout({
         if (res.ok) {
           const dbUser = await res.json();
           
-          // Compare active organization IDs. If changed, this forces a hard-reload re-sync effectively purging old state!
+          // 🔒 LOCK IN SUCCESSFUL SYNC state to break dynamic recursion loops!
+          lastSyncedOrgIdRef.current = currentClerkOrgId;
+
+          // Check if org strictly shifted in underlying DB representation since page generation
           if (user && user.org_id && dbUser.org_id !== user.org_id) {
-             console.log("🚨 ORGANIZATION SWAP DETECTED! COMMANDING PURGE & RELOAD...");
+             console.log("🚨 REAL ORGANIZATION SHIFT SECURED. RELOADING DATA CONTEXT...");
              login(dbUser);
              router.refresh();
-             // Don't drop shield yet, router is refreshing.
-             return;
+             return; // Stay hidden, wait for server refresh
           }
 
           login(dbUser);
         } else {
-          console.error("🔴 Critical identity resolution failed.");
+          console.error("🔴 Sync Engine rejected response.");
         }
       } catch (error) {
-        console.error("Failed to sync Clerk session with DB:", error);
+        console.error("Critical link failure in DB sync:", error);
       } finally {
-        // LOWER SHIELD: Data has settled successfully.
+        // Retract preloader shield
         setIsSyncing(false);
       }
     };
 
-    // Run the atomic sync logic on ANY fluctuation detected.
+    // Trigger the hardened atomic synchronization
     syncSession();
     
-  }, [clerkUser, isLoaded, organization?.id, isOrgLoaded]); // LISTEN TO ORGANIZATION ID SHIFTS DIRECTLY!
+  }, [clerkUser, isLoaded, organization?.id, isOrgLoaded, user?.id]); // Added user?.id safety latch
 
   useEffect(() => {
     if (!hasHydrated || !isLoaded) return;
