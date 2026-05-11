@@ -31,6 +31,48 @@ export async function POST(req: Request) {
         // Instant response prevents SNS retries and serverless timeout!
         after(async () => {
           try {
+            const sesMessageId = mail?.messageId;
+
+            // 1. 🔥 ATOMIC TELEMETRY UPGRADE: Link incoming AWS state to specific internal records
+            if (sesMessageId) {
+              const sendRecord = await prisma.campaignSend.findFirst({
+                where: { ses_message_id: sesMessageId },
+              });
+
+              if (sendRecord) {
+                const mappedStatus =
+                  notificationType === "Bounce"
+                    ? "bounced"
+                    : notificationType === "Complaint"
+                      ? "complained"
+                      : null;
+
+                if (mappedStatus) {
+                  // Shift internal campaign record state immediately
+                  await prisma.campaignSend.update({
+                    where: { id: sendRecord.id },
+                    data: { status: mappedStatus },
+                  });
+
+                  // Generate detailed audit event with trace context for reporting
+                  await prisma.emailEvent.create({
+                    data: {
+                      contact_id: sendRecord.contact_id,
+                      campaign_id: sendRecord.campaign_id,
+                      event_type: mappedStatus,
+                      metadata: JSON.stringify({
+                        subType:
+                          bounce?.bounceType ||
+                          complaint?.complaintFeedbackType ||
+                          "unknown",
+                      }),
+                    },
+                  });
+                }
+              }
+            }
+
+            // 2. Proceed with absolute isolation logic for Suppression Lists
             for (const email of recipients) {
               const contact = await prisma.contact.findUnique({
                 where: { email },

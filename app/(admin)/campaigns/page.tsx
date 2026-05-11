@@ -285,6 +285,7 @@ export default function CampaignsPage() {
           fromEmail,
           status,
           templateId: selectedTemplateId || null,
+          recipientsConfig: JSON.stringify({ selectedLists, excludedLists }),
         }),
       });
       if (res.ok) {

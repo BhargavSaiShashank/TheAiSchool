@@ -87,6 +87,7 @@ export async function POST(req: any) {
       fromEmail,
       status,
       templateId,
+      recipientsConfig,
     } = body;
 
     if (!name || !subject) {
@@ -122,6 +123,7 @@ export async function POST(req: any) {
         status: status || "draft",
         template_id: validTemplateId,
         org_id: orgId,
+        recipients_config: recipientsConfig,
       },
     });
 
@@ -129,9 +131,8 @@ export async function POST(req: any) {
     let openRateStr = "—";
     let clickRateStr = "—";
 
-    // If campaign is sent, auto-generate realistic relational dispatches and event logs in database
+    // If campaign is sent, auto-initiate relational dispatch tasks via AWS SQS
     if (status === "sent") {
-      // Push campaign dispatch task to AWS SQS queue for high-scale processing
       try {
         await pushToCampaignQueue(newCamp.id);
       } catch (sqsErr) {
@@ -139,111 +140,6 @@ export async function POST(req: any) {
           "Failed to push campaign dispatch job to AWS SQS:",
           sqsErr,
         );
-      }
-
-      const contacts = await prisma.contact.findMany({
-        where: { org_id: orgId },
-      });
-
-      sentCount = contacts.length;
-      let openCount = 0;
-      let clickCount = 0;
-
-      // Batch all sends in one query (avoids N+1)
-      const sendData = contacts.map((contact) => ({
-        campaign_id: newCamp.id,
-        contact_id: contact.id,
-        status: contact.status === "bounced" ? "bounced" : "delivered",
-      }));
-      if (sendData.length > 0) {
-        await prisma.campaignSend.createMany({ data: sendData });
-      }
-
-      // Build all events in memory first, then batch insert
-      const eventData: {
-        contact_id: string;
-        campaign_id: string;
-        event_type: string;
-        user_agent?: string;
-        metadata?: string;
-      }[] = [];
-
-      for (const contact of contacts) {
-        eventData.push({
-          contact_id: contact.id,
-          campaign_id: newCamp.id,
-          event_type: "sent",
-        });
-
-        if (contact.status !== "bounced") {
-          eventData.push({
-            contact_id: contact.id,
-            campaign_id: newCamp.id,
-            event_type: "delivered",
-          });
-
-          if (Math.random() < 0.65) {
-            openCount++;
-            eventData.push({
-              contact_id: contact.id,
-              campaign_id: newCamp.id,
-              event_type: "opened",
-              user_agent:
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-            });
-
-            if (Math.random() < 0.25) {
-              clickCount++;
-              eventData.push({
-                contact_id: contact.id,
-                campaign_id: newCamp.id,
-                event_type: "clicked",
-                metadata: JSON.stringify({ url: "https://pulsesend.com" }),
-              });
-            }
-          }
-        } else {
-          eventData.push({
-            contact_id: contact.id,
-            campaign_id: newCamp.id,
-            event_type: "bounced",
-            metadata: JSON.stringify({ reason: "550 User Unknown" }),
-          });
-        }
-      }
-
-      // Single batched insert for all events
-      if (eventData.length > 0) {
-        await prisma.emailEvent.createMany({ data: eventData });
-      }
-
-      openRateStr =
-        sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
-      clickRateStr =
-        sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
-
-      // 🔥 OPTIMIZED: Offload Live AWS Dispatch entirely to background execution!
-      // This guarantees the endpoint returns a success response in <500ms!
-      const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-      const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-
-      if (accessKeyId && secretAccessKey) {
-        after(async () => {
-          try {
-            await processCampaignDispatch(newCamp.id, {
-              accessKeyId,
-              secretAccessKey,
-              region: process.env.AWS_REGION || "eu-north-1",
-              senderEmail:
-                process.env.AWS_SENDER_EMAIL || "dommetishashank@gmail.com",
-            });
-          } catch (err: any) {
-            console.error(
-              "Critical Background Execution Failure:",
-              err.message,
-            );
-          }
-        });
       }
     }
 
@@ -290,6 +186,7 @@ export async function PUT(req: any) {
       fromEmail,
       status,
       templateId,
+      recipientsConfig,
     } = body;
 
     let validTemplateId: string | null = null;
@@ -316,6 +213,7 @@ export async function PUT(req: any) {
         from_email: fromEmail || "hello@pulsesend.com",
         status: status || "draft",
         template_id: validTemplateId,
+        recipients_config: recipientsConfig,
       },
     });
 
@@ -331,113 +229,6 @@ export async function PUT(req: any) {
           "Failed to push campaign dispatch job to AWS SQS:",
           sqsErr,
         );
-      }
-
-      const contacts = await prisma.contact.findMany({
-        where: { org_id: orgId },
-      });
-
-      sentCount = contacts.length;
-      let openCount = 0;
-      let clickCount = 0;
-
-      const sendData = contacts.map((contact) => ({
-        campaign_id: updated.id,
-        contact_id: contact.id,
-        status: contact.status === "bounced" ? "bounced" : "delivered",
-      }));
-      if (sendData.length > 0) {
-        await prisma.campaignSend.deleteMany({
-          where: { campaign_id: updated.id },
-        });
-        await prisma.campaignSend.createMany({ data: sendData });
-      }
-
-      const eventData: {
-        contact_id: string;
-        campaign_id: string;
-        event_type: string;
-        user_agent?: string;
-        metadata?: string;
-      }[] = [];
-
-      for (const contact of contacts) {
-        eventData.push({
-          contact_id: contact.id,
-          campaign_id: updated.id,
-          event_type: "sent",
-        });
-
-        if (contact.status !== "bounced") {
-          eventData.push({
-            contact_id: contact.id,
-            campaign_id: updated.id,
-            event_type: "delivered",
-          });
-
-          if (Math.random() < 0.65) {
-            openCount++;
-            eventData.push({
-              contact_id: contact.id,
-              campaign_id: updated.id,
-              event_type: "opened",
-              user_agent:
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-            });
-
-            if (Math.random() < 0.25) {
-              clickCount++;
-              eventData.push({
-                contact_id: contact.id,
-                campaign_id: updated.id,
-                event_type: "clicked",
-                metadata: JSON.stringify({ url: "https://pulsesend.com" }),
-              });
-            }
-          }
-        } else {
-          eventData.push({
-            contact_id: contact.id,
-            campaign_id: updated.id,
-            event_type: "bounced",
-            metadata: JSON.stringify({ reason: "550 User Unknown" }),
-          });
-        }
-      }
-
-      if (eventData.length > 0) {
-        await prisma.emailEvent.deleteMany({
-          where: { campaign_id: updated.id },
-        });
-        await prisma.emailEvent.createMany({ data: eventData });
-      }
-
-      openRateStr =
-        sentCount > 0 ? `${((openCount / sentCount) * 100).toFixed(1)}%` : "—";
-      clickRateStr =
-        sentCount > 0 ? `${((clickCount / sentCount) * 100).toFixed(1)}%` : "—";
-
-      // 🔥 OPTIMIZED: Unified background dispatcher approach to eliminate duplicate slow code and typescript import errors.
-      const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-      const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-
-      if (accessKeyId && secretAccessKey) {
-        after(async () => {
-          try {
-            await processCampaignDispatch(updated.id, {
-              accessKeyId,
-              secretAccessKey,
-              region: process.env.AWS_REGION || "eu-north-1",
-              senderEmail:
-                process.env.AWS_SENDER_EMAIL || "dommetishashank@gmail.com",
-            });
-          } catch (err: any) {
-            console.error(
-              "Critical Background PUT Execution Failure:",
-              err.message,
-            );
-          }
-        });
       }
     }
 
