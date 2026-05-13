@@ -58,8 +58,8 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (!selectedCampaignId) return;
 
-    async function fetchReport() {
-      setIsLoading(true);
+    async function fetchReport(isInitial = false) {
+      if (isInitial) setIsLoading(true);
       try {
         const res = await fetch(`/api/analytics?id=${selectedCampaignId}`);
         if (res.ok) {
@@ -69,10 +69,15 @@ export default function AnalyticsPage() {
       } catch (err) {
         console.error("Failed to fetch campaign reporting metrics:", err);
       } finally {
-        setIsLoading(false);
+        if (isInitial) setIsLoading(false);
       }
     }
-    fetchReport();
+
+    fetchReport(true);
+
+    // 🔥 REAL-TIME ANALYTICS STREAM: Silent updates every 3 seconds without triggering loaders!
+    const reportPoller = setInterval(() => fetchReport(false), 3000);
+    return () => clearInterval(reportPoller);
   }, [selectedCampaignId]);
 
   const handlePrintPDF = () => {

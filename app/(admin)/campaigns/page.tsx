@@ -163,7 +163,11 @@ export default function CampaignsPage() {
     fetchLiveCampaigns();
     fetchMailingLists();
     fetchDbTemplates();
-  }, [view]);
+
+    // 🔥 REAL-TIME AUTO-REFRESH: Keep campaign statistics and open/click rates updating live every 3 seconds!
+    const campaignPoller = setInterval(fetchLiveCampaigns, 3000);
+    return () => clearInterval(campaignPoller);
+  }, [view, user?.org_id]);
 
   const handleSendTestEmail = async () => {
     if (!testEmailRecipient) {
