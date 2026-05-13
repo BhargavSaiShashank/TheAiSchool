@@ -3,10 +3,20 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Find org and first campaign
-    const org = await prisma.organization.findFirst();
+    const requestedOrgId = req.headers.get("x-org-id");
+    
+    // 1. Find org context (either explicit or fallback)
+    let org = null;
+    if (requestedOrgId) {
+       org = await prisma.organization.findUnique({ where: { id: requestedOrgId } });
+    }
+    
+    if (!org) {
+       org = await prisma.organization.findFirst();
+    }
+
     if (!org) return NextResponse.json({ error: "No organization found" }, { status: 404 });
 
     let campaign = await prisma.campaign.findFirst({ where: { org_id: org.id } });
