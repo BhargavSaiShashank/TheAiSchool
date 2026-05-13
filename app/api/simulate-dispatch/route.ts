@@ -74,7 +74,8 @@ export async function GET(req: Request) {
       for (let i = 0; i < 12; i++) {
         try {
           const randomEmail = emails[Math.floor(Math.random() * emails.length)];
-          const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+          // 🔥 Deterministic Round-Robin to guarantee perfect 25% distributions of all event types including 'clicked'!
+          const eventType = eventTypes[i % eventTypes.length];
           
           // 1. Insert simulated Contact for raw email feed visibility
           const simContact = await prisma.contact.create({
