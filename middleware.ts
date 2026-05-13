@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/force-dispatch(.*)",
   "/api/simulate-dispatch(.*)",
   "/api/seed-templates(.*)",
+  "/api/debug-templates(.*)",
 ]);
 
 const clerk = clerkMiddleware(async (auth, request) => {
