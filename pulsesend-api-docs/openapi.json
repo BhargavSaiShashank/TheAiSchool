@@ -1,0 +1,1654 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "PulseSend Email Campaign Platform API",
+    "description": "Official API Specification for PulseSend. Provides administrative control, contact handling, template management, analytics harvesting, and multi-tenant isolation hooks.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "PulseSend Engineering",
+      "email": "dev@pulsesend.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development Sandbox"
+    },
+    {
+      "url": "https://api.pulsesend.com",
+      "description": "Production API Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "Campaign": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "previewText": {
+            "type": "string"
+          },
+          "fromName": {
+            "type": "string"
+          },
+          "fromEmail": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "templateId": {
+            "type": "string"
+          }
+        }
+      },
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "ContactList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "Template": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string"
+          }
+        }
+      },
+      "SuppressionItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      }
+    },
+    "responses": {
+      "ServerError": {
+        "description": "System execution failure",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/admin/reset-db": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Force Database Purge",
+        "description": "Permanently wipes all sandbox environment datasets (Campaigns, Contacts, Lists, Segments, Templates) to facilitate local reset. Extreme caution advised.",
+        "responses": {
+          "200": {
+            "description": "Successfully wiped",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Standard Direct Authenticate",
+        "description": "Acquires valid application profile credentials via standard internal email authentication hook.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success Login Token Return",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "org_id": {
+                      "type": "string"
+                    },
+                    "org_name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid Credentials"
+          }
+        }
+      }
+    },
+    "/api/auth/signup": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Initial Corporate Sign Up Pipeline",
+        "description": "Bootstraps a completely new root organization tenant, allocated SUPER_ADMIN root profile, and isolation boundaries simultaneously.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password",
+                  "orgName"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "orgName": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration finalized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Validate Identity Token & Retrieve Active Session Payload",
+        "description": "Critical session verification pipeline routing user authorization to their exact active multi-tenant org container, performing self-healing profile creation if necessary.",
+        "responses": {
+          "200": {
+            "description": "Self context returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "org_id": {
+                      "type": "string"
+                    },
+                    "org_name": {
+                      "type": "string"
+                    },
+                    "aws_region": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns": {
+      "get": {
+        "tags": [
+          "Campaigns"
+        ],
+        "summary": "Retrieve Campaign Inventory Catalog",
+        "description": "Harvests the complete list of active, scheduled, sent, and draft campaigns bound exclusively to the user's organizational limits.",
+        "responses": {
+          "200": {
+            "description": "List of Campaign Models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Campaign"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Campaigns"
+        ],
+        "summary": "Orchestrate New Communication Campaign",
+        "description": "Defines a fresh dynamic campaign template container inside active tenancy. Triggers AWS SQS queues immediately if set to sent.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Campaign"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Campaign"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Campaigns"
+        ],
+        "summary": "Mutate Existing Campaign Blueprint",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identifier UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Campaign"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated Success"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Campaigns"
+        ],
+        "summary": "Eradicate Campaign Permanently",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted Successfully"
+          }
+        }
+      }
+    },
+    "/api/campaigns/{id}/report": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Forensic Campaign Report Aggregator",
+        "description": "Runs intensive aggregate logic yielding timeline events, click charts, device breakdown distributions, and bounce counts for specific campaigns.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Target Campaign ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unified statistics report returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "campaign": {
+                      "type": "object"
+                    },
+                    "metrics": {
+                      "type": "object"
+                    },
+                    "charts": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Historical Performance Analytics Pipeline",
+        "description": "Extracts aggregate user-agent breakdowns and high-fidelity click attribution distributions for visual timeline renders.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Campaign ID (Optional, lists all sent campaigns if omitted)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytical arrays returned"
+          }
+        }
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Operational Command Console Baseline Telemetry",
+        "description": "Quantum leap concurrent query engine retrieving absolute global counts (Audience, Sent, Open, Clicks) and rolling 7-day volume trajectories simultaneously.",
+        "responses": {
+          "200": {
+            "description": "Dashboard layout state data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stats": {
+                      "type": "object"
+                    },
+                    "liveActivities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "topCampaigns": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "performanceData": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contacts": {
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Harvest Isolation-Safe Contacts Manifest",
+        "responses": {
+          "200": {
+            "description": "Contact collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Contact"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Inject Manual Subscriber Record",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "company": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "jobTitle": {
+                    "type": "string"
+                  },
+                  "listId": {
+                    "type": "string"
+                  },
+                  "customFields": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contact registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contact"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contacts/import": {
+      "post": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Execute High-Velocity CSV Stream Ingestion",
+        "description": "Ingests highly parallel array parsing payloads to batch-upsert rows against strict unique email indexes within physical container parameters.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contacts"
+                ],
+                "properties": {
+                  "contacts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "listId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resulting ingestion outcome statistics object returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "added": {
+                      "type": "integer"
+                    },
+                    "updated": {
+                      "type": "integer"
+                    },
+                    "errored": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contacts/timeline": {
+      "get": {
+        "tags": [
+          "Contacts"
+        ],
+        "summary": "Forensic Engagement Trace Stream",
+        "description": "Assembles comprehensive email event historical markers (opened, clicked, etc.) belonging exclusively to target contact instance.",
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of log traces"
+          }
+        }
+      }
+    },
+    "/api/lists": {
+      "get": {
+        "tags": [
+          "Lists"
+        ],
+        "summary": "Collate Active Segmentation Vault Structures",
+        "responses": {
+          "200": {
+            "description": "Array of target contact lists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContactList"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Lists"
+        ],
+        "summary": "Provision Clean List Target Container",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List object yielded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Lists"
+        ],
+        "summary": "Modify Meta-Descriptors",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful update return"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Lists"
+        ],
+        "summary": "Irreversible List Cascade Annihilation",
+        "description": "Safely executes atomic cascading memberships extraction prior to eradicating parent segmentation container completely.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully removed"
+          }
+        }
+      }
+    },
+    "/api/lists/members": {
+      "post": {
+        "tags": [
+          "Lists"
+        ],
+        "summary": "Bind Multiple Recipients To Structural Container",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "listId",
+                  "contactIds"
+                ],
+                "properties": {
+                  "listId": {
+                    "type": "string"
+                  },
+                  "contactIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bindings written"
+          }
+        }
+      }
+    },
+    "/api/lists/members/bulk": {
+      "post": {
+        "tags": [
+          "Lists"
+        ],
+        "summary": "Execute High-Throughput Relational Actions",
+        "description": "High-speed operation executing bulk binding ('add'), batch exclusion ('remove'), or literal hard erasure ('delete') across contact lists.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contactIds",
+                  "action"
+                ],
+                "properties": {
+                  "contactIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "listId": {
+                    "type": "string"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "add",
+                      "remove",
+                      "delete"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch completed"
+          }
+        }
+      }
+    },
+    "/api/org": {
+      "get": {
+        "tags": [
+          "Organization"
+        ],
+        "summary": "Acquire Corporate Identity Registry Metadata",
+        "description": "Fetches current enterprise limits including integrated AWS SES Regions and configured Config Sets. Restricted strictly to SUPER_ADMIN clearances.",
+        "responses": {
+          "200": {
+            "description": "Configuration metadata bundle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "fromEmail": {
+                      "type": "string"
+                    },
+                    "region": {
+                      "type": "string"
+                    },
+                    "configSet": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Organization"
+        ],
+        "summary": "Patch Secure Multi-Tenant Integration Variables",
+        "description": "Authoritative injection routing global environment hooks (AWS, Mail Identifiers, Logos) directly to mapped context containers safely.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "fromEmail": {
+                    "type": "string"
+                  },
+                  "region": {
+                    "type": "string"
+                  },
+                  "configSet": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Variables integrated"
+          }
+        }
+      }
+    },
+    "/api/segments": {
+      "get": {
+        "tags": [
+          "Segments"
+        ],
+        "summary": "Retrieve Rule-Based Segmentation Criteria Inventory",
+        "responses": {
+          "200": {
+            "description": "Array of segments returned"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Segments"
+        ],
+        "summary": "Archive Fresh Query Segment Specification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "rules"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "rules": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful definition archival"
+          }
+        }
+      }
+    },
+    "/api/send-test": {
+      "post": {
+        "tags": [
+          "Campaigns"
+        ],
+        "summary": "Fire Solo Live Diagnostic Despatch",
+        "description": "Direct, non-pipeline AWS SES execution allowing super-administrators to fire physical debug emails outside normal reporting workflows.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "to",
+                  "subject"
+                ],
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "html": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fired via AWS SES SMTP gateway"
+          }
+        }
+      }
+    },
+    "/api/suppression": {
+      "get": {
+        "tags": [
+          "Suppression & Security"
+        ],
+        "summary": "Inspect Global Isolation Blacklist Registry",
+        "description": "Retrieves current comprehensive database list of globally-quarantined identifiers (Hard Bounces, Complaints, Manual Additions).",
+        "responses": {
+          "200": {
+            "description": "Blacklist manifest output",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SuppressionItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Suppression & Security"
+        ],
+        "summary": "Enforce Quarantine State Manually",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "reason"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "log": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully blacklisted"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Suppression & Security"
+        ],
+        "summary": "Pardon & Erase Quarantined Entity",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restored eligibility status successfully"
+          }
+        }
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Harvest Active Multi-Tenant Template Collection",
+        "responses": {
+          "200": {
+            "description": "Inventory collection data returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Template"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Commit Dynamic Unlayer Design State Data",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Optional. Existing UUID to perform update instead of create"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Unlayer block schema state payload string"
+                  },
+                  "html": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Layout saved successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Excise Template Entry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Design permanently deleted"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users & Access Control"
+        ],
+        "summary": "List Organizational Seat Occupants",
+        "responses": {
+          "200": {
+            "description": "Active manifest output"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Users & Access Control"
+        ],
+        "summary": "Provision New Organization Seat Profile",
+        "description": "Forces preliminary relational allocation mapped to active tenant ID context, spawning pre-authenticated pending Clerk hooks.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "role"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "SUPER_ADMIN",
+                      "CAMPAIGN_MANAGER",
+                      "VIEWER"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Seat provisioned"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users & Access Control"
+        ],
+        "summary": "Elevate or Restrict Occupant Clearance Roles",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "role"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RBAC role patched"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users & Access Control"
+        ],
+        "summary": "Evict Member Profile Permanently",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant seat purged"
+          }
+        }
+      }
+    },
+    "/api/upload": {
+      "post": {
+        "tags": [
+          "Media & Files"
+        ],
+        "summary": "Direct Binary File/Blob Ingest to Cloud Storage",
+        "description": "Processes base64-encoded assets stream payloads, streaming directly to configured physical AWS S3 storage pools.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "description": "Base64 string"
+                  },
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "fileType": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cron/process-schedule": {
+      "get": {
+        "tags": [
+          "System Automation"
+        ],
+        "summary": "Execute Cron Dispatcher Synchronization",
+        "description": "Secured system automation trigger looping over scheduled queues, transitioning ready items into sending state and routing tasks to AWS SQS execution grids.",
+        "responses": {
+          "200": {
+            "description": "Cron cycle executed and released"
+          }
+        }
+      }
+    },
+    "/api/unsubscribe": {
+      "post": {
+        "tags": [
+          "Compliance Pipelines"
+        ],
+        "summary": "Execute Legal Opt-Out Compliance Sequence",
+        "description": "Parses hashed/combined unique UID tokens, forcing recipient mapping state to 'unsubscribed' and generating detailed EmailEvent logging automatically.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "uid"
+                ],
+                "properties": {
+                  "uid": {
+                    "type": "string",
+                    "example": "contactUuid_campaignUuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Opt-out complete"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Compliance Pipelines"
+        ],
+        "summary": "Rollback Suppression Eligibility Sequence",
+        "description": "Manually toggles target identity state back from quarantine into regular 'active' pool status.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "uid"
+                ],
+                "properties": {
+                  "uid": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Re-eligibility restored successfully"
+          }
+        }
+      }
+    },
+    "/api/preferences": {
+      "get": {
+        "tags": [
+          "Compliance Pipelines"
+        ],
+        "summary": "Fetch Recipient-Facing Preferences Grid State",
+        "security": [],
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full list structure with existing memberships delivered"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Compliance Pipelines"
+        ],
+        "summary": "Bulk Sync Subscription Directives",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "uid",
+                  "listIds"
+                ],
+                "properties": {
+                  "uid": {
+                    "type": "string"
+                  },
+                  "listIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List directives synchronized"
+          }
+        }
+      }
+    },
+    "/track/click": {
+      "get": {
+        "tags": [
+          "Telemetry Tracking Hooks"
+        ],
+        "summary": "Facilitate Live Traffic Click Redirection & Attribution",
+        "security": [],
+        "description": "Captures temporal click context (IP, UA, UUID) then executes immediate background logging processes BEFORE firing atomic HTTP 302 redirects to preserve performance.",
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Immediate browser redirect to absolute destination URL"
+          }
+        }
+      }
+    },
+    "/track/open": {
+      "get": {
+        "tags": [
+          "Telemetry Tracking Hooks"
+        ],
+        "summary": "Deliver Transparent Core Tracking Pixel Node",
+        "security": [],
+        "description": "Fires immediate 1x1 transparent GIF buffer payload while executing background logging routines asynchronously.",
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Base64 pixel node",
+            "content": {
+              "image/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhooks/clerk": {
+      "post": {
+        "tags": [
+          "Webhooks Gateway"
+        ],
+        "summary": "Svix Clerk Core Event Ingest",
+        "security": [],
+        "description": "Listens directly to Clerk Auth provider event webhooks to sync system user definitions and organizational mirror containers.",
+        "responses": {
+          "200": {
+            "description": "Event resolved successfully"
+          }
+        }
+      }
+    },
+    "/api/webhooks/ses": {
+      "post": {
+        "tags": [
+          "Webhooks Gateway"
+        ],
+        "summary": "AWS SES Simple Notification Service Destination",
+        "security": [],
+        "description": "Auto-confirms SNS subs then continuously streams background-throttled 'Bounce', 'Complaint', and 'Delivery' telemetry updates into permanent tables.",
+        "responses": {
+          "200": {
+            "description": "Ack yielded"
+          }
+        }
+      }
+    }
+  }
+}

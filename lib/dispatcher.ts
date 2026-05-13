@@ -175,10 +175,15 @@ export async function processCampaignDispatch(
             const pixelId = `${contact.id}_${campaignId}`;
             const openTracker = `<img src="${baseUrl}/track/open?uid=${pixelId}" width="1" height="1" alt="" style="display:none!important;" />`;
             
+            const unsubHtml = `<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eaeaea; font-family: sans-serif; font-size: 12px; color: #888;">
+              <p>You are receiving this email because you are subscribed to our updates.</p>
+              <p><a href="${unsubLink}" style="color: #888; text-decoration: underline;">Unsubscribe from this list</a></p>
+            </div>`;
+
             if (htmlBody.includes("</body>")) {
-               htmlBody = htmlBody.replace("</body>", `${openTracker}</body>`);
+               htmlBody = htmlBody.replace("</body>", `${unsubHtml}${openTracker}</body>`);
             } else {
-               htmlBody = htmlBody + openTracker;
+               htmlBody = htmlBody + unsubHtml + openTracker;
             }
 
             // ✅ TRACKING ENGINE 3: Absolute Anchor Tag Rewriter (Click Wrapper)
