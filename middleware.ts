@@ -8,6 +8,8 @@ const isPublicRoute = createRouteMatcher([
   "/track(.*)",
   "/api/webhooks/clerk(.*)",
   "/api/webhooks/ses(.*)",
+  "/api/unsubscribe(.*)",
+  "/api/preferences(.*)",
   "/api/cron/process-schedule(.*)",
   "/api/debug-campaigns(.*)",
   "/api/force-dispatch(.*)",
