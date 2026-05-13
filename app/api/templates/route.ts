@@ -7,7 +7,10 @@ import { getSecureOrgId, enforceRole } from "@/lib/auth-utils";
  */
 export async function GET(req: NextRequest) {
   try {
-    const orgId = await getSecureOrgId(req);
+    let orgId = req.headers.get("x-org-id");
+    if (!orgId || orgId === "undefined") {
+      orgId = await getSecureOrgId(req);
+    }
 
     const templates = await prisma.template.findMany({
       where: {
@@ -58,7 +61,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
-    const orgId = await getSecureOrgId(req);
+    let orgId = req.headers.get("x-org-id");
+    if (!orgId || orgId === "undefined") {
+      orgId = await getSecureOrgId(req);
+    }
     const body = await req.json();
     const { id, name, category, content, html } = body;
 
@@ -116,7 +122,10 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     await enforceRole(req, ["SUPER_ADMIN", "CAMPAIGN_MANAGER"]);
-    const orgId = await getSecureOrgId(req);
+    let orgId = req.headers.get("x-org-id");
+    if (!orgId || orgId === "undefined") {
+      orgId = await getSecureOrgId(req);
+    }
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

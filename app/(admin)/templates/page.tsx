@@ -130,7 +130,9 @@ export default function TemplatesPage() {
 
     async function fetchTemplates() {
       try {
-        const res = await fetch("/api/templates");
+        const res = await fetch("/api/templates", {
+          headers: { "x-org-id": user?.org_id || "" }
+        });
         if (res.ok) {
           const data = await res.json();
           if (data && Array.isArray(data) && data.length > 0) {
@@ -328,7 +330,10 @@ export default function TemplatesPage() {
 
           const res = await fetch("/api/templates", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              "x-org-id": user?.org_id || ""
+            },
             body: JSON.stringify({
               id: selectedTemplate.id,
               name: selectedTemplate.name || "Untitled Template",
@@ -379,6 +384,7 @@ export default function TemplatesPage() {
     try {
       const res = await fetch(`/api/templates?id=${templateId}`, {
         method: "DELETE",
+        headers: { "x-org-id": user?.org_id || "" }
       });
 
       if (res.ok) {
@@ -401,7 +407,10 @@ export default function TemplatesPage() {
     try {
       const res = await fetch("/api/templates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-org-id": user?.org_id || ""
+        },
         body: JSON.stringify({
           id: "new", // Deliberately enforce new record creation instead of update
           name: `${template.name || "Untitled"} (Copy)`,
