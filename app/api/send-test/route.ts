@@ -50,6 +50,11 @@ export async function POST(req: NextRequest) {
           </div>
         `;
 
+        // Fix unclickable relative unsubscribe links hardcoded in templates for test sends
+        finalHtml = finalHtml
+          .replace(/\{\{uid\}\}/gi, "demo-contact-id_demo-campaign-id")
+          .replace(/href="\/unsubscribe/gi, `href="${baseUrl}/unsubscribe`);
+
         const unsubHtml = `
           <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eaeaea; font-family: sans-serif; font-size: 12px; color: #888;">
             <p>You are receiving this email because you are subscribed to our updates.</p>

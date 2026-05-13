@@ -169,10 +169,13 @@ export async function processCampaignDispatch(
               .replace(/\{\{email\}\}/gi, contact.email);
 
             // ✅ TRACKING ENGINE 1: Dynamic Unsubscribe Mapping
-            const unsubLink = `${baseUrl}/unsubscribe?uid=${contact.id}_${campaignId}`;
-
-            // ✅ TRACKING ENGINE 2: Embedded Transparent Tracking Pixel injection
             const pixelId = `${contact.id}_${campaignId}`;
+            const unsubLink = `${baseUrl}/unsubscribe?uid=${pixelId}`;
+            
+            // Fix unclickable relative unsubscribe links hardcoded in templates
+            htmlBody = htmlBody
+              .replace(/\{\{uid\}\}/gi, pixelId)
+              .replace(/href="\/unsubscribe/gi, `href="${baseUrl}/unsubscribe`);
             const openTracker = `<img src="${baseUrl}/track/open?uid=${pixelId}" width="1" height="1" alt="" style="display:none!important;" />`;
             
             const unsubHtml = `<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eaeaea; font-family: sans-serif; font-size: 12px; color: #888;">
