@@ -9,38 +9,43 @@ async function resetAll() {
 
   try {
     console.log("1. Wiping Prisma Database (Supabase)...");
-    
-    // Delete in order to respect foreign key constraints
-    await prisma.suppressionList.deleteMany();
-    console.log("  - Suppressions deleted");
-    
-    await prisma.emailEvent.deleteMany();
-    console.log("  - Email Events deleted");
-    
-    await prisma.campaignSend.deleteMany();
-    console.log("  - Campaign Sends deleted");
-    
-    await prisma.campaign.deleteMany();
-    console.log("  - Campaigns deleted");
-    
-    await prisma.template.deleteMany();
-    console.log("  - Templates deleted");
-    
-    await prisma.segment.deleteMany();
-    console.log("  - Segments deleted");
-    
-    await prisma.contactListMember.deleteMany();
-    await prisma.contact.deleteMany();
-    await prisma.contactList.deleteMany();
-    console.log("  - Contacts & Lists deleted");
-    
-    await prisma.user.deleteMany();
-    console.log("  - Users deleted");
-    
-    await prisma.organization.deleteMany();
-    console.log("  - Organizations deleted");
+    try {
+      // Delete in order to respect foreign key constraints
+      await prisma.suppressionList.deleteMany();
+      console.log("  - Suppressions deleted");
+      
+      await prisma.emailEvent.deleteMany();
+      console.log("  - Email Events deleted");
+      
+      await prisma.campaignSend.deleteMany();
+      console.log("  - Campaign Sends deleted");
+      
+      await prisma.campaign.deleteMany();
+      console.log("  - Campaigns deleted");
+      
+      await prisma.template.deleteMany();
+      console.log("  - Templates deleted");
+      
+      await prisma.segment.deleteMany();
+      console.log("  - Segments deleted");
+      
+      await prisma.importJob.deleteMany();
+      await prisma.contactListMember.deleteMany();
+      await prisma.contact.deleteMany();
+      await prisma.contactList.deleteMany();
+      console.log("  - Contacts, Lists & Jobs deleted");
+      
+      await prisma.user.deleteMany();
+      console.log("  - Users deleted");
+      
+      await prisma.organization.deleteMany();
+      console.log("  - Organizations deleted");
 
-    console.log("✅ Prisma Database completely wiped.");
+      console.log("✅ Prisma Database completely wiped.");
+    } catch (dbErr) {
+      console.log("⚠️  Prisma Database Wipe Failed/Skipped (Project is likely paused on Supabase). Ensure your Supabase project is ACTIVE.");
+      console.log(`   Details: ${dbErr.message || dbErr}\n`);
+    }
 
     console.log("\n2. Wiping Clerk Users and Organizations...");
     

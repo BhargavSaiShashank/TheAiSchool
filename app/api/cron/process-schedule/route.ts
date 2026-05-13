@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { pushToCampaignQueue } from "@/lib/sqs";
+import { after } from "next/server";
+import { processCampaignDispatch } from "@/lib/dispatcher";
 
 /**
  * CRON WORKER: Scans for scheduled campaigns that are ready to send.
@@ -50,8 +52,23 @@ export async function GET(req: Request) {
 
         // Push dispatcher message to AWS SQS queue
         await pushToCampaignQueue(camp.id);
-
         activatedCount++;
+
+        // 🔥 ASYNC SERVERLESS SCHEDULE DISPATCH: Fire background runner for this cron cycle
+        after(async () => {
+          try {
+            const config = {
+              accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+              secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+              region: process.env.AWS_REGION || "eu-north-1",
+              senderEmail: process.env.AWS_SENDER_EMAIL || "dommetishashank@gmail.com",
+            };
+            await processCampaignDispatch(camp.id, config);
+          } catch (dispErr) {
+            console.error(`Cron background dispatch failure for ${camp.id}:`, dispErr);
+          }
+        });
+
       } catch (err: any) {
         console.error(
           `Cron process failed to launch campaign ${camp.id}:`,

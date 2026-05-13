@@ -145,6 +145,21 @@ export async function POST(req: any) {
           sqsErr,
         );
       }
+
+      // 🔥 ZERO-DELAY SERVERLESS DISPATCH: Executes instantly in background after client response
+      after(async () => {
+        try {
+          const config = {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+            region: process.env.AWS_REGION || "eu-north-1",
+            senderEmail: process.env.AWS_SENDER_EMAIL || "dommetishashank@gmail.com",
+          };
+          await processCampaignDispatch(newCamp.id, config);
+        } catch (dispatchErr) {
+          console.error("Background POST campaign dispatch failure:", dispatchErr);
+        }
+      });
     }
 
     return NextResponse.json({
@@ -238,6 +253,21 @@ export async function PUT(req: any) {
           sqsErr,
         );
       }
+
+      // 🔥 ZERO-DELAY SERVERLESS DISPATCH: Executes instantly in background after client response
+      after(async () => {
+        try {
+          const config = {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+            region: process.env.AWS_REGION || "eu-north-1",
+            senderEmail: process.env.AWS_SENDER_EMAIL || "dommetishashank@gmail.com",
+          };
+          await processCampaignDispatch(updated.id, config);
+        } catch (dispatchErr) {
+          console.error("Background PUT campaign dispatch failure:", dispatchErr);
+        }
+      });
     }
 
     return NextResponse.json({
