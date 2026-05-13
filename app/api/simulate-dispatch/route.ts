@@ -20,7 +20,15 @@ export async function GET(req: Request) {
        org = await prisma.organization.findFirst();
     }
 
-    if (!org) return NextResponse.json({ error: "No organization found" }, { status: 404 });
+    // 🔥 ABSOLUTE FAILSAFE MODE: Auto-provision organization row if DB is empty or record missing!
+    if (!org) {
+       org = await prisma.organization.create({
+         data: {
+           id: targetOrgId || undefined,
+           name: "Demonstration Workspace"
+         }
+       });
+    }
 
     let campaign = await prisma.campaign.findFirst({ where: { org_id: org.id } });
     if (!campaign) {
