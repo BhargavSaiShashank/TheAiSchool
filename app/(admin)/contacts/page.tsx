@@ -788,9 +788,7 @@ export default function ContactsPage() {
                     Total Contacts
                   </p>
                   <p className="text-2xl font-black text-foreground font-mono">
-                    {lists
-                      .reduce((sum, l) => sum + (l.count ?? 0), 0)
-                      .toLocaleString()}
+                    {contacts.length.toLocaleString()}
                   </p>
                 </div>
               </div>
