@@ -17,7 +17,7 @@ export async function processCampaignDispatch(
 ) {
   console.log(`[Dispatcher] Initializing activation logic for campaign: ${campaignId}`);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://the-ai-school-pearl.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   try {
     // 1. Acquire current Campaign context and validation guard
