@@ -5,12 +5,15 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   try {
-    const requestedOrgId = req.headers.get("x-org-id");
+    const { searchParams } = new URL(req.url);
+    const queryOrgId = searchParams.get("orgId");
+    const headerOrgId = req.headers.get("x-org-id");
+    const targetOrgId = queryOrgId || headerOrgId;
     
     // 1. Find org context (either explicit or fallback)
     let org = null;
-    if (requestedOrgId) {
-       org = await prisma.organization.findUnique({ where: { id: requestedOrgId } });
+    if (targetOrgId) {
+       org = await prisma.organization.findUnique({ where: { id: targetOrgId } });
     }
     
     if (!org) {
