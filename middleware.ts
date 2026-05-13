@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/cron/process-schedule(.*)",
   "/api/debug-campaigns(.*)",
   "/api/force-dispatch(.*)",
+  "/api/simulate-dispatch(.*)",
 ]);
 
 const clerk = clerkMiddleware(async (auth, request) => {

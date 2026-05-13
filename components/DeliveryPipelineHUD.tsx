@@ -27,6 +27,10 @@ export default function DeliveryPipelineHUD({
     if (isSimulating) return;
     setIsSimulating(true);
     setSpeedMultiplier(4.5); // Hyper-speed!
+
+    // 🔥 FIRE LIVE SIMULATION TELEMETRY API FOR REALL-TIME DASHBOARD INJECTION!
+    fetch('/api/simulate-dispatch').catch(e => console.error("Simulation Trigger Fail:", e));
+
     setTimeout(() => {
       setSpeedMultiplier(1);
       setIsSimulating(false);

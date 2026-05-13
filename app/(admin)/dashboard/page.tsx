@@ -94,7 +94,11 @@ export default function DashboardPage() {
     }
 
     fetchDashboard();
-  }, []);
+
+    // 🔥 REAL-TIME HUD STREAM: Poll every 3 seconds so the submission UI feels incredibly alive!
+    const pollInterval = setInterval(fetchDashboard, 3000);
+    return () => clearInterval(pollInterval);
+  }, [user?.org_id]);
 
   const handleCopilotGenerate = () => {
     if (!copilotQuery) return;
